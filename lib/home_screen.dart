@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:teammaker/team_screen.dart';
 
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
@@ -23,15 +24,117 @@ class PlutoExampleScreen extends StatefulWidget {
 
 class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   PlutoGridStateManager? stateManager;
+
   int teams = 4;
 
   int level = 4;
   List<PlutoColumn> columns = [
     /// Text Column definition
+    // PlutoColumn(
+    //   title: 'column1',
+    //   field: 'column1',
+    //   type: PlutoColumnType.text(),
+    //   enableRowDrag: true,
+    //   enableRowChecked: true,
+    //   width: 250,
+    //   minWidth: 175,
+    //   renderer: (rendererContext) {
+    //     return Row(
+    //       children: [
+    //         IconButton(
+    //           icon: const Icon(
+    //             Icons.add_circle,
+    //           ),
+    //           onPressed: () {
+    //             rendererContext.stateManager!.insertRows(
+    //               rendererContext.rowIdx!,
+    //               [rendererContext.stateManager!.getNewRow()],
+    //             );
+    //           },
+    //           iconSize: 18,
+    //           color: Colors.green,
+    //           padding: const EdgeInsets.all(0),
+    //         ),
+    //         IconButton(
+    //           icon: const Icon(
+    //             Icons.remove_circle_outlined,
+    //           ),
+    //           onPressed: () {
+    //             rendererContext.stateManager!
+    //                 .removeRows([rendererContext.row]);
+    //           },
+    //           iconSize: 18,
+    //           color: Colors.red,
+    //           padding: const EdgeInsets.all(0),
+    //         ),
+    //         Expanded(
+    //           child: Text(
+    //             rendererContext
+    //                 .row!.cells[rendererContext.column!.field]!.value
+    //                 .toString(),
+    //             maxLines: 1,
+    //             overflow: TextOverflow.ellipsis,
+    //           ),
+    //         ),
+    //       ],
+    //     );
+    //   },
+    // ),
     PlutoColumn(
+      enableRowDrag: true,
+      enableRowChecked: true,
       title: 'name',
       field: 'name_field',
+      frozen: PlutoColumnFrozen.left,
       type: PlutoColumnType.text(),
+      renderer: (rendererContext) {
+        return Row(
+          children: [
+            Expanded(
+              child: Text(
+                rendererContext
+                    .row!.cells[rendererContext.column!.field]!.value
+                    .toString(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(
+                Icons.add_circle,
+              ),
+              onPressed: () {
+                rendererContext.stateManager!.insertRows(
+                  rendererContext.rowIdx!,
+                  [rendererContext.stateManager!.getNewRow()],
+                );
+              },
+              iconSize: 18,
+              color: Colors.green,
+              padding: const EdgeInsets.all(0),
+            ),
+            IconButton(
+              icon: const Icon(
+                Icons.remove_circle_outlined,
+              ),
+              onPressed: () {
+                rendererContext.stateManager!
+                    .removeRows([rendererContext.row]);
+              },
+              iconSize: 18,
+              color: Colors.red,
+              padding: const EdgeInsets.all(0),
+            ),
+
+          ],
+        );
+      },
+    ),
+    PlutoColumn(
+      title: 'team#',
+      field: 'team_field',
+      frozen: PlutoColumnFrozen.right,
+      type: PlutoColumnType.number(),
     ),
 
     /// Number Column definition
@@ -39,41 +142,31 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       title: 'levels',
       field: 'skill_level_field',
       type: PlutoColumnType.number(),
-    ),
-    PlutoColumn(
-      title: 'team',
-      field: 'team_field',
-      type: PlutoColumnType.number(),
     )
   ];
 
   List<PlutoRow> rows = [
     PlutoRow(
       cells: {
-        'name_field': PlutoCell(value: 'Text cell gg'),
-        'skill_level_field': PlutoCell(value: 1),
-        'team_field': PlutoCell(value: 1),
+        'name_field': PlutoCell(value: 'two'),
+        'skill_level_field': PlutoCell(value: 2),
+        'team_field': PlutoCell(value: 2),
+
+
       },
-    )
+    ),
+
+
   ];
   void rebuild_options() {
-    var team_list = new List<int>.generate(level, (i) => i + 1);
-    var level_list = new List<int>.generate(teams, (i) => i + 1);
-    columns[1] = PlutoColumn(
-      title: 'skill_level_field',
-      field: 'skill_level_field',
-      type: PlutoColumnType.select(team_list, readOnly: false, defaultValue: 2),
-    );
-    columns[2] = PlutoColumn(
-      title: 'team_field',
-      field: 'team_field',
-      type: PlutoColumnType.select([1, 2, 3, 4, 5, 4, 4]),
-    );
-    columns[2] = PlutoColumn(
-      title: 'team_field',
-      field: 'team_field',
-      type: PlutoColumnType.select([5, 2, 3, 2, 5, 4, 4]),
-    );
+    // var team_list = new List<int>.generate(level, (i) => i + 1);
+    // var level_list = new List<int>.generate(teams, (i) => i + 1);
+    // columns[1] = PlutoColumn(
+    //   title: 'level',
+    //   field: 'skill_level_field',
+    //   type: PlutoColumnType.number(),
+    // );
+
 
     setState(() {});
   }
@@ -154,7 +247,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   }
 
   AlertDialog todo(BuildContext context) {
-    TextEditingController emailController = new TextEditingController();
+
     return AlertDialog(
       title: const Text('We are adding this feature later'),
       content: Container(
@@ -176,35 +269,39 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       ],
     );
   }
+  TextEditingController team_text_controller =
+  new TextEditingController(text: "4");
+  TextEditingController level_text_controller =
+  new TextEditingController(text: "4");
 
   AlertDialog settings(BuildContext context) {
-    TextEditingController team_text_controller =
-        new TextEditingController(text: teams.toString());
-    TextEditingController level_text_controller =
-        new TextEditingController(text: level.toString());
+
     return AlertDialog(
       title: const Text('Set number of teams and skill levels'),
-      content: Container(
-        height: 200,
-        width: 400,
+      content: SingleChildScrollView(
+
         child: Column(
           children: [
-            TextFormField(
-              validator: (value) {
-                if (null != value && value.isEmpty) {
-                  return 'Enter number of teams';
-                }
-                return null;
-              },
-              controller: team_text_controller,
-              decoration: InputDecoration(
-                labelText: "Enter number of teams",
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+            Container(
+                constraints: BoxConstraints(maxHeight: 200),
+                child:   TextFormField(
+                  validator: (value) {
+                    if (null != value && value.isEmpty) {
+                      return 'Enter number of teams';
+                    }
+                    return null;
+                  },
+                  controller: team_text_controller,
+                  decoration: InputDecoration(
+                    labelText: "Enter number of teams",
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    // The validator receives the text that the user has entered.
+                  ),
                 ),
-                // The validator receives the text that the user has entered.
-              ),
             ),
+
             TextFormField(
               controller: level_text_controller,
               validator: (value) {
@@ -257,25 +354,32 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   }
 
   AlertDialog reportingDialog(BuildContext context) {
-    TextEditingController emailController = new TextEditingController();
+    TextEditingController player_text = new TextEditingController();
+
     return AlertDialog(
       title: const Text('Add Players'),
       content: Container(
         width: 300,
         child: Column(
           children: [
-            const Text('Paste from meetup, or type one player per line'),
+            const Text('Add  player name and level. One player/level per line.'),
             TextField(
-              controller: emailController,
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'zobair,4\nmike,1\njohn,1',
+              ),
+              controller: player_text,
               keyboardType: TextInputType.multiline,
               maxLines: null,
             ),
-            TextButton(
+            ElevatedButton(
               child: const Text('Format text from meetup'),
               onPressed: () {
-                String text = emailController.text;
+                String text = player_text.text;
                 var lines = text.split("\n");
                 var player_line = [lines[0]];
+                var data = [lines[0]+",3"];
+                var regex = "/(?<!\d)4\d{2}(?!\d)/";
 
                 for (var i = 0; i <= lines.length - 1; i++) {
                   String line = lines[i];
@@ -283,16 +387,18 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
                   if (line == last) {
                     continue;
-                  } else if ((line.endsWith("PM")) || (line.endsWith("AM"))) {
+                  } else if ((line.endsWith("PM")) || (line.endsWith("AM"))|| (line.startsWith("Event")) || int.tryParse(line.trim())!=null) {
                     continue;
                   } else if ((line.trim() == "")) {
                     continue;
-                  } else {
+                  }
+                  else {
                     player_line.add(lines[i]);
+                    data.add(lines[i] +",3");
                   }
                 }
                 print(player_line);
-                emailController.text = player_line.join("\n");
+                player_text.text = data.join("\n");
               },
             ),
           ],
@@ -313,7 +419,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         TextButton(
           child: const Text('add players'),
           onPressed: () {
-            var lines = emailController.text.split("\n");
+            var lines = player_text.text.split("\n");
 
             for (var i = 0; i <= lines.length - 1; i++) {
               var data = lines[i].split(",");
@@ -328,6 +434,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
               stateManager!.appendRows([
                 PlutoRow(
+                  checked: true,
                   cells: {
                     'name_field': PlutoCell(value: data[0]),
                     'skill_level_field': PlutoCell(value: skill),
@@ -344,6 +451,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       ],
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -362,6 +470,86 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       bottomNavigationBar: BottomAppBar(
         child: ButtonBar(
           children: [
+            Container(
+              width:166,
+              child: TextField(
+                decoration: new InputDecoration(labelText: "How many teams?"),
+                keyboardType: TextInputType.number,
+                controller:team_text_controller ,
+                //
+                // onChanged: (value){
+                //   if (int.tryParse(value.trim())!=null){
+                //     setState(() {
+                //       teams = int.parse(value.trim());
+                //     });
+                //
+                //   }
+                //
+                // },
+                // Only numbers can be entered
+              ),
+            ),
+            ElevatedButton.icon(
+              label: Text("Generate Team"),
+                onPressed: () {
+
+                  stateManager!.sortAscending(columns[1]);
+                  var dat=stateManager?.rows ??[];
+                  var tmp_rows=[];
+                  for (var i = 0; i < dat.length; i++){
+                    print(dat[i]?.checked);
+                    if (dat[i]?.checked?? false){
+                      tmp_rows.add(dat[i]);
+                    }
+                  }
+
+
+                  Map <String, List<String>> teams_list = Map();
+                  for (var i = 0; i < teams; i ++){
+                    teams_list[i.toString()] = [];
+                  }
+                  var keys = teams_list.keys.toList();
+                  int size = teams_list.length;
+                  print(size);
+                  var start = 0;
+                  for (var i = start; i < tmp_rows.length; i=i+size){
+                    int end = i+size < tmp_rows.length? i+size :  tmp_rows.length -1;
+                    var sublist = tmp_rows.sublist(start, end);
+                    keys.shuffle();
+                    int key_i = 0;
+                    sublist.forEach((value) {
+                      var text = value?.cells?["name_field"]?.value.toString() ?? "";
+                      teams_list[keys[key_i]]?.add(text);
+                      key_i++;
+
+                    });
+                    start = i+size;
+
+                    // print(keys);
+                    // for (var j = 0; j <= keys.length - 1; j+teams) {
+                    //   if (tmp_rows[j] == null) {
+                    //     continue;
+                    //   }
+                    //
+                    //
+                    // }
+                  }
+
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => TeamScreen(teams_list: teams_list,)));
+                }
+                ,
+                icon: Icon(Icons.update)),
+            ElevatedButton.icon(
+                label: Text("Add Players"),
+                onPressed: () {
+                  // print(rows.length);
+                  showDialog<void>(
+                    context: context,
+                    builder: reportingDialog,
+                  );
+                },
+
+                icon: Icon(Icons.add)),
             IconButton(
                 onPressed: () {
                   showDialog<void>(
@@ -386,33 +574,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   );
                 },
                 icon: Icon(Icons.remove)),
-            IconButton(
-                onPressed: () {
 
-                  stateManager!.sortAscending(columns[1]);
-                  var tmp_rows = stateManager!.rows;
-                  Map <String, List<String>> teams_list = Map();
-                  for (var i = 0; i < teams; i ++){
-                    teams_list[i.toString()] = [];
-                  }
-
-
-                  var keys = teams_list.keys.toList();
-                  for (var i = 0; i <= tmp_rows.length - 1; i+teams) {
-                    var subrows = tmp_rows.getRange(i, i+teams).toList();
-                    keys.shuffle();
-                    for (var j = 0; j <= keys.length - 1; j+teams) {
-                      if (subrows[j] == null) {
-                        continue;
-                      }
-
-                      teams_list[keys[j]]?.add(subrows[i]?.cells?["a"].toString()??"None");
-                    }
-                  }
-                  print(teams_list.toString());
-                  }
-,
-                icon: Icon(Icons.update)),
             IconButton(
               onPressed: () {
                 rebuild_options();
