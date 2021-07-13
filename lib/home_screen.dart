@@ -130,27 +130,28 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         );
       },
     ),
-    PlutoColumn(
-      title: 'team#',
-      field: 'team_field',
-      frozen: PlutoColumnFrozen.right,
-      type: PlutoColumnType.number(),
-    ),
+
 
     /// Number Column definition
     PlutoColumn(
       title: 'levels',
       field: 'skill_level_field',
       type: PlutoColumnType.number(),
-    )
+    ),
+    PlutoColumn(
+      title: 'team#',
+      field: 'team_field',
+      frozen: PlutoColumnFrozen.right,
+      type: PlutoColumnType.number(),
+    ),
   ];
 
   List<PlutoRow> rows = [
     PlutoRow(
       cells: {
-        'name_field': PlutoCell(value: 'two'),
-        'skill_level_field': PlutoCell(value: 2),
-        'team_field': PlutoCell(value: 2),
+        'name_field': PlutoCell(value: 'Zobair'),
+        'skill_level_field': PlutoCell(value: 3),
+        'team_field': PlutoCell(value: 0),
 
 
       },
@@ -363,6 +364,10 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         child: Column(
           children: [
             const Text('Add  player name and level. One player/level per line.'),
+        Container(
+          constraints: BoxConstraints(maxHeight: 100),
+          child: SingleChildScrollView(
+            child:
             TextField(
               decoration: InputDecoration(
                   border: OutlineInputBorder(),
@@ -372,6 +377,8 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
               keyboardType: TextInputType.multiline,
               maxLines: null,
             ),
+        ),
+        ),
             ElevatedButton(
               child: const Text('Format text from meetup'),
               onPressed: () {
@@ -457,7 +464,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PlutoGrid Demo'),
+        title: const Text('Balanced Team Maker'),
       ),
       body: Container(
           child: PlutoGrid(
@@ -510,13 +517,15 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   }
                   var keys = teams_list.keys.toList();
                   int size = teams_list.length;
-                  print(size);
+                  print(tmp_rows.length);
                   var start = 0;
-                  for (var i = start; i < tmp_rows.length; i=i+size){
-                    int end = i+size < tmp_rows.length? i+size :  tmp_rows.length -1;
+                  for (var i = 0; i < tmp_rows.length; i=i+size){
+
+                    int end = i+size <= tmp_rows.length? i+size :  tmp_rows.length;
                     var sublist = tmp_rows.sublist(start, end);
                     keys.shuffle();
                     int key_i = 0;
+                    print(end);
                     sublist.forEach((value) {
                       var text = value?.cells?["name_field"]?.value.toString() ?? "";
                       teams_list[keys[key_i]]?.add(text);
@@ -550,41 +559,41 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 },
 
                 icon: Icon(Icons.add)),
-            IconButton(
-                onPressed: () {
-                  showDialog<void>(
-                    context: context,
-                    builder: todo,
-                  );
-                },
-                icon: Icon(Icons.add)),
-            IconButton(
-                onPressed: () {
-                  showDialog<void>(
-                    context: context,
-                    builder: todo,
-                  );
-                },
-                icon: Icon(Icons.person_off)),
-            IconButton(
-                onPressed: () {
-                  showDialog<void>(
-                    context: context,
-                    builder: todo,
-                  );
-                },
-                icon: Icon(Icons.remove)),
-
-            IconButton(
-              onPressed: () {
-                rebuild_options();
-                showDialog<void>(
-                  context: context,
-                  builder: settings,
-                );
-              },
-              icon: Icon(Icons.settings),
-            ),
+            // IconButton(
+            //     onPressed: () {
+            //       showDialog<void>(
+            //         context: context,
+            //         builder: todo,
+            //       );
+            //     },
+            //     icon: Icon(Icons.add)),
+            // IconButton(
+            //     onPressed: () {
+            //       showDialog<void>(
+            //         context: context,
+            //         builder: todo,
+            //       );
+            //     },
+            //     icon: Icon(Icons.person_off)),
+            // IconButton(
+            //     onPressed: () {
+            //       showDialog<void>(
+            //         context: context,
+            //         builder: todo,
+            //       );
+            //     },
+            //     icon: Icon(Icons.remove)),
+            //
+            // IconButton(
+            //   onPressed: () {
+            //     rebuild_options();
+            //     showDialog<void>(
+            //       context: context,
+            //       builder: settings,
+            //     );
+            //   },
+            //   icon: Icon(Icons.settings),
+            // ),
           ],
         ),
       ),
