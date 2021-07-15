@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:localstorage/localstorage.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:teammaker/team_screen.dart';
 
@@ -26,6 +29,28 @@ enum Status { none, running, stopped, paused }
 
 class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   PlutoGridStateManager? stateManager;
+  final storage = new LocalStorage('my_data.json');
+
+  void saveData() {
+    final Iterable<Map<String, dynamic>>? rowsToUpdate =
+        stateManager?.rows.map((e) {
+      return {
+        'name_field': e?.cells['name_field']?.value,
+        'skill_level_field': e?.cells['skill_level_field']?.value,
+        'gender_field': e?.cells['gender_field']?.value,
+        'team_field': e?.cells['team_field']?.value,
+      };
+    });
+    // update rowsToUpdate
+
+    print(jsonEncode(rowsToUpdate));
+
+    storage.setItem('todos', jsonEncode(rowsToUpdate));
+  }
+
+  void loadData() {
+    print(storage.getItem('todos'));
+  }
 
   int teams = 4;
 
@@ -194,9 +219,9 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   }
 
   TextEditingController team_text_controller =
-      new TextEditingController(text: "4");
+  new TextEditingController(text: "4");
   TextEditingController level_text_controller =
-      new TextEditingController(text: "4");
+  new TextEditingController(text: "4");
 
   AlertDialog settings(BuildContext context) {
     return AlertDialog(
@@ -294,7 +319,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 var lines = text.split("\n");
                 var player_line = [];
                 var date_field_regex =
-                    RegExp(r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
+                RegExp(r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
                 var record_flag = true;
                 for (var i = 0; i <= lines.length - 1; i++) {
                   if ((record_flag == true) && (lines[i].trim() != "")) {
@@ -587,21 +612,23 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       ),
       body: Container(
           child: PlutoGrid(
-        columns: columns,
-        rows: rows,
-        configuration: PlutoGridConfiguration.dark(
-          enableColumnBorder: false,
-          enableMoveDownAfterSelecting: true,
-          enterKeyAction: PlutoGridEnterKeyAction.editingAndMoveDown,
-        ),
-        onLoaded: (PlutoGridOnLoadedEvent event) {
-          stateManager = event.stateManager;
-        },
-      )),
+            columns: columns,
+            rows: rows,
+            configuration: PlutoGridConfiguration.dark(
+              enableColumnBorder: false,
+              enableMoveDownAfterSelecting: true,
+              enterKeyAction: PlutoGridEnterKeyAction.editingAndMoveDown,
+            ),
+            onLoaded: (PlutoGridOnLoadedEvent event) {
+              stateManager = event.stateManager;
+            },
+          )),
       bottomNavigationBar: BottomAppBar(
         child: ButtonBar(
           children: [
             IconButton(onPressed: generateTeams, icon: Icon(Icons.update)),
+            // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
+            // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
 
             IconButton(
                 onPressed: () {
