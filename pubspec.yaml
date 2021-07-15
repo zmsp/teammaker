@@ -30,7 +30,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   pluto_grid: ^2.2.1
   localstorage: ^4.0.0+1
-  faker:
+  url_launcher: ^6.0.9
+  url_launcher_web: ^2.0.1
   font_awesome_flutter:
 
 dev_dependencies:

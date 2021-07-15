@@ -11,7 +11,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Team Maker',
-      theme: ThemeData.from(colorScheme: ColorScheme.dark()),
+      theme: ThemeData(
+        brightness: Brightness.light,
+        /* light theme settings */
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        /* dark theme settings */
+      ),
+      themeMode: ThemeMode.dark,
+      // theme: ThemeData.from(colorScheme: ColorScheme.dark()),
       // darkTheme: ThemeData.from(colorScheme: ColorScheme.dark()),
 
       home: CellRendererScreen(),

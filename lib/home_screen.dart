@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:teammaker/HelpScreen.dart';
 import 'package:teammaker/team_screen.dart';
 
 class PlutoExampleScreen extends StatefulWidget {
@@ -77,6 +78,8 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                     .toString(),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.white70),
               ),
             ),
             Wrap(
@@ -124,6 +127,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     PlutoColumn(
         title: 'gender',
         field: 'gender_field',
+        width: 80,
         type: PlutoColumnType.select(["MALE", "FEMALE", "X"])),
 
     /// Number Column definition
@@ -501,7 +505,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     TextEditingController player_text = new TextEditingController();
 
     return AlertDialog(
-      title: const Text('Add Players'),
+      title: const Text('Instructions'),
       content: Container(
         width: 300,
         child: Column(
@@ -568,7 +572,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         print(value?.cells?["gender_field"]?.value);
         print(value?.cells?["skill_level_field"]?.value);
         setState(() {
-          value?.cells?["team_field"] = PlutoCell(value: keys[key_i]);
+          value?.cells?["team_field"]?.value = keys[key_i].toString();
         });
         print(text);
 
@@ -679,11 +683,13 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => HelpExample()));
           // print(rows.length);
-          showDialog<void>(
-            context: context,
-            builder: reportingDialog,
-          );
+          // showDialog<void>(
+          //   context: context,
+          //   builder: HelpDialog,
+          // );
         },
         child: const FaIcon(
           FontAwesomeIcons.exclamation,
