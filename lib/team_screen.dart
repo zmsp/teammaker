@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-
-
 class TeamList extends StatelessWidget {
   final List<ListItem> items;
 
@@ -9,7 +7,7 @@ class TeamList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = 'Mixed List';
+    final title = 'Team List';
 
     return Scaffold(
       appBar: AppBar(
@@ -45,8 +43,9 @@ abstract class ListItem {
 /// A ListItem that contains data to display a heading.
 class HeadingItem implements ListItem {
   final String heading;
+  final String subtitle;
 
-  HeadingItem(this.heading);
+  HeadingItem(this.heading, this.subtitle);
 
   @override
   Widget buildTitle(BuildContext context) {
@@ -59,7 +58,7 @@ class HeadingItem implements ListItem {
   }
 
   @override
-  Widget buildSubtitle(BuildContext context) => SizedBox();
+  Widget buildSubtitle(BuildContext context) => Text(subtitle);
 }
 
 /// A ListItem that contains data to display a message.

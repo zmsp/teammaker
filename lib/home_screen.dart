@@ -223,13 +223,13 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   }
 
   TextEditingController team_text_controller =
-  new TextEditingController(text: "4");
+      new TextEditingController(text: "4");
   TextEditingController level_text_controller =
-  new TextEditingController(text: "4");
+      new TextEditingController(text: "4");
 
   AlertDialog settings(BuildContext context) {
     return AlertDialog(
-      title: const Text('Set number of teams and skill levels'),
+      title: const Text("Teammaker settings"),
       content: SingleChildScrollView(
         child: Column(
           children: [
@@ -292,27 +292,21 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
     return AlertDialog(
       title: const Text('Add Players'),
-      content: Container(
-        width: 300,
+      content: SingleChildScrollView(
         child: Column(
           children: [
             const Text('Add  player name and info.'
                 '\ncomma separated info:'
                 '\nNAME,SKILL LEVEL, GENDER, Team'
                 '\n\nname is required, all the other value is optional'),
-            Container(
-              constraints: BoxConstraints(maxHeight: 100),
-              child: SingleChildScrollView(
-                child: TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'zobair,4\nmike,1,MALE\njohn,1,MALE,TEAM#1',
-                  ),
-                  controller: player_text,
-                  keyboardType: TextInputType.multiline,
-                  maxLines: null,
-                ),
+            TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'zobair,4\nmike,1,MALE\njohn,1,MALE,TEAM#1',
               ),
+              controller: player_text,
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
             ),
             const Text(
                 'if you are pasting the information from meetup, press format text from meetup'),
@@ -323,7 +317,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 var lines = text.split("\n");
                 var player_line = [];
                 var date_field_regex =
-                RegExp(r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
+                    RegExp(r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
                 var record_flag = true;
                 for (var i = 0; i <= lines.length - 1; i++) {
                   if ((record_flag == true) && (lines[i].trim() != "")) {
@@ -354,7 +348,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 var data = [];
 
                 for (var i = 0; i <= lines.length - 1; i++) {
-                  data.add(lines[i] + ",3" + ",MALE");
+                  data.add(lines[i] + ",3" + ",M");
                 }
                 player_text.text = data.join("\n");
               },
@@ -531,12 +525,83 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     );
   }
 
+  void navigateToTeam() {
+    //sort by team name
+    print("1");
+    stateManager!.sortAscending(columns[3]);
+    List<PlutoRow?> dat = stateManager?.rows ?? [];
+
+    Map<String, List<String>> teams_name_list = Map();
+    Map<String, double> teams_score = Map();
+
+    //find checked items
+
+    List<PlutoRow?> tmp_rows = [];
+    for (var i = 0; i < dat.length; i++) {
+      if (dat[i]?.checked ?? false) {
+        // teams_name_list.update(dat[i]?.cells?["team_field"]?.value?? "None", (value) => null)
+
+        teams_score.update(
+          dat[i]?.cells?["team_field"]?.value ?? "None",
+          // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
+          (existingValue) =>
+              existingValue + (dat[i]?.cells?["skill_level_field"]?.value ?? 0),
+          ifAbsent: () => (dat[i]?.cells?["skill_level_field"]?.value ?? 0),
+        );
+
+        teams_name_list.update(
+          dat[i]?.cells?["team_field"]?.value ?? "None",
+          // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
+          (existingValue) {
+            existingValue.add(dat[i]?.cells?["name_field"]?.value +
+                "\nLevel:" +
+                dat[i]?.cells?["skill_level_field"]?.value.toString() +
+                "|Gender:" +
+                dat[i]?.cells?["gender_field"]?.value);
+            return existingValue;
+          },
+          ifAbsent: () => [
+            (dat[i]?.cells?["name_field"]?.value +
+                "\nLevel:" +
+                dat[i]?.cells?["skill_level_field"]?.value.toString() +
+                "|Gender:" +
+                dat[i]?.cells?["gender_field"]?.value)
+          ],
+        );
+      } else {
+        //TODO unassign team
+
+      }
+      print("HI");
+    }
+    print("HI");
+    Map<String, List<String>> teams_list = Map();
+    // for (var i = 1; i <= teams; i++) {
+    //   teams_list[i.toString()] = [];
+    // }
+    List<ListItem> teams_list_data = [];
+    print(teams_list.toString());
+    teams_name_list.keys.toList().forEach((value) {
+      teams_list_data.add(HeadingItem(
+          'TEAM#: $value', 'Level total:' + teams_score[value].toString()));
+      teams_name_list[value]?.toList().forEach((name) {
+        teams_list_data.add(MessageItem(name.toString(), name.toString()));
+      });
+    });
+    print(teams_list_data);
+
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => TeamList(items: teams_list_data)));
+  }
+
   void generateTeams({bool skill = true, gender = true}) {
     if (skill) {
       stateManager!.sortAscending(columns[1]);
     }
     if (gender) {
-      stateManager!.sortAscending(columns[2]);
+      stateManager!.sortDescending(columns[2]);
     }
 
     List<PlutoRow?> dat = stateManager?.rows ?? [];
@@ -552,7 +617,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     }
 
     Map<String, List<String>> teams_list = Map();
-    for (var i = 0; i < teams; i++) {
+    for (var i = 1; i <= teams; i++) {
       teams_list[i.toString()] = [];
     }
     var keys = teams_list.keys.toList();
@@ -590,22 +655,8 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       //
       // }
     }
-    print(teams_list.toString());
 
-    print("HI");
-    List<ListItem> teams_list_data = [];
-    print(teams_list.toString());
-    teams_list.keys.toList().forEach((value) {
-      teams_list_data.add(HeadingItem('TEAM: $value'));
-      teams_list[value]?.toList().forEach((name) {
-        teams_list_data.add(MessageItem(name.toString(), name.toString()));
-      });
-    });
-
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => TeamList(items: teams_list_data)));
+    navigateToTeam();
   }
 
   @override
@@ -616,21 +667,23 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       ),
       body: Container(
           child: PlutoGrid(
-            columns: columns,
-            rows: rows,
-            configuration: PlutoGridConfiguration.dark(
-              enableColumnBorder: false,
-              enableMoveDownAfterSelecting: true,
-              enterKeyAction: PlutoGridEnterKeyAction.editingAndMoveDown,
-            ),
-            onLoaded: (PlutoGridOnLoadedEvent event) {
-              stateManager = event.stateManager;
-            },
-          )),
+        columns: columns,
+        rows: rows,
+        configuration: PlutoGridConfiguration.dark(
+          enableColumnBorder: false,
+          enableMoveDownAfterSelecting: true,
+          enterKeyAction: PlutoGridEnterKeyAction.editingAndMoveDown,
+        ),
+        onLoaded: (PlutoGridOnLoadedEvent event) {
+          stateManager = event.stateManager;
+        },
+      )),
       bottomNavigationBar: BottomAppBar(
         child: ButtonBar(
           children: [
             IconButton(onPressed: generateTeams, icon: Icon(Icons.update)),
+            IconButton(
+                onPressed: navigateToTeam, icon: Icon(Icons.remove_red_eye)),
             // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
             // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
 
