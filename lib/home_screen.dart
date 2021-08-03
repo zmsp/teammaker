@@ -5,6 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:teammaker/HelpScreen.dart';
+import 'package:teammaker/SettingsScreen.dart';
+import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/team_screen.dart';
 
 class PlutoExampleScreen extends StatefulWidget {
@@ -30,6 +32,7 @@ enum Status { none, running, stopped, paused }
 
 class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   PlutoGridStateManager? stateManager;
+  SettingsData settingsData = new SettingsData();
   final storage = new LocalStorage('my_data.json');
 
   void saveData() {
@@ -53,9 +56,6 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     print(storage.getItem('todos'));
   }
 
-  int teams = 4;
-
-  int level = 4;
 
   List<PlutoColumn> columns = [
     /// Text Column definition
@@ -199,93 +199,9 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     );
   }
 
-  AlertDialog todo(BuildContext context) {
-    return AlertDialog(
-      title: const Text('We are adding this feature later'),
-      content: Container(
-        width: 300,
-        child: Text("TODO"),
-      ),
-      actions: [
-        TextButton(
-          child: const Text(
-            'No',
-            style: TextStyle(
-              color: Colors.deepOrange,
-            ),
-          ),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ],
-    );
-  }
 
-  TextEditingController team_text_controller =
-      new TextEditingController(text: "4");
-  TextEditingController level_text_controller =
-      new TextEditingController(text: "4");
 
-  AlertDialog settings(BuildContext context) {
-    return AlertDialog(
-      title: const Text("Teammaker settings"),
-      content: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              constraints: BoxConstraints(maxHeight: 200),
-              child: TextFormField(
-                validator: (value) {
-                  if (null != value && value.isEmpty) {
-                    return 'Enter number of teams';
-                  }
-                  return null;
-                },
-                controller: team_text_controller,
-                decoration: InputDecoration(
-                  labelText: "Enter number of teams",
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  // The validator receives the text that the user has entered.
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: const Text(
-            'No',
-            style: TextStyle(
-              color: Colors.deepOrange,
-            ),
-          ),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        TextButton(
-          child: const Text(
-            'Save',
-            style: TextStyle(
-              color: Colors.green,
-            ),
-          ),
-          onPressed: () {
-            setState(() {
-              teams = int.parse(team_text_controller.text);
-              level = int.parse(level_text_controller.text);
-            });
-            rebuild_options();
-            Navigator.of(context).pop();
-          },
-        ),
-      ],
-    );
-  }
+
 
   AlertDialog reportingDialog(BuildContext context) {
     TextEditingController player_text = new TextEditingController();
@@ -495,35 +411,6 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     );
   }
 
-  AlertDialog HelpDialog(BuildContext context) {
-    TextEditingController player_text = new TextEditingController();
-
-    return AlertDialog(
-      title: const Text('Instructions'),
-      content: Container(
-        width: 300,
-        child: Column(
-          children: [
-            const Text(
-                'Add  player name and level. One player/level per line.'),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: const Text(
-            'No',
-            style: TextStyle(
-              color: Colors.deepOrange,
-            ),
-          ),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ],
-    );
-  }
 
   void navigateToTeam() {
     //sort by team name
@@ -596,13 +483,31 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
             builder: (context) => TeamList(items: teams_list_data)));
   }
 
-  void generateTeams({bool skill = true, gender = true}) {
-    if (skill) {
-      stateManager!.sortAscending(columns[1]);
+  void generateTeams() {
+    switch(settingsData.o) {
+      case GEN_OPTION.random: {
+      }
+      break;
+
+      case GEN_OPTION.division: {
+        stateManager!.sortAscending(columns[1]);
+
+      }
+      break;
+      case GEN_OPTION.distribute: {
+        stateManager!.sortAscending(columns[1]);
+        stateManager!.sortDescending(columns[2]);
+        //statements;
+      }
+      break;
+
+      default: {
+        //statements;
+      }
+      break;
     }
-    if (gender) {
-      stateManager!.sortDescending(columns[2]);
-    }
+
+
 
     List<PlutoRow?> dat = stateManager?.rows ?? [];
 
@@ -617,43 +522,92 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     }
 
     Map<String, List<String>> teams_list = Map();
-    for (var i = 1; i <= teams; i++) {
+    for (var i = 1; i <= settingsData.teamCount; i++) {
       teams_list[i.toString()] = [];
     }
     var keys = teams_list.keys.toList();
     int size = teams_list.length;
     print(tmp_rows.length);
     var start = 0;
-    for (var i = 0; i < tmp_rows.length; i = i + size) {
-      int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
-      List<PlutoRow?> sublist = tmp_rows.sublist(start, end);
-      keys.shuffle();
-      int key_i = 0;
+    if (settingsData.o == GEN_OPTION.division){
+      var subKeys = keys.length /settingsData.division;
+      var chunks = [];
+      for (var i = 0; i < keys.length; i += 2) {
+        chunks.add(keys.sublist(i, i+2 > keys.length ? keys.length : i + 2));
+      }
+      int dat = (tmp_rows.length / chunks.length).toInt();
 
-      sublist.forEach((value) {
-        var text = value?.cells?["name_field"]?.value.toString() ?? "";
+      int size = chunks.length;
 
-        print(value?.cells?["name_field"]?.value);
-        print(value?.cells?["gender_field"]?.value);
-        print(value?.cells?["skill_level_field"]?.value);
-        setState(() {
-          value?.cells?["team_field"]?.value = keys[key_i].toString();
+
+        for (var i = 0; i < tmp_rows.length; i = i + size) {
+          int row = (i /dat).toInt();
+          int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
+          List<PlutoRow?> sublist = tmp_rows.sublist(start, end);
+          var key1= chunks[row];
+          key1.shuffle();
+          int key_i = 0;
+
+          sublist.forEach((value) {
+            var text = value?.cells?["name_field"]?.value.toString() ?? "";
+
+
+            setState(() {
+              value?.cells?["team_field"]?.value = key1[key_i].toString();
+            });
+            print(text);
+
+            teams_list[key1[key_i]]?.add(text);
+            key_i++;
+          });
+          start = i + size;
+
+          // print(keys);
+          // for (var j = 0; j <= keys.length - 1; j+teams) {
+          //   if (tmp_rows[j] == null) {
+          //     continue;
+          //   }
+          //
+          //
+          // }
+        }
+
+
+
+
+
+    }else {
+      for (var i = 0; i < tmp_rows.length; i = i + size) {
+        int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
+        List<PlutoRow?> sublist = tmp_rows.sublist(start, end);
+        keys.shuffle();
+        int key_i = 0;
+
+        sublist.forEach((value) {
+          var text = value?.cells?["name_field"]?.value.toString() ?? "";
+
+          print(value?.cells?["name_field"]?.value);
+          print(value?.cells?["gender_field"]?.value);
+          print(value?.cells?["skill_level_field"]?.value);
+          setState(() {
+            value?.cells?["team_field"]?.value = keys[key_i].toString();
+          });
+          print(text);
+
+          teams_list[keys[key_i]]?.add(text);
+          key_i++;
         });
-        print(text);
+        start = i + size;
 
-        teams_list[keys[key_i]]?.add(text);
-        key_i++;
-      });
-      start = i + size;
-
-      // print(keys);
-      // for (var j = 0; j <= keys.length - 1; j+teams) {
-      //   if (tmp_rows[j] == null) {
-      //     continue;
-      //   }
-      //
-      //
-      // }
+        // print(keys);
+        // for (var j = 0; j <= keys.length - 1; j+teams) {
+        //   if (tmp_rows[j] == null) {
+        //     continue;
+        //   }
+        //
+        //
+        // }
+      }
     }
 
     navigateToTeam();
@@ -679,59 +633,80 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         },
       )),
       bottomNavigationBar: BottomAppBar(
-        child: ButtonBar(
+        child:
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            IconButton(onPressed: generateTeams, icon: Icon(Icons.update)),
-            IconButton(
-                onPressed: navigateToTeam, icon: Icon(Icons.remove_red_eye)),
-            // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
-            // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
+            ButtonBar(
+              children: [
+                IconButton(onPressed: generateTeams, icon: Icon(Icons.update)),
+                IconButton(
+                    onPressed: navigateToTeam, icon: Icon(Icons.remove_red_eye)),
+                // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
+                // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
 
-            IconButton(
-                onPressed: () {
-                  // print(rows.length);
-                  showDialog<void>(
-                    context: context,
-                    builder: reportingDialog,
-                  );
-                },
-                icon: Icon(Icons.add)),
-            // IconButton(
-            //     onPressed: () {
-            //       showDialog<void>(
-            //         context: context,
-            //         builder: todo,
-            //       );
-            //     },
-            //     icon: Icon(Icons.add)),
-            // IconButton(
-            //     onPressed: () {
-            //       showDialog<void>(
-            //         context: context,
-            //         builder: todo,
-            //       );
-            //     },
-            //     icon: Icon(Icons.person_off)),
-            // IconButton(
-            //     onPressed: () {
-            //       showDialog<void>(
-            //         context: context,
-            //         builder: todo,
-            //       );
-            //     },
-            //     icon: Icon(Icons.remove)),
-            //
-            IconButton(
-              onPressed: () {
-                rebuild_options();
-                showDialog<void>(
-                  context: context,
-                  builder: settings,
-                );
-              },
-              icon: Icon(Icons.settings),
+                IconButton(
+                    onPressed: () {
+                      // print(rows.length);
+                      showDialog<void>(
+                        context: context,
+                        builder: reportingDialog,
+                      );
+                    },
+                    icon: Icon(Icons.add)),
+
+              ],
+            ),
+            ButtonBar(
+              children: [
+
+                // IconButton(
+                //     onPressed: () {
+                //       showDialog<void>(
+                //         context: context,
+                //         builder: todo,
+                //       );
+                //     },
+                //     icon: Icon(Icons.add)),
+                // IconButton(
+                //     onPressed: () {
+                //       showDialog<void>(
+                //         context: context,
+                //         builder: todo,
+                //       );
+                //     },
+                //     icon: Icon(Icons.person_off)),
+                // IconButton(
+                //     onPressed: () {
+                //       showDialog<void>(
+                //         context: context,
+                //         builder: todo,
+                //       );
+                //     },
+                //     icon: Icon(Icons.remove)),
+                //
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context, MaterialPageRoute(builder: (context) => HelpExample()));
+
+                  },
+                  icon: Icon(Icons.help),
+                ),
+                IconButton(
+                  onPressed: () async {
+                   Navigator.push(
+                        context, MaterialPageRoute(builder: (context) => SettingsScreen(settingsData))) ;
+
+                    print(settingsData.o);
+
+                  },
+                  icon: Icon(Icons.settings),
+                ),
+              ],
             ),
           ],
+
         ),
       ),
       floatingActionButton: FloatingActionButton(
