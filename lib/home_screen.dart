@@ -535,7 +535,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       for (var i = 0; i < keys.length; i += 2) {
         chunks.add(keys.sublist(i, i+2 > keys.length ? keys.length : i + 2));
       }
-      int dat = (tmp_rows.length / chunks.length).toInt();
+      double dat = (tmp_rows.length / chunks.length);
 
       int size = chunks.length;
 
