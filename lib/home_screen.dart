@@ -117,9 +117,9 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       },
     ),
     PlutoColumn(
-      title: 'rank#',
+      title: 'Level',
       field: 'skill_level_field',
-      type: PlutoColumnType.number(),
+      type: PlutoColumnType.select([1, 2, 3, 4,5]),
       width: 80,
       textAlign: PlutoColumnTextAlign.right,
     ),
@@ -200,11 +200,146 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   }
 
 
+String data = """Jeff P
+bb
 
+Oct 4, 9:05 PM
+
+Aline Guidry
+Aline Guidry
+you know me
+
+Oct 4, 8:21 PM
+
+Trung Nguyen
+Trung Nguyen
+A
+
+Oct 4, 8:21 PM
+
+Zamir
+Zamir
+2,2
+
+Oct 4, 3:35 PM
+
+Bet~el בֵּית אֵל ቤቴል
+Bet~el בֵּית אֵל ቤቴል
+Oct 4, 3:35 PM
+
+Rajan
+Rajan
+Bb
+
+Oct 4, 3:35 PM
+
+Viet
+Viet
+BB
+
+Oct 4, 3:34 PM
+
+Lisa Hu
+Lisa Hu
+B/BB
+
+Oct 4, 8:27 AM
+
+Rohit S
+Rohit S
+B
+
+Oct 4, 12:05 AM
+
+Rubi Novillo
+Rubi Novillo
+Advanced beginner plus
+
+Oct 4, 12:05 AM
+
+T-T
+T-T
+Ok
+
+Oct 4, 12:05 AM
+
+Nancy (pronouns She/her)
+Nancy (pronouns She/her)
+Event organizer
+Advanced beginner
+
+Oct 4, 12:04 AM
+
+Mike
+Mike
+Organizer
+competitive
+
+Oct 4, 12:04 AM
+
+Rawof
+Rawof
+Oct 4, 12:04 AM
+
+Mike Daly
+Mike Daly
+Oct 4, 12:04 AM
+
+Angel Navas
+Angel Navas
+my level is BB
+
+Oct 4, 12:04 AM
+
+Lester
+Lester
+Bb
+
+Oct 4, 12:04 AM
+
+Aya
+Aya
+BB
+
+Oct 4, 12:04 AM
+
+Mat F
+Mat F
+Event organizer
+2
+
+Oct 4, 12:04 AM
+
+Carra (Care-a)
+Carra (Care-a)
+Na
+
+Oct 4, 12:04 AM
+
+Jeff Zhang
+Jeff Zhang
+Intermediate
+
+Oct 3, 7:31 PM
+
+Rohith Ravichandran
+Rohith Ravichandran
+BB
+
+Oct 3, 7:31 PM
+
+Zobair
+Zobair
+Event host
+Oct 2, 8:46 PM
+""";
 
 
   AlertDialog reportingDialog(BuildContext context) {
-    TextEditingController player_text = new TextEditingController();
+    TextEditingController player_text = new TextEditingController(text: data
+
+
+    );
 
     return AlertDialog(
       title: const Text('Add Players'),
@@ -366,7 +501,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                     break;
                   case 1:
                     {
-                      map_data["level"] = double.tryParse(data[1]) ?? 3;
+                      map_data["level"] = int.tryParse(data[1]) ?? 3;
                     }
                     break;
                   case 2:
@@ -414,7 +549,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
   void navigateToTeam() {
     //sort by team name
-    print("1");
+
     stateManager!.sortAscending(columns[3]);
     List<PlutoRow?> dat = stateManager?.rows ?? [];
 
@@ -427,13 +562,14 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     for (var i = 0; i < dat.length; i++) {
       if (dat[i]?.checked ?? false) {
         // teams_name_list.update(dat[i]?.cells?["team_field"]?.value?? "None", (value) => null)
-
+        var t =dat[i]?.cells?["skill_level_field"]?.value;
+        print(t.runtimeType );
         teams_score.update(
           dat[i]?.cells?["team_field"]?.value ?? "None",
           // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
           (existingValue) =>
-              existingValue + (dat[i]?.cells?["skill_level_field"]?.value ?? 0),
-          ifAbsent: () => (dat[i]?.cells?["skill_level_field"]?.value ?? 0),
+              existingValue + (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
+          ifAbsent: () => (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
         );
 
         teams_name_list.update(
@@ -459,15 +595,15 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         //TODO unassign team
 
       }
-      print("HI");
+
     }
-    print("HI");
+
     Map<String, List<String>> teams_list = Map();
     // for (var i = 1; i <= teams; i++) {
     //   teams_list[i.toString()] = [];
     // }
     List<ListItem> teams_list_data = [];
-    print(teams_list.toString());
+    // print(teams_list.toString());
     teams_name_list.keys.toList().forEach((value) {
       teams_list_data.add(HeadingItem(
           'TEAM#: $value', 'Level total:' + teams_score[value].toString()));
@@ -475,7 +611,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         teams_list_data.add(MessageItem(name.toString(), name.toString()));
       });
     });
-    print(teams_list_data);
+    // print(teams_list_data);
 
     Navigator.push(
         context,
@@ -639,23 +775,35 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
           children: [
             ButtonBar(
               children: [
-                IconButton(onPressed: generateTeams, icon: Icon(Icons.update)),
-                IconButton(
-                    onPressed: navigateToTeam, icon: Icon(Icons.remove_red_eye)),
+                Tooltip(
+                  message: 'Shuffle players into teams!',
+                  child:     IconButton(onPressed: generateTeams, icon:  FaIcon(FontAwesomeIcons.random)),
+                ),
+
+
+                Tooltip(
+                  message: 'View Current Teams',
+                  child: IconButton(
+                      onPressed: navigateToTeam, icon: FaIcon(FontAwesomeIcons.users)),
+                ),
                 // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
                 // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
 
-                IconButton(
-                    onPressed: () {
-                      // print(rows.length);
-                      showDialog<void>(
-                        context: context,
-                        builder: reportingDialog,
-                      );
-                    },
-                    icon: Icon(Icons.add)),
+                Tooltip(
+                  message: 'Add a list of players',
+                  child: IconButton(
+                      onPressed: () {
+                        // print(rows.length);
+                        showDialog<void>(
+                          context: context,
+                          builder: reportingDialog,
+                        );
+                      },
+                      icon:  FaIcon(FontAwesomeIcons.plus),
+                  ),
+                )
 
-              ],
+                  ],
             ),
             ButtonBar(
               children: [
@@ -685,23 +833,28 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 //     },
                 //     icon: Icon(Icons.remove)),
                 //
-                IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context, MaterialPageRoute(builder: (context) => HelpExample()));
-
-                  },
-                  icon: Icon(Icons.help),
+                Tooltip(
+                  message: 'Get help',
+                  child: IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context, MaterialPageRoute(builder: (context) => HelpExample()));
+                    },
+                    icon: FaIcon(FontAwesomeIcons.questionCircle),
+                  ),
                 ),
-                IconButton(
-                  onPressed: () async {
-                   Navigator.push(
-                        context, MaterialPageRoute(builder: (context) => SettingsScreen(settingsData))) ;
+                Tooltip(
+                  message: 'Team-maker settings',
+                  child: IconButton(
+                    onPressed: () async {
+                     Navigator.push(
+                          context, MaterialPageRoute(builder: (context) => SettingsScreen(settingsData))) ;
 
-                    print(settingsData.o);
+                      print(settingsData.o);
 
-                  },
-                  icon: Icon(Icons.settings),
+                    },
+                    icon:  FaIcon(FontAwesomeIcons.cog),
+                  ),
                 ),
               ],
             ),

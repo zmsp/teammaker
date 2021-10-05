@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:teammaker/video_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpExample extends StatefulWidget {
@@ -32,35 +34,55 @@ class _HelpExampleState extends State<HelpExample> {
         title: Text("HELP PAGE"),
       ),
       body: ListView(
-        children: <Widget>[
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              ElevatedButton(
-                onPressed: () => setState(() {
-                  _launched = _launchInBrowser(
-                      "https://github.com/zmsp/teammaker/wiki/installation");
-                }),
-                child: const Text('Install this app'),
-              ),
-              const Padding(padding: EdgeInsets.all(16.0)),
-              ElevatedButton(
-                onPressed: () => setState(() {
+        children:  <Widget>[
+
+          Card(
+            child: ListTile(
+              leading: Icon(FontAwesomeIcons.meetup),
+              title: Text('How to add data from meetup?'),
+              subtitle:Text('Click hear to learn'),
+              onTap: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => VideoApp('https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4', "Meetup entry", "how to add from meetup")));
+              },
+            ),
+          ),
+          Card(
+            child: ListTile(
+                leading: Icon(FontAwesomeIcons.download),
+              subtitle:Text('How do you install this app to your phone?'),
+              title: Text('Install this app'),
+              onTap:() => setState(() {
+                _launched = _launchInBrowser(
+                    "https://github.com/zmsp/teammaker/wiki/installation");
+              })
+            ),
+          ),
+          Card(
+            child: ListTile(
+                leading: Icon(FontAwesomeIcons.question),
+                subtitle:Text('Read the user manual'),
+                title: Text('Need help on using?'),
+                onTap:() => setState(() {
                   _launched = _launchInBrowser(
                       "https://github.com/zmsp/teammaker/wiki/user-manual");
-                }),
-                child: const Text('Need help on using?'),
-              ),
-              ElevatedButton(
-                onPressed: () => setState(() {
-                  _launched = _launchInBrowser(
-                      "https://github.com/zmsp/teammaker/issues");
-                }),
-                child: const Text('Have issues?'),
-              ),
-            ],
+                })
+            ),
           ),
-        ],
+          Card(
+            child: ListTile(
+                leading: Icon(FontAwesomeIcons.handsHelping),
+                subtitle:Text('Add issues to github issue tracker'),
+                title: Text('Having issues or need new features?'),
+                onTap:() => setState(() {
+                  _launched = _launchInBrowser(
+                      'https://github.com/zmsp/teammaker/issues');
+                })
+            ),
+          ),
+
+            ],
+
       ),
     );
   }
