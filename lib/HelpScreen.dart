@@ -43,7 +43,7 @@ class _HelpExampleState extends State<HelpExample> {
               subtitle:Text('Click hear to learn'),
               onTap: () {
                 Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => VideoApp('https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4', "Meetup entry", "how to add from meetup")));
+                    context, MaterialPageRoute(builder: (context) => VideoApp('asset/video/meetup.mp4', "Meetup entry", "how to add from meetup")));
               },
             ),
           ),

@@ -33,7 +33,7 @@ class _VideoAppState extends State<VideoApp> {
 
   void initState() {
     super.initState();
-    _controller =  VideoPlayerController.network(_video_url);
+    _controller =  VideoPlayerController.asset(_video_url);
 
     _controller.setLooping(true);
     _controller.initialize().then((_) => setState(() {}));
