@@ -24,7 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("HELP PAGE"),
+        title: Text("Options"),
       ),
       body: ListView(
         children: <Widget>[

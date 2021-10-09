@@ -35,27 +35,27 @@ class _HelpExampleState extends State<HelpExample> {
       ),
       body: ListView(
         children:  <Widget>[
-
           Card(
             child: ListTile(
-              leading: Icon(FontAwesomeIcons.meetup),
-              title: Text('How to add data from meetup?'),
-              subtitle:Text('Click hear to learn'),
+              leading: Icon(FontAwesomeIcons.search),
+              title: Text('How to create teams?'),
+              subtitle:Text('Click here to watch help video'),
               onTap: () {
                 Navigator.push(
                     context, MaterialPageRoute(builder: (context) => VideoApp('asset/video/meetup.mp4', "Meetup entry", "how to add from meetup")));
               },
             ),
           ),
+
           Card(
             child: ListTile(
-                leading: Icon(FontAwesomeIcons.download),
-              subtitle:Text('How do you install this app to your phone?'),
-              title: Text('Install this app'),
-              onTap:() => setState(() {
-                _launched = _launchInBrowser(
-                    "https://github.com/zmsp/teammaker/wiki/installation");
-              })
+              leading: Icon(FontAwesomeIcons.meetup),
+              title: Text('How to add data from meetup?'),
+              subtitle:Text('Click here to watch help video'),
+              onTap: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => VideoApp('asset/video/meetup.mp4', "Meetup entry", "how to add from meetup")));
+              },
             ),
           ),
           Card(
@@ -69,6 +69,18 @@ class _HelpExampleState extends State<HelpExample> {
                 })
             ),
           ),
+          Card(
+            child: ListTile(
+                leading: Icon(FontAwesomeIcons.download),
+              subtitle:Text('How do you install this app to your phone?'),
+              title: Text('Install this app'),
+              onTap:() => setState(() {
+                _launched = _launchInBrowser(
+                    "https://github.com/zmsp/teammaker/wiki/installation");
+              })
+            ),
+          ),
+
           Card(
             child: ListTile(
                 leading: Icon(FontAwesomeIcons.handsHelping),

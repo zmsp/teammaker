@@ -144,7 +144,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   List<PlutoRow> rows = [
     PlutoRow(
       cells: {
-        'name_field': PlutoCell(value: 'Zobair'),
+        'name_field': PlutoCell(value: 'Joe'),
         'skill_level_field': PlutoCell(value: 3),
         'team_field': PlutoCell(value: "0"),
         'gender_field': PlutoCell(value: "X"),
@@ -200,139 +200,9 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   }
 
 
-String data = """Jeff P
-bb
-
-Oct 4, 9:05 PM
-
-Aline Guidry
-Aline Guidry
-you know me
-
-Oct 4, 8:21 PM
-
-Trung Nguyen
-Trung Nguyen
-A
-
-Oct 4, 8:21 PM
-
-Zamir
-Zamir
-2,2
-
-Oct 4, 3:35 PM
-
-Bet~el בֵּית אֵל ቤቴል
-Bet~el בֵּית אֵל ቤቴል
-Oct 4, 3:35 PM
-
-Rajan
-Rajan
-Bb
-
-Oct 4, 3:35 PM
-
-Viet
-Viet
-BB
-
-Oct 4, 3:34 PM
-
-Lisa Hu
-Lisa Hu
-B/BB
-
-Oct 4, 8:27 AM
-
-Rohit S
-Rohit S
-B
-
-Oct 4, 12:05 AM
-
-Rubi Novillo
-Rubi Novillo
-Advanced beginner plus
-
-Oct 4, 12:05 AM
-
-T-T
-T-T
-Ok
-
-Oct 4, 12:05 AM
-
-Nancy (pronouns She/her)
-Nancy (pronouns She/her)
-Event organizer
-Advanced beginner
-
-Oct 4, 12:04 AM
-
-Mike
-Mike
-Organizer
-competitive
-
-Oct 4, 12:04 AM
-
-Rawof
-Rawof
-Oct 4, 12:04 AM
-
-Mike Daly
-Mike Daly
-Oct 4, 12:04 AM
-
-Angel Navas
-Angel Navas
-my level is BB
-
-Oct 4, 12:04 AM
-
-Lester
-Lester
-Bb
-
-Oct 4, 12:04 AM
-
-Aya
-Aya
-BB
-
-Oct 4, 12:04 AM
-
-Mat F
-Mat F
-Event organizer
-2
-
-Oct 4, 12:04 AM
-
-Carra (Care-a)
-Carra (Care-a)
-Na
-
-Oct 4, 12:04 AM
-
-Jeff Zhang
-Jeff Zhang
-Intermediate
-
-Oct 3, 7:31 PM
-
-Rohith Ravichandran
-Rohith Ravichandran
-BB
-
-Oct 3, 7:31 PM
-
-Zobair
-Zobair
-Event host
-Oct 2, 8:46 PM
-""";
+String data = """
+John,3,M
+Jane,4,F""";
 
 
   AlertDialog reportingDialog(BuildContext context) {
@@ -346,10 +216,8 @@ Oct 2, 8:46 PM
       content: SingleChildScrollView(
         child: Column(
           children: [
-            const Text('Add  player name and info.'
-                '\ncomma separated info:'
-                '\nNAME,SKILL LEVEL, GENDER, Team'
-                '\n\nname is required, all the other value is optional'),
+            const Text('Add  player name and info'),
+            const Text('One line per player. Format should be <NAME>,<LeveL>,<GENDER>'),
             TextField(
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
@@ -361,8 +229,17 @@ Oct 2, 8:46 PM
             ),
             const Text(
                 'if you are pasting the information from meetup, press format text from meetup'),
-            ElevatedButton(
-              child: const Text('Format text from meetup'),
+            ElevatedButton.icon(
+              icon: Icon(FontAwesomeIcons.meetup,
+                size: 25.0,),
+
+              style: ButtonStyle(
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>( EdgeInsets.fromLTRB(20, 15, 10, 20)),
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.redAccent),
+
+              ),
+
+              label: const Text('Format Text from meetup'),
               onPressed: () {
                 String text = player_text.text;
                 var lines = text.split("\n");
@@ -373,7 +250,7 @@ Oct 2, 8:46 PM
                 for (var i = 0; i <= lines.length - 1; i++) {
                   if ((record_flag == true) && (lines[i].trim() != "")) {
                     print(lines[i]);
-                    player_line.add(lines[i]);
+                    player_line.add(lines[i]+ ",3" + ",M");
                     record_flag = false;
                     continue;
                   }
@@ -386,18 +263,26 @@ Oct 2, 8:46 PM
                   }
                 }
                 player_text.text = player_line.join("\n");
+
+
               },
             ),
             const Text(
                 'if you want to add default level(3) and gender info(male), press the next button'),
-            ElevatedButton(
-              child: const Text("add default skill level and gender"),
+            ElevatedButton.icon(
+              icon: Icon(FontAwesomeIcons.addressCard,
+                size: 25.0,),
+
+              style: ButtonStyle(
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>( EdgeInsets.fromLTRB(20, 15, 10, 20)),
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.redAccent),
+
+              ),
+              label: const Text('Add default level and gender'),
               onPressed: () {
                 String text = player_text.text;
                 var lines = text.split("\n");
-
                 var data = [];
-
                 for (var i = 0; i <= lines.length - 1; i++) {
                   data.add(lines[i] + ",3" + ",M");
                 }
@@ -405,8 +290,16 @@ Oct 2, 8:46 PM
               },
             ),
             const Text('Press check button to see what will be added'),
-            ElevatedButton(
-              child: const Text("Check/Validate"),
+            ElevatedButton.icon(
+              icon: Icon(FontAwesomeIcons.search,
+                size: 25.0,),
+
+              style: ButtonStyle(
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>( EdgeInsets.fromLTRB(20, 15, 10, 20)),
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.redAccent),
+
+              ),
+              label: const Text("Check/Validate"),
               onPressed: () {
                 var lines = player_text.text.split("\n");
                 var string_data = [];
@@ -873,10 +766,10 @@ Oct 2, 8:46 PM
           // );
         },
         child: const FaIcon(
-          FontAwesomeIcons.exclamation,
+          FontAwesomeIcons.question,
           color: Colors.white,
         ),
-        backgroundColor: const Color(0xFF33BDE5),
+
       ),
     );
   }

@@ -1,6 +1,15 @@
 # teammaker
 
-creates teams
+This app is designed to create balanced team for sports based on levels and gender.
+
+Features:
+* Support pasting players from meetup
+* Create balanced team by dividing player levels and gender fairly
+* Add, edit or remove players from roster.
+
+
+
+
 
 ## Getting Started
 
