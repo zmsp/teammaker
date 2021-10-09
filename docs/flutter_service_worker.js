@@ -3,24 +3,25 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
-  "favicon-16x16.png": "d4ece6620abcc4219bef0fdc0dfba23e",
-"version.json": "0870a691b5b7cc249f701ce0ee8dc12a",
+  "assets/asset/video/meetup.mp4": "b3ca6514987ee9aa3f285f5048bd0020",
+"assets/AssetManifest.json": "6786e232f8c1fb700e6e9719376cde4e",
+"assets/FontManifest.json": "5a32d4310a6f5d9a6b651e75ba0d7372",
+"assets/fonts/MaterialIcons-Regular.otf": "4e6447691c9509f7acdbf8a931a85ca1",
+"assets/NOTICES": "cbaaa781a3ec0a889cbddbc39d6dafcb",
+"assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "6d342eb68f170c97609e9da345464e5e",
+"assets/packages/font_awesome_flutter/lib/fonts/fa-brands-400.ttf": "3241d1d9c15448a4da96df05f3292ffe",
+"assets/packages/font_awesome_flutter/lib/fonts/fa-regular-400.ttf": "eaed33dc9678381a55cb5c13edaf241d",
+"assets/packages/font_awesome_flutter/lib/fonts/fa-solid-900.ttf": "ffed6899ceb84c60a1efa51c809a57e4",
+"favicon-16x16.png": "d4ece6620abcc4219bef0fdc0dfba23e",
+"favicon-32x32.png": "9ad0cd08bb3c62107eafa2937eca988b",
 "favicon.ico": "ec761c5fe844585a2cace7ab5ada732d",
-"index.html": "40641d61295a14d8995c97ff4e05e15c",
-"/": "40641d61295a14d8995c97ff4e05e15c",
-"main.dart.js": "97f57824d6aeeee37dd8f93d5f76e382",
 "icons/Icon-192.png": "a3c17e0b349ce5ed82a8479c44a3764d",
 "icons/Icon-512.png": "afd8e84f8ac9488df1312e209fd5ac98",
-"manifest.json": "14854901f7a4c74913206d1ea06174ef",
-"assets/AssetManifest.json": "801125fca546f506babac9af4ec061ba",
-"assets/NOTICES": "2e03a0acbb1de10a58c9685ded2c79ee",
-"assets/FontManifest.json": "5a32d4310a6f5d9a6b651e75ba0d7372",
-"assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "6d342eb68f170c97609e9da345464e5e",
-"assets/packages/font_awesome_flutter/lib/fonts/fa-solid-900.ttf": "ffed6899ceb84c60a1efa51c809a57e4",
-"assets/packages/font_awesome_flutter/lib/fonts/fa-regular-400.ttf": "eaed33dc9678381a55cb5c13edaf241d",
-"assets/packages/font_awesome_flutter/lib/fonts/fa-brands-400.ttf": "3241d1d9c15448a4da96df05f3292ffe",
-"assets/fonts/MaterialIcons-Regular.otf": "4e6447691c9509f7acdbf8a931a85ca1",
-"favicon-32x32.png": "9ad0cd08bb3c62107eafa2937eca988b"
+"index.html": "8e54a6d62d47fc294653e01e11ef98bd",
+"/": "8e54a6d62d47fc294653e01e11ef98bd",
+"main.dart.js": "d256edd33db3afe5441e993616233167",
+"manifest.json": "a539673271a08dafe26dde954ed28e8c",
+"version.json": "0870a691b5b7cc249f701ce0ee8dc12a"
 };
 
 // The application shell files that are downloaded before a service worker can
