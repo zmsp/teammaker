@@ -1,4 +1,4 @@
-package teammaker.zmsp.github.io.teammaker
+package io.github.zmsp.teammaker
 
 import io.flutter.embedding.android.FlutterActivity
 
