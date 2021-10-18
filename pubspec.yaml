@@ -34,6 +34,7 @@ dependencies:
   url_launcher_web: ^2.0.1
   video_player: ^2.2.5
   font_awesome_flutter: ^9.1.0
+  msix: ^2.3.1
 
 
 dev_dependencies:
@@ -87,3 +88,16 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+msix_config:
+  display_name: teammaker
+  publisher_display_name: zprimellc
+  identity_name: 3666zmsp.teammaker
+  msix_version: 1.0.0.0
+  store: true
+  logo_path: web\icons\Icon-192.png
+  publisher: CN=X
+  start_menu_icon_path: web\icons\Icon-192.png
+  tile_icon_path: web\icons\Icon-192.png
+  icons_background_color: '#ffffff'
+  architecture: x64
+  capabilities: 'internetClient'
