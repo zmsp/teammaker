@@ -6,6 +6,7 @@ import 'package:localstorage/localstorage.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:teammaker/HelpScreen.dart';
 import 'package:teammaker/SettingsScreen.dart';
+import 'package:teammaker/add_screen.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/team_screen.dart';
 
@@ -207,8 +208,6 @@ Jane,4,F""";
 
   AlertDialog reportingDialog(BuildContext context) {
     TextEditingController player_text = new TextEditingController(text: data
-
-
     );
 
     return AlertDialog(
@@ -685,13 +684,22 @@ Jane,4,F""";
                 Tooltip(
                   message: 'Add a list of players',
                   child: IconButton(
-                      onPressed: () {
-                        // print(rows.length);
-                        showDialog<void>(
-                          context: context,
-                          builder: reportingDialog,
-                        );
-                      },
+                    onPressed: () async {
+                      Navigator.push(
+                          context, MaterialPageRoute(builder: (context) => AddScreen(settingsData))) ;
+
+                      print(settingsData.o);
+
+                    },
+
+                      //
+                      // onPressed: () {
+                      //   // print(rows.length);
+                      //   showDialog<void>(
+                      //     context: context,
+                      //     builder: reportingDialog,
+                      //   );
+                      // },
                       icon:  FaIcon(FontAwesomeIcons.plus),
                   ),
                 )
