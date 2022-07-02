@@ -31,34 +31,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              ListTile(
+              if (settingsData.o != GEN_OPTION.proportion ) ListTile(
                 leading: Icon(
                   Icons.person,
                   size: 40.0,
                 ),
                 title: Text('Number of teams'),
-                subtitle: TextFormField(
-                    decoration: const InputDecoration(
-                      hintText:
-                          'How many teams do you want to split the players to?',
-                    ),
-                    inputFormatters: [
-                      WhitelistingTextInputFormatter.digitsOnly
-                    ],
-                    initialValue: settingsData.teamCount.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      settingsData.teamCount =
-                          int.tryParse(value) ?? settingsData.teamCount;
-                    },
-                    textAlign: TextAlign.left),
+
               ),
               ListTile(
                 leading: Icon(
                   Icons.refresh,
                   size: 40.0,
                 ),
-                title: Text('Generation Options'),
+                title: Text('Team generation option'),
                 subtitle: Column(children: <Widget>[
                   ListTile(
                     title: const Text('Equal level and gender'),
@@ -70,6 +56,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           settingsData.o = value??settingsData.o;
                         });
                       },
+                    ),
+                    subtitle: Column(
+                      children: [
+                        settingsData.o == GEN_OPTION.distribute ? TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("Number of teams"),
+                              hintText:
+                              'How many teams do you want to split the players to?',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.teamCount.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.teamCount =
+                                  int.tryParse(value) ?? settingsData.teamCount;
+                            },
+                            textAlign: TextAlign.left): Text(""),
+
+                      ],
                     ),
                   ),
 
@@ -86,26 +93,79 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                         ),
 
-                    ),
-
-                  settingsData.o == GEN_OPTION.division ? TextFormField(
-                      decoration: const InputDecoration(
-                        hintText:
-                        'How many division levels for the team',
-                      ),
-                      inputFormatters: [
-                        WhitelistingTextInputFormatter.digitsOnly
+                    subtitle:    settingsData.o == GEN_OPTION.division ?  Column(
+                      children: [
+                        TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text('Number of divisions') ,
+                              hintText:
+                              'Division number means top teams will have better players',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.division.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.division =
+                                  int.tryParse(value) ?? settingsData.division;
+                            },
+                            textAlign: TextAlign.left),
+                        TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("Number of teams"),
+                              hintText:
+                              'How many teams do you want to split the players to?',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.teamCount.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.teamCount =
+                                  int.tryParse(value) ?? settingsData.teamCount;
+                            },
+                            textAlign: TextAlign.left),
                       ],
-                      initialValue: settingsData.division.toString(),
-                      keyboardType: TextInputType.number,
-                      onChanged: (value) {
-                        settingsData.division =
-                            int.tryParse(value) ?? settingsData.division;
+
+                    ) : Text(""),
+
+
+                  ),
+
+
+
+                  ListTile(
+                    title: const Text('Balanced team based on number of players'),
+                    leading:
+                    Radio<GEN_OPTION>(
+                      value: GEN_OPTION.proportion,
+                      groupValue: settingsData.o,
+                      onChanged: (GEN_OPTION? value) {
+                        setState(() {
+                          settingsData.o = value??settingsData.o;
+                        });
                       },
-                      textAlign: TextAlign.left) : Text(""),
+                    ),
+                    subtitle:    settingsData.o == GEN_OPTION.proportion ?  TextFormField(
+                        decoration: const InputDecoration(
+                          label: Text('Number of players per team') ,
+                          hintText:
+                          'How many players per team',
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        initialValue: settingsData.division.toString(),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          settingsData.division =
+                              int.tryParse(value) ?? settingsData.division;
+                        },
+                        textAlign: TextAlign.left) : Text(""),
 
-
-
+                  ),
 
                   ListTile(
                     title: const Text('Random'),

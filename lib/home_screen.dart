@@ -35,22 +35,22 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   SettingsData settingsData = new SettingsData();
   final storage = new LocalStorage('my_data.json');
 
-  void saveData() {
-    final Iterable<Map<String, dynamic>>? rowsToUpdate =
-        stateManager?.rows.map((e) {
-      return {
-        'name_field': e?.cells['name_field']?.value,
-        'skill_level_field': e?.cells['skill_level_field']?.value,
-        'gender_field': e?.cells['gender_field']?.value,
-        'team_field': e?.cells['team_field']?.value,
-      };
-    });
-    // update rowsToUpdate
-
-    print(jsonEncode(rowsToUpdate));
-
-    storage.setItem('todos', jsonEncode(rowsToUpdate));
-  }
+  // void saveData() {
+  //   final Iterable<Map<String, dynamic>>? rowsToUpdate =
+  //       stateManager?.rows.map((e) {
+  //     return {
+  //       'name_field': e?.cells['name_field']?.value,
+  //       'skill_level_field': e?.cells['skill_level_field']?.value,
+  //       'gender_field': e?.cells['gender_field']?.value,
+  //       'team_field': e?.cells['team_field']?.value,
+  //     };
+  //   });
+  //   // update rowsToUpdate
+  //
+  //   print(jsonEncode(rowsToUpdate));
+  //
+  //   storage.setItem('todos', jsonEncode(rowsToUpdate));
+  // }
 
   void loadData() {
     print(storage.getItem('todos'));
