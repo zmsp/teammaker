@@ -6,6 +6,7 @@ import 'package:localstorage/localstorage.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:teammaker/HelpScreen.dart';
 import 'package:teammaker/SettingsScreen.dart';
+import 'package:teammaker/add_players.dart';
 import 'package:teammaker/add_screen.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/team_screen.dart';
@@ -686,7 +687,7 @@ Jane,4,F""";
                   child: IconButton(
                     onPressed: () async {
                       Navigator.push(
-                          context, MaterialPageRoute(builder: (context) => AddScreen(settingsData))) ;
+                          context, MaterialPageRoute(builder: (context) => Review())) ;
 
                       print(settingsData.o);
 

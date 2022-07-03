@@ -31,14 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              if (settingsData.o != GEN_OPTION.proportion ) ListTile(
-                leading: Icon(
-                  Icons.person,
-                  size: 40.0,
-                ),
-                title: Text('Number of teams'),
 
-              ),
               ListTile(
                 leading: Icon(
                   Icons.refresh,
