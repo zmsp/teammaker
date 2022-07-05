@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import 'package:teammaker/model/data_model.dart';
+import 'package:teammaker/model/player_model.dart';
+import 'package:teammaker/widget/player.dart';
 
 class Review extends StatefulWidget {
   @override
@@ -14,17 +15,23 @@ class Review extends StatefulWidget {
 class ReviewState extends State<Review> {
   final List<int> _levels = [1, 2, 3, 4, 5];
   final List<String> _genders = ["male", "female", "x"];
+  final TextEditingController _batch_text = TextEditingController();
   final TextEditingController _player_text = TextEditingController();
+  final FocusNode myFocusNode = FocusNode();
+
   int _selectedLevel = 3;
   String _selectedGender = "male";
   TextEditingController textarea = TextEditingController();
 
+
+
+  List<PlayerModel> players = [];
   showTextDialog(BuildContext context, String title, String message) {
     // set up the button
     Widget okButton = TextButton(
       child: Text("OK"),
       onPressed: () {
-        Navigator.pop(context);
+        Navigator.pop(context, players);
       },
     );
 
@@ -54,8 +61,11 @@ class ReviewState extends State<Review> {
     super.initState();
   }
   bool useEditor = false;
+
   @override
   Widget build(BuildContext context) {
+
+
     Size screenSize = MediaQuery.of(context).size;
     double screenWidth = screenSize.width;
     return Scaffold(
@@ -82,7 +92,7 @@ class ReviewState extends State<Review> {
         children: <Widget>[
           SizedBox(height: 12.0),
           ListTile(
-            title: const Text('Batch add'),
+            title: const Text('Add from text'),
             leading: Switch(
               value: useEditor,
               onChanged: (value) {
@@ -96,12 +106,21 @@ class ReviewState extends State<Review> {
             ),
           ),
 
-          useEditor ? Row(
+          !useEditor ? Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
               Container(
                 width: screenWidth * 0.4,
+
                 child: TextField(
+                  textInputAction: TextInputAction.done,
+                  focusNode: myFocusNode,
+                  onSubmitted: (value){
+                    setState(() {
+                      players.add(PlayerModel(_selectedLevel, _player_text.text, "team", _selectedGender));
+                    });
+                    myFocusNode.requestFocus();
+                  },
                   controller: _player_text,
                   decoration: InputDecoration(
                     contentPadding: EdgeInsets.all(10),
@@ -111,6 +130,9 @@ class ReviewState extends State<Review> {
                     hintText: "Player name",
                     labelText: "Name",
                   ),
+
+
+
                 ),
               ),
               Container(
@@ -154,7 +176,14 @@ class ReviewState extends State<Review> {
                   builder: (BuildContext context) {
                     return IconButton(
                       icon: Icon(Icons.person_add),
-                      onPressed: () {},
+                      onPressed: () {
+                        setState(() {
+                          players.add(PlayerModel(_selectedLevel, _player_text.text, "0", _selectedGender));
+                        });
+
+
+
+                      },
                     );
                   },
                 ),
@@ -169,8 +198,8 @@ class ReviewState extends State<Review> {
                       icon: Icon(FontAwesomeIcons.clipboard,
                         size: 25.0,),
                       onPressed: (){
-                        Clipboard.setData(new ClipboardData(text: _player_text.text));
-                        print(_player_text.text);
+                        Clipboard.setData(new ClipboardData(text: _batch_text.text));
+                        print(_batch_text.text);
                       },
                       label: Text("Copy")
                   ),
@@ -179,7 +208,7 @@ class ReviewState extends State<Review> {
                       icon: Icon(FontAwesomeIcons.meetup,
                         size: 25.0,),
                         onPressed: () {
-                          String text = _player_text.text;
+                          String text = _batch_text.text;
                           print(text);
                           var lines = text.split("\n");
                           var player_line = [];
@@ -203,7 +232,7 @@ class ReviewState extends State<Review> {
                           }
 
                           setState(() {
-                            _player_text.text = player_line.join("\n");
+                            _batch_text.text = player_line.join("\n");
                           });
 
                         },
@@ -215,7 +244,7 @@ class ReviewState extends State<Review> {
                       icon: Icon(FontAwesomeIcons.alignRight,
                         size: 25.0,),
                       onPressed: (){
-                        var lines = _player_text.text.split("\n");
+                        var lines = _batch_text.text.split("\n");
                         var string_data = [];
 
                         for (var i = 0; i <= lines.length - 1; i++) {
@@ -276,7 +305,7 @@ class ReviewState extends State<Review> {
                       icon: Icon(FontAwesomeIcons.eraser,
                         size: 25.0,),
                       onPressed: (){
-                        _player_text.text = "";
+                        _batch_text.text = "";
                       },
                       label: Text("Clear")
                   ),
@@ -294,12 +323,12 @@ class ReviewState extends State<Review> {
               ),
               SizedBox(height: 12.0),
               TextField(
-                controller: _player_text,
+                controller: _batch_text,
 
                 keyboardType: TextInputType.multiline,
-                maxLines: 6,
+                maxLines: 7,
                 decoration: InputDecoration(
-                    hintText: "Enter players levels and gender. One player per line.\nFormat: <Name>,<Level>,<Gender>"
+                    hintText: "Enter players levels and gender. See help menu for details on adding from text or meetup. One player per line.\nFormat: <Name>,<Level>,<Gender>"
                         "\n---Example--- \nZobair,3,M, \nMary,2,Female \nZach,5,male",
                     focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(width: 1, color: Colors.redAccent)
@@ -316,8 +345,13 @@ class ReviewState extends State<Review> {
                       icon: Icon(FontAwesomeIcons.circleXmark,
                         size: 25.0,),
                       onPressed: (){
-                        Navigator.pop(context);
-                        print(_player_text.text);
+                        // Navigator.pop(context);
+
+                        setState(() {
+
+                          players = [];
+                        });
+
 
                       },
                       label: Text("Cancel")
@@ -328,7 +362,7 @@ class ReviewState extends State<Review> {
                         size: 25.0,),
                       onPressed: () {
 
-                        var lines = _player_text.text.split("\n");
+                        var lines = _batch_text.text.split("\n");
                         var string_data = [];
 
                         for (var i = 0; i <= lines.length - 1; i++) {
@@ -391,7 +425,70 @@ class ReviewState extends State<Review> {
                       icon: Icon(FontAwesomeIcons.circlePlus,
                         size: 25.0,),
                       onPressed: (){
-                        print(textarea.text);
+
+
+                        var lines = _batch_text.text.split("\n");
+                        var string_data = [];
+
+
+                        for (var i = 0; i <= lines.length - 1; i++) {
+
+                          PlayerModel player = PlayerModel(3
+                              , "X", "X", "X");
+
+                          var data = lines[i].split(",");
+                          for (var j = 0; j < data.length; j++) {
+                            switch (j) {
+                              case 0:
+                                {
+                                  player.name= data[0];
+                                }
+                                break;
+                              case 1:
+                                {
+                                  player.level= int.tryParse(data[1]) ?? 3;
+                                }
+                                break;
+                              case 2:
+                                {
+                                  if (data[2].trim().toUpperCase().startsWith("M")) {
+                                    player.gender = "MALE";
+                                  } else if (data[2]
+                                      .trim()
+                                      .toUpperCase()
+                                      .startsWith("F")) {
+                                    player.gender = "FEMALE";
+                                  } else {
+                                    player.gender = "X";
+                                  }
+                                }
+                                break;
+                              case 3:
+                                {
+                                  player.team = data[3];
+                                }
+                                break;
+                              default:
+                                {
+                                  break;
+                                }
+                            }
+                          }
+                          players.add(player);
+
+
+
+                        }
+
+
+
+
+
+
+                        setState(() {
+                        });
+
+
                       },
                       label: Text("Add")
                   ),
@@ -427,19 +524,50 @@ class ReviewState extends State<Review> {
                 Icon(Icons.person),
                 SizedBox(width: 10.0),
                 Text(
-                  "Players List",
+                  "We will add ${players.length} players",
                   style: TextStyle(fontSize: 18),
                 ),
+            IconButton(
+              icon: Icon(Icons.close),
+              color: Colors.red,
+              onPressed: () {
+                setState(() {
+                  players=[];
+                });
+
+
+              },
+            ),
               ],
             ),
           ),
           //contains list of reviews
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(10.0),
-              child: Text("None yet"),
-            ),
-          ),
+
+              players.length !=0 ? ListView(
+                shrinkWrap: true,
+                physics: ScrollPhysics(),
+
+                children:
+                players.reversed.map((player) {
+                  return PlayerWidget(
+                    player: player,
+                  );
+                }).toList(),
+              )
+                    : Text("No players to be added"),
+
+
+              //
+              // players.length !=0 ? ListView(
+              //   children:
+              //   players.map((player) {
+              //     return PlayerWidget(
+              //       player: player,
+              //     );
+              //   }).toList(),
+              // )
+
+
         ],
       ),
     );
