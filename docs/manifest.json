@@ -1,29 +1,22 @@
 {
-    "name": "team maker",
+    "name": "teammaker",
     "short_name": "teammaker",
     "start_url": ".",
-    "display": "minimal-ui",
-    "background_color": "#000000",
-    "theme_color": "#800000",
-    "description": "Creates balanced sport teams!",
+    "display": "standalone",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "creates teams",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
         {
-            "src": "icons/Icon-192.png",
+            "src": "icons/icon-192.png",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "icons/Icon-512.png",
+            "src": "icons/icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
-        }
-    ],
-    "screenshots": [
-        {
-            "src": "images/screenshot.png",
-            "sizes": "664x1439",
             "type": "image/png"
         }
     ]
