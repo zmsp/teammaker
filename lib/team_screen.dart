@@ -1,15 +1,49 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+
 class TeamList extends StatelessWidget {
   final List<ListItem> items;
 
   TeamList({Key? key, required this.items}) : super(key: key);
 
+  List<String> findAllPermutations(String source) {
+    List allPermutations = [];
+
+    void permutate(List list, int cursor) {
+      // when the cursor gets this far, we've found one permutation, so save it
+      if (cursor == list.length) {
+        allPermutations.add(list);
+        return;
+      }
+
+      for (int i = cursor; i < list.length; i++) {
+        List permutation = new List.from(list);
+        permutation[cursor] = list[i];
+        permutation[i] = list[cursor];
+        permutate(permutation, cursor + 1);
+      }
+    }
+
+    permutate(source.split(''), 0);
+
+    List<String> strPermutations = [];
+    for (List permutation in allPermutations) {
+      strPermutations.add(permutation.join());
+    }
+
+    return strPermutations;
+  }
   @override
   Widget build(BuildContext context) {
     final title = 'Team List';
 
-    return Scaffold(
+
+
+
+      return Scaffold(
       appBar: AppBar(
         title: Text(title),
       ),
@@ -26,6 +60,45 @@ class TeamList extends StatelessWidget {
             subtitle: item.buildSubtitle(context),
           );
         },
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+
+          var t = findAllPermutations("1234");
+          print(t.toString());
+
+          showDialog<String>(
+              context: context,
+              builder: (BuildContext context) => AlertDialog(
+            title: const Text('Possible games'),
+            content: Container(
+              height: 300.0, // Change as per your requirement
+              width: 300.0, // Change as per your requirement
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: 1,
+                itemBuilder: (BuildContext context, int index) {
+                  return ListTile(
+                    title: Text(t.toString()),
+                  );
+                },
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'OK'),
+                child: const Text('OK'),
+              ),
+            ],
+          ));
+
+
+
+        },
+        child: const FaIcon(
+          FontAwesomeIcons.volleyball,
+        ),
       ),
     );
   }
