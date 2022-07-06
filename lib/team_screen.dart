@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'dart:math';
 class TeamList extends StatelessWidget {
   final List<ListItem> items;
 
@@ -50,7 +50,7 @@ class HeadingItem implements ListItem {
   @override
   Widget buildTitle(BuildContext context) {
     return Container(
-        color: Colors.black54,
+        color: Colors.primaries[Random().nextInt(Colors.primaries.length)],
         child: Text(
           heading,
           style: Theme.of(context).textTheme.headline6,

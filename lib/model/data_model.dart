@@ -9,5 +9,12 @@ class SettingsData{
   String toString() {
     return 'SettingsData{teamCount: $teamCount, o: $o, division: $division}';
   }
+
+  SettingsData(){
+     teamCount = 4;
+     division = 2;
+     proportion = 2;
+     o = GEN_OPTION.distribute;
+  }
 }
 enum GEN_OPTION{distribute, division, random, proportion}

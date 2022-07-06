@@ -163,11 +163,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly
                             ],
-                            initialValue: settingsData.division.toString(),
+                            initialValue: settingsData.proportion.toString(),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
-                              settingsData.division =
-                                  int.tryParse(value) ?? settingsData.division;
+                              settingsData.proportion =
+                                  int.tryParse(value) ?? settingsData.proportion;
                             },
                             textAlign: TextAlign.left)
                         : Text(""),

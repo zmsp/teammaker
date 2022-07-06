@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:pluto_grid/pluto_grid.dart';
@@ -8,7 +11,9 @@ import 'package:teammaker/add_players.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/team_screen.dart';
+import 'package:pluto_grid_export/pluto_grid_export.dart' as pluto_grid_export;
 
+import 'package:flutter/material.dart';
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
   final String? topTitle;
@@ -34,6 +39,26 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   PlutoGridStateManager? stateManager;
   SettingsData settingsData = new SettingsData();
   final storage = new LocalStorage('my_data.json');
+
+  void exportToCsv() async {
+    String title = "pluto_grid_export";
+    if (stateManager != null){
+      var exported = const Utf8Encoder()
+          .convert(pluto_grid_export.PlutoGridExport.exportCSV(stateManager!));
+
+      var test = pluto_grid_export.PlutoGridExport.exportCSV(stateManager!, fieldDelimiter: ",", textDelimiter: "", textEndDelimiter: "")
+      ;
+      Clipboard.setData(
+          new ClipboardData(text:test));
+      print(test);
+
+
+    }
+
+
+
+    // use file_saver from pub.dev
+  }
 
   // void saveData() {
   //   final Iterable<Map<String, dynamic>>? rowsToUpdate =
@@ -460,8 +485,8 @@ Jane,4,F""";
     List<PlutoRow?> dat = stateManager?.rows ?? [];
 
     Map<String, List<String>> teams_name_list = Map();
-    Map<String, double> teams_score = Map();
-
+    Map<String, double> teams_total_score = Map();
+    Map<String, double> teams_avg_score = Map();
     //find checked items
 
     List<PlutoRow?> tmp_rows = [];
@@ -470,7 +495,7 @@ Jane,4,F""";
         // teams_name_list.update(dat[i]?.cells?["team_field"]?.value?? "None", (value) => null)
         var t = dat[i]?.cells?["skill_level_field"]?.value;
         print(t.runtimeType);
-        teams_score.update(
+        teams_total_score.update(
           dat[i]?.cells?["team_field"]?.value ?? "None",
           // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
           (existingValue) =>
@@ -479,6 +504,8 @@ Jane,4,F""";
           ifAbsent: () =>
               (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
         );
+
+
 
         teams_name_list.update(
           dat[i]?.cells?["team_field"]?.value ?? "None",
@@ -513,7 +540,7 @@ Jane,4,F""";
     // print(teams_list.toString());
     teams_name_list.keys.toList().forEach((value) {
       teams_list_data.add(HeadingItem(
-          'TEAM#: $value', 'Level total:' + teams_score[value].toString()));
+          'TEAM#: $value', 'Level total:' + teams_total_score[value].toString()));
       teams_name_list[value]?.toList().forEach((name) {
         teams_list_data.add(MessageItem(name.toString(), name.toString()));
       });
@@ -541,6 +568,16 @@ Jane,4,F""";
         {
           stateManager!.sortAscending(columns[1]);
           stateManager!.sortDescending(columns[2]);
+          //statements;
+        }
+        break;
+      case GEN_OPTION.proportion:
+        {
+          stateManager!.sortAscending(columns[1]);
+          stateManager!.sortDescending(columns[2]);
+          int player_num = stateManager?.checkedRows.length ?? 1;
+          settingsData.teamCount =  (player_num/settingsData.proportion).round();
+          print("TEASM ${ settingsData.teamCount}");
           //statements;
         }
         break;
@@ -752,6 +789,20 @@ Jane,4,F""";
                               builder: (context) => HelpExample()));
                     },
                     icon: FaIcon(FontAwesomeIcons.questionCircle),
+                  ),
+                ),
+                Tooltip(
+                  message: 'Export',
+                  child: IconButton(
+                    onPressed: () {
+                      exportToCsv();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Text Copied! Save it somewhere for future!"),
+                      ));
+
+
+                    },
+                    icon: FaIcon(FontAwesomeIcons.share),
                   ),
                 ),
                 Tooltip(
