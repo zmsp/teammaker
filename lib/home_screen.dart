@@ -1,14 +1,19 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:teammaker/HelpScreen.dart';
 import 'package:teammaker/SettingsScreen.dart';
+import 'package:teammaker/add_players.dart';
 import 'package:teammaker/model/data_model.dart';
+import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/team_screen.dart';
+import 'package:pluto_grid_export/pluto_grid_export.dart' as pluto_grid_export;
 
+import 'package:flutter/material.dart';
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
   final String? topTitle;
@@ -35,27 +40,46 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   SettingsData settingsData = new SettingsData();
   final storage = new LocalStorage('my_data.json');
 
-  void saveData() {
-    final Iterable<Map<String, dynamic>>? rowsToUpdate =
-        stateManager?.rows.map((e) {
-      return {
-        'name_field': e?.cells['name_field']?.value,
-        'skill_level_field': e?.cells['skill_level_field']?.value,
-        'gender_field': e?.cells['gender_field']?.value,
-        'team_field': e?.cells['team_field']?.value,
-      };
-    });
-    // update rowsToUpdate
+  void exportToCsv() async {
+    String title = "pluto_grid_export";
+    if (stateManager != null){
+      var exported = const Utf8Encoder()
+          .convert(pluto_grid_export.PlutoGridExport.exportCSV(stateManager!));
 
-    print(jsonEncode(rowsToUpdate));
+      var test = pluto_grid_export.PlutoGridExport.exportCSV(stateManager!, fieldDelimiter: ",", textDelimiter: "", textEndDelimiter: "")
+      ;
+      Clipboard.setData(
+          new ClipboardData(text:test));
+      print(test);
 
-    storage.setItem('todos', jsonEncode(rowsToUpdate));
+
+    }
+
+
+
+    // use file_saver from pub.dev
   }
+
+  // void saveData() {
+  //   final Iterable<Map<String, dynamic>>? rowsToUpdate =
+  //       stateManager?.rows.map((e) {
+  //     return {
+  //       'name_field': e?.cells['name_field']?.value,
+  //       'skill_level_field': e?.cells['skill_level_field']?.value,
+  //       'gender_field': e?.cells['gender_field']?.value,
+  //       'team_field': e?.cells['team_field']?.value,
+  //     };
+  //   });
+  //   // update rowsToUpdate
+  //
+  //   print(jsonEncode(rowsToUpdate));
+  //
+  //   storage.setItem('todos', jsonEncode(rowsToUpdate));
+  // }
 
   void loadData() {
     print(storage.getItem('todos'));
   }
-
 
   List<PlutoColumn> columns = [
     /// Text Column definition
@@ -119,7 +143,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     PlutoColumn(
       title: 'Level',
       field: 'skill_level_field',
-      type: PlutoColumnType.select([1, 2, 3, 4,5]),
+      type: PlutoColumnType.select([1, 2, 3, 4, 5]),
       width: 80,
       textAlign: PlutoColumnTextAlign.right,
     ),
@@ -144,7 +168,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   List<PlutoRow> rows = [
     PlutoRow(
       cells: {
-        'name_field': PlutoCell(value: 'Joe'),
+        'name_field': PlutoCell(value: 'Sample Player'),
         'skill_level_field': PlutoCell(value: 3),
         'team_field': PlutoCell(value: "0"),
         'gender_field': PlutoCell(value: "X"),
@@ -199,17 +223,12 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     );
   }
 
-
-String data = """
+  String data = """
 John,3,M
 Jane,4,F""";
 
-
   AlertDialog reportingDialog(BuildContext context) {
-    TextEditingController player_text = new TextEditingController(text: data
-
-
-    );
+    TextEditingController player_text = new TextEditingController(text: data);
 
     return AlertDialog(
       title: const Text('Add Players'),
@@ -217,7 +236,8 @@ Jane,4,F""";
         child: Column(
           children: [
             const Text('Add  player name and info'),
-            const Text('One line per player. Format should be <NAME>,<LeveL>,<GENDER>'),
+            const Text(
+                'One line per player. Format should be <NAME>,<LeveL>,<GENDER>'),
             TextField(
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
@@ -230,15 +250,16 @@ Jane,4,F""";
             const Text(
                 'if you are pasting the information from meetup, press format text from meetup'),
             ElevatedButton.icon(
-              icon: Icon(FontAwesomeIcons.meetup,
-                size: 25.0,),
-
-              style: ButtonStyle(
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>( EdgeInsets.fromLTRB(20, 15, 10, 20)),
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.redAccent),
-
+              icon: Icon(
+                FontAwesomeIcons.meetup,
+                size: 25.0,
               ),
-
+              style: ButtonStyle(
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>(
+                    EdgeInsets.fromLTRB(20, 15, 10, 20)),
+                backgroundColor:
+                    MaterialStateProperty.all<Color>(Colors.redAccent),
+              ),
               label: const Text('Format Text from meetup'),
               onPressed: () {
                 String text = player_text.text;
@@ -250,7 +271,7 @@ Jane,4,F""";
                 for (var i = 0; i <= lines.length - 1; i++) {
                   if ((record_flag == true) && (lines[i].trim() != "")) {
                     print(lines[i]);
-                    player_line.add(lines[i]+ ",3" + ",M");
+                    player_line.add(lines[i] + ",3" + ",M");
                     record_flag = false;
                     continue;
                   }
@@ -263,20 +284,20 @@ Jane,4,F""";
                   }
                 }
                 player_text.text = player_line.join("\n");
-
-
               },
             ),
             const Text(
                 'if you want to add default level(3) and gender info(male), press the next button'),
             ElevatedButton.icon(
-              icon: Icon(FontAwesomeIcons.addressCard,
-                size: 25.0,),
-
+              icon: Icon(
+                FontAwesomeIcons.addressCard,
+                size: 25.0,
+              ),
               style: ButtonStyle(
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>( EdgeInsets.fromLTRB(20, 15, 10, 20)),
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.redAccent),
-
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>(
+                    EdgeInsets.fromLTRB(20, 15, 10, 20)),
+                backgroundColor:
+                    MaterialStateProperty.all<Color>(Colors.redAccent),
               ),
               label: const Text('Add default level and gender'),
               onPressed: () {
@@ -291,13 +312,15 @@ Jane,4,F""";
             ),
             const Text('Press check button to see what will be added'),
             ElevatedButton.icon(
-              icon: Icon(FontAwesomeIcons.search,
-                size: 25.0,),
-
+              icon: Icon(
+                FontAwesomeIcons.search,
+                size: 25.0,
+              ),
               style: ButtonStyle(
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>( EdgeInsets.fromLTRB(20, 15, 10, 20)),
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.redAccent),
-
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>(
+                    EdgeInsets.fromLTRB(20, 15, 10, 20)),
+                backgroundColor:
+                    MaterialStateProperty.all<Color>(Colors.redAccent),
               ),
               label: const Text("Check/Validate"),
               onPressed: () {
@@ -439,6 +462,21 @@ Jane,4,F""";
     );
   }
 
+  void addPlayers(List<PlayerModel> players) {
+    for (var player in players) {
+      stateManager!.appendRows([
+        PlutoRow(
+          checked: true,
+          cells: {
+            'name_field': PlutoCell(value: player.name),
+            'skill_level_field': PlutoCell(value: player.level),
+            'team_field': PlutoCell(value: player.team),
+            'gender_field': PlutoCell(value: player.gender),
+          },
+        )
+      ]);
+    }
+  }
 
   void navigateToTeam() {
     //sort by team name
@@ -447,23 +485,27 @@ Jane,4,F""";
     List<PlutoRow?> dat = stateManager?.rows ?? [];
 
     Map<String, List<String>> teams_name_list = Map();
-    Map<String, double> teams_score = Map();
-
+    Map<String, double> teams_total_score = Map();
+    Map<String, double> teams_avg_score = Map();
     //find checked items
 
     List<PlutoRow?> tmp_rows = [];
     for (var i = 0; i < dat.length; i++) {
       if (dat[i]?.checked ?? false) {
         // teams_name_list.update(dat[i]?.cells?["team_field"]?.value?? "None", (value) => null)
-        var t =dat[i]?.cells?["skill_level_field"]?.value;
-        print(t.runtimeType );
-        teams_score.update(
+        var t = dat[i]?.cells?["skill_level_field"]?.value;
+        print(t.runtimeType);
+        teams_total_score.update(
           dat[i]?.cells?["team_field"]?.value ?? "None",
           // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
           (existingValue) =>
-              existingValue + (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
-          ifAbsent: () => (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
+              existingValue +
+              (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
+          ifAbsent: () =>
+              (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
         );
+
+
 
         teams_name_list.update(
           dat[i]?.cells?["team_field"]?.value ?? "None",
@@ -488,7 +530,6 @@ Jane,4,F""";
         //TODO unassign team
 
       }
-
     }
 
     Map<String, List<String>> teams_list = Map();
@@ -499,7 +540,7 @@ Jane,4,F""";
     // print(teams_list.toString());
     teams_name_list.keys.toList().forEach((value) {
       teams_list_data.add(HeadingItem(
-          'TEAM#: $value', 'Level total:' + teams_score[value].toString()));
+          'TEAM#: $value', 'Level total:' + teams_total_score[value].toString()));
       teams_name_list[value]?.toList().forEach((name) {
         teams_list_data.add(MessageItem(name.toString(), name.toString()));
       });
@@ -513,30 +554,40 @@ Jane,4,F""";
   }
 
   void generateTeams() {
-    switch(settingsData.o) {
-      case GEN_OPTION.random: {
-      }
-      break;
+    switch (settingsData.o) {
+      case GEN_OPTION.random:
+        {}
+        break;
 
-      case GEN_OPTION.division: {
-        stateManager!.sortAscending(columns[1]);
+      case GEN_OPTION.division:
+        {
+          stateManager!.sortAscending(columns[1]);
+        }
+        break;
+      case GEN_OPTION.distribute:
+        {
+          stateManager!.sortAscending(columns[1]);
+          stateManager!.sortDescending(columns[2]);
+          //statements;
+        }
+        break;
+      case GEN_OPTION.proportion:
+        {
+          stateManager!.sortAscending(columns[1]);
+          stateManager!.sortDescending(columns[2]);
+          int player_num = stateManager?.checkedRows.length ?? 1;
+          settingsData.teamCount =  (player_num/settingsData.proportion).round();
+          print("TEASM ${ settingsData.teamCount}");
+          //statements;
+        }
+        break;
 
-      }
-      break;
-      case GEN_OPTION.distribute: {
-        stateManager!.sortAscending(columns[1]);
-        stateManager!.sortDescending(columns[2]);
-        //statements;
-      }
-      break;
-
-      default: {
-        //statements;
-      }
-      break;
+      default:
+        {
+          //statements;
+        }
+        break;
     }
-
-
 
     List<PlutoRow?> dat = stateManager?.rows ?? [];
 
@@ -558,54 +609,47 @@ Jane,4,F""";
     int size = teams_list.length;
     print(tmp_rows.length);
     var start = 0;
-    if (settingsData.o == GEN_OPTION.division){
-      var subKeys = keys.length /settingsData.division;
+    if (settingsData.o == GEN_OPTION.division) {
+      var subKeys = keys.length / settingsData.division;
       var chunks = [];
       for (var i = 0; i < keys.length; i += 2) {
-        chunks.add(keys.sublist(i, i+2 > keys.length ? keys.length : i + 2));
+        chunks.add(keys.sublist(i, i + 2 > keys.length ? keys.length : i + 2));
       }
       double dat = (tmp_rows.length / chunks.length);
 
       int size = chunks.length;
 
+      for (var i = 0; i < tmp_rows.length; i = i + size) {
+        int row = (i / dat).toInt();
+        int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
+        List<PlutoRow?> sublist = tmp_rows.sublist(start, end);
+        var key1 = chunks[row];
+        key1.shuffle();
+        int key_i = 0;
 
-        for (var i = 0; i < tmp_rows.length; i = i + size) {
-          int row = (i /dat).toInt();
-          int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
-          List<PlutoRow?> sublist = tmp_rows.sublist(start, end);
-          var key1= chunks[row];
-          key1.shuffle();
-          int key_i = 0;
+        sublist.forEach((value) {
+          var text = value?.cells?["name_field"]?.value.toString() ?? "";
 
-          sublist.forEach((value) {
-            var text = value?.cells?["name_field"]?.value.toString() ?? "";
-
-
-            setState(() {
-              value?.cells?["team_field"]?.value = key1[key_i].toString();
-            });
-            print(text);
-
-            teams_list[key1[key_i]]?.add(text);
-            key_i++;
+          setState(() {
+            value?.cells?["team_field"]?.value = key1[key_i].toString();
           });
-          start = i + size;
+          print(text);
 
-          // print(keys);
-          // for (var j = 0; j <= keys.length - 1; j+teams) {
-          //   if (tmp_rows[j] == null) {
-          //     continue;
-          //   }
-          //
-          //
-          // }
-        }
+          teams_list[key1[key_i]]?.add(text);
+          key_i++;
+        });
+        start = i + size;
 
-
-
-
-
-    }else {
+        // print(keys);
+        // for (var j = 0; j <= keys.length - 1; j+teams) {
+        //   if (tmp_rows[j] == null) {
+        //     continue;
+        //   }
+        //
+        //
+        // }
+      }
+    } else {
       for (var i = 0; i < tmp_rows.length; i = i + size) {
         int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
         List<PlutoRow?> sublist = tmp_rows.sublist(start, end);
@@ -662,22 +706,23 @@ Jane,4,F""";
         },
       )),
       bottomNavigationBar: BottomAppBar(
-        child:
-        Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             ButtonBar(
               children: [
                 Tooltip(
                   message: 'Shuffle players into teams!',
-                  child:     IconButton(onPressed: generateTeams, icon:  FaIcon(FontAwesomeIcons.random)),
+                  child: IconButton(
+                      onPressed: generateTeams,
+                      icon: FaIcon(FontAwesomeIcons.random)),
                 ),
-
 
                 Tooltip(
                   message: 'View Current Teams',
                   child: IconButton(
-                      onPressed: navigateToTeam, icon: FaIcon(FontAwesomeIcons.users)),
+                      onPressed: navigateToTeam,
+                      icon: FaIcon(FontAwesomeIcons.users)),
                 ),
                 // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
                 // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
@@ -685,22 +730,30 @@ Jane,4,F""";
                 Tooltip(
                   message: 'Add a list of players',
                   child: IconButton(
-                      onPressed: () {
-                        // print(rows.length);
-                        showDialog<void>(
-                          context: context,
-                          builder: reportingDialog,
-                        );
-                      },
-                      icon:  FaIcon(FontAwesomeIcons.plus),
+                    onPressed: () async {
+                      final List<PlayerModel> players = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AddPlayersScreen()));
+
+                      addPlayers(players);
+                    },
+
+                    //
+                    // onPressed: () {
+                    //   // print(rows.length);
+                    //   showDialog<void>(
+                    //     context: context,
+                    //     builder: reportingDialog,
+                    //   );
+                    // },
+                    icon: FaIcon(FontAwesomeIcons.plus),
                   ),
                 )
-
-                  ],
+              ],
             ),
             ButtonBar(
               children: [
-
                 // IconButton(
                 //     onPressed: () {
                 //       showDialog<void>(
@@ -731,34 +784,53 @@ Jane,4,F""";
                   child: IconButton(
                     onPressed: () {
                       Navigator.push(
-                          context, MaterialPageRoute(builder: (context) => HelpExample()));
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => HelpExample()));
                     },
                     icon: FaIcon(FontAwesomeIcons.questionCircle),
+                  ),
+                ),
+                Tooltip(
+                  message: 'Export',
+                  child: IconButton(
+                    onPressed: () {
+                      exportToCsv();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Text Copied! Save it somewhere for future!"),
+                      ));
+
+
+                    },
+                    icon: FaIcon(FontAwesomeIcons.share),
                   ),
                 ),
                 Tooltip(
                   message: 'Team-maker settings',
                   child: IconButton(
                     onPressed: () async {
-                     Navigator.push(
-                          context, MaterialPageRoute(builder: (context) => SettingsScreen(settingsData))) ;
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  SettingsScreen(settingsData)));
 
                       print(settingsData.o);
-
                     },
-                    icon:  FaIcon(FontAwesomeIcons.cog),
+                    icon: FaIcon(FontAwesomeIcons.cog),
                   ),
                 ),
               ],
             ),
           ],
-
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => HelpExample()));
+        onPressed: () async {
+          final List<PlayerModel> players = await Navigator.push(context,
+              MaterialPageRoute(builder: (context) => AddPlayersScreen()));
+
+          addPlayers(players);
           // print(rows.length);
           // showDialog<void>(
           //   context: context,
@@ -766,10 +838,8 @@ Jane,4,F""";
           // );
         },
         child: const FaIcon(
-          FontAwesomeIcons.question,
-          color: Colors.white,
+          FontAwesomeIcons.plus,
         ),
-
       ),
     );
   }
