@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:teammaker/MatchScreen.dart';
+import 'package:teammaker/SettingsScreen.dart';
+import 'package:teammaker/model/data_model.dart';
 
 
 class TeamList extends StatelessWidget {
   final List<ListItem> items;
-
-  TeamList({Key? key, required this.items}) : super(key: key);
+  final SettingsData settingsData;
+  //
+  TeamList({Key? key, required this.items, required this.settingsData}) : super(key: key);
 
   List<String> findAllPermutations(String source) {
     List allPermutations = [];
@@ -64,35 +68,8 @@ class TeamList extends StatelessWidget {
 
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-
-          var t = findAllPermutations("1234");
-          print(t.toString());
-
-          showDialog<String>(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-            title: const Text('Possible games'),
-            content: Container(
-              height: 300.0, // Change as per your requirement
-              width: 300.0, // Change as per your requirement
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: 1,
-                itemBuilder: (BuildContext context, int index) {
-                  return ListTile(
-                    title: Text(t.toString()),
-                  );
-                },
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.pop(context, 'OK'),
-                child: const Text('OK'),
-              ),
-            ],
-          ));
-
+          Navigator.push(context,   MaterialPageRoute(
+              builder: (context) => MatchScreen(settingsData)));
 
 
         },

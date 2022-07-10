@@ -68,7 +68,7 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
       appBar: AppBar(
         title: Text('Add Players'),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton(
         tooltip: "Add listed players",
         onPressed: () {
@@ -80,7 +80,7 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
           // );
         },
         child: const FaIcon(
-          FontAwesomeIcons.peopleGroup,
+          FontAwesomeIcons.check,
         ),
       ),
       body: ListView(
@@ -102,86 +102,92 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
           ),
 
           !useEditor
-              ? Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    Container(
-                      width: screenWidth * 0.4,
-                      child: TextField(
-                        textInputAction: TextInputAction.done,
-                        focusNode: myFocusNode,
-                        onSubmitted: (value) {
-                          setState(() {
-                            players.add(PlayerModel(_selectedLevel,
-                                _player_text.text, "team", _selectedGender));
-                          });
-                          _player_text.text = "";
-                          myFocusNode.requestFocus();
-                        },
-                        controller: _player_text,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.all(10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          hintText: "Player name",
-                          labelText: "Name",
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: DropdownButton(
-                        hint: Text("Levels"),
-                        elevation: 0,
-                        value: _selectedLevel,
-                        items: _levels.map((star) {
-                          return DropdownMenuItem<int>(
-                            child: Text(star.toString()),
-                            value: star,
-                          );
-                        }).toList(),
-                        onChanged: (int? item) {
-                          setState(() {
-                            _selectedLevel = item ?? 3;
-                          });
-                        },
-                      ),
-                    ),
-                    Container(
-                      child: DropdownButton(
-                        hint: Text("Genders"),
-                        elevation: 0,
-                        value: _selectedGender,
-                        items: _genders.map((gender) {
-                          return DropdownMenuItem<String>(
-                            child: Text(gender.toString()),
-                            value: gender,
-                          );
-                        }).toList(),
-                        onChanged: (String? item) {
-                          setState(() {
-                            _selectedGender = item ?? "MALE";
-                          });
-                        },
-                      ),
-                    ),
-                    Container(
-                      child: Builder(
-                        builder: (BuildContext context) {
-                          return IconButton(
-                            icon: FaIcon(FontAwesomeIcons.personCirclePlus),
-                            onPressed: () {
+              ? Column(
+                children: [
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        Container(
+                          width: screenWidth * 0.4,
+                          child: TextField(
+                            textInputAction: TextInputAction.done,
+                            focusNode: myFocusNode,
+                            onSubmitted: (value) {
                               setState(() {
                                 players.add(PlayerModel(_selectedLevel,
-                                    _player_text.text, "0", _selectedGender));
+                                    _player_text.text, "team", _selectedGender));
+                              });
+                              _player_text.text = "";
+                              myFocusNode.requestFocus();
+                            },
+                            controller: _player_text,
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.all(10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              hintText: "Player name",
+                              labelText: "Name",
+                            ),
+                          ),
+                        ),
+                        Container(
+                          child: DropdownButton(
+                            hint: Text("Levels"),
+                            elevation: 0,
+                            value: _selectedLevel,
+                            items: _levels.map((star) {
+                              return DropdownMenuItem<int>(
+                                child: Text(star.toString()),
+                                value: star,
+                              );
+                            }).toList(),
+                            onChanged: (int? item) {
+                              setState(() {
+                                _selectedLevel = item ?? 3;
                               });
                             },
-                          );
-                        },
-                      ),
+                          ),
+                        ),
+                        Container(
+                          child: DropdownButton(
+                            hint: Text("Genders"),
+                            elevation: 0,
+                            value: _selectedGender,
+                            items: _genders.map((gender) {
+                              return DropdownMenuItem<String>(
+                                child: Text(gender.toString()),
+                                value: gender,
+                              );
+                            }).toList(),
+                            onChanged: (String? item) {
+                              setState(() {
+                                _selectedGender = item ?? "MALE";
+                              });
+                            },
+                          ),
+                        ),
+                        Container(
+                          child: Builder(
+                            builder: (BuildContext context) {
+                              return IconButton(
+                                icon: FaIcon(FontAwesomeIcons.personCirclePlus),
+                                onPressed: () {
+                                  setState(() {
+                                    players.add(PlayerModel(_selectedLevel,
+                                        _player_text.text, "0", _selectedGender));
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                )
+
+
+                ],
+              )
               : Column(
                   children: [
                     Row(
@@ -522,7 +528,18 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
                     );
                   }).toList(),
                 )
-              : Text("No players to be added"),
+              :      Padding(
+            padding: EdgeInsets.all(10.0),
+            child:
+                Expanded(
+                    child: Text(
+                        'No Players to be added' )
+                ),
+
+
+
+
+          ),
 
           ElevatedButton.icon(
               onPressed: () {

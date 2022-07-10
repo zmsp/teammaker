@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:teammaker/HelpScreen.dart';
+import 'package:teammaker/MatchScreen.dart';
 import 'package:teammaker/SettingsScreen.dart';
 import 'package:teammaker/add_players.dart';
 import 'package:teammaker/model/data_model.dart';
@@ -550,7 +551,7 @@ Jane,4,F""";
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => TeamList(items: teams_list_data)));
+            builder: (context) => TeamList(items: teams_list_data, settingsData: settingsData)));
   }
 
   void generateTeams() {
@@ -690,7 +691,7 @@ Jane,4,F""";
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Balanced Team Maker'),
+        title: const Text('Team Shaker'),
       ),
       body: Container(
           child: PlutoGrid(
@@ -711,22 +712,6 @@ Jane,4,F""";
           children: [
             ButtonBar(
               children: [
-                Tooltip(
-                  message: 'Shuffle players into teams!',
-                  child: IconButton(
-                      onPressed: generateTeams,
-                      icon: FaIcon(FontAwesomeIcons.random)),
-                ),
-
-                Tooltip(
-                  message: 'View Current Teams',
-                  child: IconButton(
-                      onPressed: navigateToTeam,
-                      icon: FaIcon(FontAwesomeIcons.users)),
-                ),
-                // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
-                // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
-
                 Tooltip(
                   message: 'Add a list of players',
                   child: IconButton(
@@ -749,7 +734,38 @@ Jane,4,F""";
                     // },
                     icon: FaIcon(FontAwesomeIcons.plus),
                   ),
-                )
+                ),
+                Tooltip(
+                  message: 'Shuffle players into teams!',
+                  child: IconButton(
+                      onPressed: generateTeams,
+                      icon: FaIcon(FontAwesomeIcons.dice)),
+                ),
+
+                Tooltip(
+                  message: 'View Current Teams',
+                  child: IconButton(
+                      onPressed: navigateToTeam,
+                      icon: FaIcon(FontAwesomeIcons.usersViewfinder)),
+                ),
+
+                Tooltip(
+                  message: 'Create Match',
+                  child: IconButton(
+                      onPressed: (){
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => MatchScreen(settingsData)));
+
+                      },
+                      icon: FaIcon(FontAwesomeIcons.trophy)),
+                ),
+                // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
+                // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
+
+
+
               ],
             ),
             ButtonBar(
@@ -797,12 +813,12 @@ Jane,4,F""";
                     onPressed: () {
                       exportToCsv();
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text("Text Copied! Save it somewhere for future!"),
+                        content: Text("Text Copied. Paste text somewhere to save!"),
                       ));
 
 
                     },
-                    icon: FaIcon(FontAwesomeIcons.share),
+                    icon: FaIcon(FontAwesomeIcons.clipboard),
                   ),
                 ),
                 Tooltip(
