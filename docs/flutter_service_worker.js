@@ -3,18 +3,13 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 const RESOURCES = {
-  "canvaskit/canvaskit.js": "c2b4e5f3d7a3d82aed024e7249a78487",
-"canvaskit/profiling/canvaskit.js": "ae2949af4efc61d28a4a80fffa1db900",
-"canvaskit/profiling/canvaskit.wasm": "95e736ab31147d1b2c7b25f11d4c32cd",
-"canvaskit/canvaskit.wasm": "4b83d89d9fecbea8ca46f2f760c5a9ba",
-"index.html": "796b3e0ba3d7dfdc4116efafdaa1fff7",
-"/": "796b3e0ba3d7dfdc4116efafdaa1fff7",
+  "index.html": "67507dde12ccc5f993de0c304ecf1cad",
+"/": "67507dde12ccc5f993de0c304ecf1cad",
 "manifest.json": "14854901f7a4c74913206d1ea06174ef",
 "favicon.ico": "ec761c5fe844585a2cace7ab5ada732d",
 "favicon-16x16.png": "d4ece6620abcc4219bef0fdc0dfba23e",
 "version.json": "3c427495a302124d19506364b6375335",
-"flutter.js": "eb2682e33f25cd8f1fc59011497c35f8",
-"main.dart.js": "8c6470db47985a635e3dcadb1bea2522",
+"main.dart.js": "bec6e40b43ce0ca79910044fc311f91b",
 "assets/AssetManifest.json": "6786e232f8c1fb700e6e9719376cde4e",
 "assets/asset/video/meetup.mp4": "b3ca6514987ee9aa3f285f5048bd0020",
 "assets/packages/font_awesome_flutter/lib/fonts/fa-brands-400.ttf": "d1722d5cf2c7855862f68edb85e31f88",
