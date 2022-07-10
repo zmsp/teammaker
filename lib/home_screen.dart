@@ -551,7 +551,7 @@ Jane,4,F""";
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => TeamList(items: teams_list_data)));
+            builder: (context) => TeamList(items: teams_list_data, settingsData: settingsData)));
   }
 
   void generateTeams() {

@@ -21,17 +21,27 @@ class SettingsData{
 }
 
 
-class Match{
+class Game{
   String team;
   String venue;
 
-  Match(this.team, this.venue);
+  Game(this.team, this.venue);
+
+  @override
+  String toString() {
+    return 'Game{teams: $team, venue: $venue}';
+  }
 }
 class Round{
-  List<Match> matches;
+  List<Game> matches;
   String roundName;
 
   Round(this.matches, this.roundName);
+
+  @override
+  String toString() {
+    return 'Round{matches: $matches, roundName: $roundName}';
+  }
 }
 
 enum GEN_OPTION{distribute, division, random, proportion}

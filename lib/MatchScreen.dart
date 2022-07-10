@@ -68,6 +68,51 @@ class MatchScreenState extends State<MatchScreen> {
   @override
   void initState() {
     super.initState();
+
+    rounds  = [];
+
+    List <String> team = List.generate( settingsData.teamCount, (index) => "${index+1}");
+    if (team.length.floor().isOdd){
+      team.add("X1");
+    }
+    int sub_length = (team.length/2).round();
+    List <String> subList2 =  List.generate( sub_length, (index) => "${2+index*2}");
+    List <String> subList1 = List.generate( sub_length, (index) => "${1+ index*2}");
+
+    List <String> games = [];
+    for (var t = 0; t < sub_length; t++) {
+
+      String team1 = subList1.elementAt(t);
+      String team2 = subList2.elementAt(t);
+      games.add("$team1 VS $team2");
+    }
+    for (var r = 1; r <= settingsData.gameRounds; r++) {
+      Round c_round  = Round([], "$r");
+      for (var v = 1; v <= settingsData.gameVenues; v++) {
+        if (games.length ==0){
+          String s_1 = subList1.removeAt(1);
+          String s_2 = subList2.removeAt(0);
+          subList1.insert(1, s_2);
+          subList2.add(s_1);
+          for (var t = 0; t < sub_length; t++) {
+
+            String team1 = subList1.elementAt(t);
+            String team2 = subList2.elementAt(t);
+            games.add("$team1 VS $team2");
+          }
+
+
+        }
+        Game g = Game(games.removeAt(0), "$v");
+        c_round.matches.add(g);
+
+      }
+
+      rounds.add(c_round);
+    }
+    setState((){
+
+    });
   }
 
   bool useEditor = false;
@@ -78,7 +123,7 @@ class MatchScreenState extends State<MatchScreen> {
     double screenWidth = screenSize.width;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Players'),
+        title: Text('Game matches'),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton(
@@ -119,7 +164,7 @@ class MatchScreenState extends State<MatchScreen> {
                 textAlign: TextAlign.left),
           ),
           ListTile(
-            leading: FaIcon(FontAwesomeIcons.volleyball),
+            leading: FaIcon(FontAwesomeIcons.flag),
             subtitle:  TextFormField(
                 decoration: const InputDecoration(
                   label: Text("How many sites are available?"),
@@ -162,6 +207,50 @@ class MatchScreenState extends State<MatchScreen> {
           ),
           ElevatedButton.icon(
               onPressed: () {
+                rounds  = [];
+
+                List <String> team = List.generate( settingsData.teamCount, (index) => "${index+1}");
+                if (team.length.floor().isOdd){
+                  team.add("X1");
+                }
+                int sub_length = (team.length/2).round();
+                List <String> subList2 =  List.generate( sub_length, (index) => "${2+index*2}");
+                List <String> subList1 = List.generate( sub_length, (index) => "${1+ index*2}");
+
+                List <String> games = [];
+                for (var t = 0; t < sub_length; t++) {
+
+                  String team1 = subList1.elementAt(t);
+                  String team2 = subList2.elementAt(t);
+                  games.add("$team1 VS $team2");
+                }
+                for (var r = 1; r <= settingsData.gameRounds; r++) {
+                  Round c_round  = Round([], "$r");
+                  for (var v = 1; v <= settingsData.gameVenues; v++) {
+                    if (games.length ==0){
+                      String s_1 = subList1.removeAt(1);
+                      String s_2 = subList2.removeAt(0);
+                      subList1.insert(1, s_2);
+                      subList2.add(s_1);
+                      for (var t = 0; t < sub_length; t++) {
+
+                        String team1 = subList1.elementAt(t);
+                        String team2 = subList2.elementAt(t);
+                        games.add("$team1 VS $team2");
+                      }
+
+
+                    }
+                    Game g = Game(games.removeAt(0), "$v");
+                    c_round.matches.add(g);
+
+                  }
+
+                  rounds.add(c_round);
+                }
+                setState((){
+
+                });
 
               },
               icon: FaIcon(FontAwesomeIcons.trophy),
@@ -177,11 +266,11 @@ class MatchScreenState extends State<MatchScreen> {
 
           //contains list of reviews
 
-          players.length != 0
+          rounds.length != 0
               ? ListView(
             shrinkWrap: true,
             physics: ScrollPhysics(),
-            children: rounds.reversed.map((round) {
+            children: rounds.map((round) {
               return MatchWidget(
                 round: round,
               );
