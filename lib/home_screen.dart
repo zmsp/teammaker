@@ -716,7 +716,8 @@ Jane,4,F""";
                   message: 'Add a list of players',
                   child: IconButton(
                     onPressed: () async {
-                      final List<PlayerModel> players = await Navigator.push(
+
+                       List<PlayerModel> players = await Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) => AddPlayersScreen()));

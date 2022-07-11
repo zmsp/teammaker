@@ -188,7 +188,8 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
 
                 ],
               )
-              : Column(
+              :
+          Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -528,19 +529,11 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
                     );
                   }).toList(),
                 )
-              :      Padding(
-            padding: EdgeInsets.all(10.0),
-            child:
-                Expanded(
-                    child: Text(
-                        'No Players to be added' )
-                ),
+              :
 
-
-
-
+          PlayerWidget(
+            player: PlayerModel(0, "None", "", "x"),
           ),
-
           ElevatedButton.icon(
               onPressed: () {
                 Navigator.pop(context, players);
