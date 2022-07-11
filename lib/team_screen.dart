@@ -1,17 +1,16 @@
-import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/MatchScreen.dart';
-import 'package:teammaker/SettingsScreen.dart';
 import 'package:teammaker/model/data_model.dart';
-
 
 class TeamList extends StatelessWidget {
   final List<ListItem> items;
   final SettingsData settingsData;
   //
-  TeamList({Key? key, required this.items, required this.settingsData}) : super(key: key);
+  TeamList({Key? key, required this.items, required this.settingsData})
+      : super(key: key);
 
   List<String> findAllPermutations(String source) {
     List allPermutations = [];
@@ -40,14 +39,12 @@ class TeamList extends StatelessWidget {
 
     return strPermutations;
   }
+
   @override
   Widget build(BuildContext context) {
     final title = 'Team List';
 
-
-
-
-      return Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: Text(title),
       ),
@@ -65,13 +62,12 @@ class TeamList extends StatelessWidget {
           );
         },
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          Navigator.push(context,   MaterialPageRoute(
-              builder: (context) => MatchScreen(settingsData)));
-
-
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => MatchScreen(settingsData)));
         },
         child: const FaIcon(
           FontAwesomeIcons.volleyball,

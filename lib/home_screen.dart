@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:localstorage/localstorage.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:pluto_grid_export/pluto_grid_export.dart' as pluto_grid_export;
 import 'package:teammaker/HelpScreen.dart';
 import 'package:teammaker/MatchScreen.dart';
 import 'package:teammaker/SettingsScreen.dart';
@@ -12,9 +13,7 @@ import 'package:teammaker/add_players.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/team_screen.dart';
-import 'package:pluto_grid_export/pluto_grid_export.dart' as pluto_grid_export;
 
-import 'package:flutter/material.dart';
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
   final String? topTitle;
@@ -43,20 +42,15 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
   void exportToCsv() async {
     String title = "pluto_grid_export";
-    if (stateManager != null){
+    if (stateManager != null) {
       var exported = const Utf8Encoder()
           .convert(pluto_grid_export.PlutoGridExport.exportCSV(stateManager!));
 
-      var test = pluto_grid_export.PlutoGridExport.exportCSV(stateManager!, fieldDelimiter: ",", textDelimiter: "", textEndDelimiter: "")
-      ;
-      Clipboard.setData(
-          new ClipboardData(text:test));
+      var test = pluto_grid_export.PlutoGridExport.exportCSV(stateManager!,
+          fieldDelimiter: ",", textDelimiter: "", textEndDelimiter: "");
+      Clipboard.setData(new ClipboardData(text: test));
       print(test);
-
-
     }
-
-
 
     // use file_saver from pub.dev
   }
@@ -487,7 +481,7 @@ Jane,4,F""";
 
     Map<String, List<String>> teams_name_list = Map();
     Map<String, double> teams_total_score = Map();
-    Map<String, double> teams_avg_score = Map();
+
     //find checked items
 
     List<PlutoRow?> tmp_rows = [];
@@ -506,25 +500,19 @@ Jane,4,F""";
               (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
         );
 
-
-
         teams_name_list.update(
           dat[i]?.cells?["team_field"]?.value ?? "None",
           // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
           (existingValue) {
             existingValue.add(dat[i]?.cells?["name_field"]?.value +
-                "\nLevel:" +
-                dat[i]?.cells?["skill_level_field"]?.value.toString() +
-                "|Gender:" +
-                dat[i]?.cells?["gender_field"]?.value);
+                "\n     ${dat[i]?.cells?["gender_field"]?.value} with level ${dat[i]?.cells?["skill_level_field"]?.value.toString()}"
+                    .toLowerCase());
             return existingValue;
           },
           ifAbsent: () => [
             (dat[i]?.cells?["name_field"]?.value +
-                "\nLevel:" +
-                dat[i]?.cells?["skill_level_field"]?.value.toString() +
-                "|Gender:" +
-                dat[i]?.cells?["gender_field"]?.value)
+                "\n     ${dat[i]?.cells?["gender_field"]?.value} with level  ${dat[i]?.cells?["skill_level_field"]?.value.toString()}"
+                    .toLowerCase())
           ],
         );
       } else {
@@ -532,7 +520,7 @@ Jane,4,F""";
 
       }
     }
-
+    Map<String, double> teams_avg_score = Map();
     Map<String, List<String>> teams_list = Map();
     // for (var i = 1; i <= teams; i++) {
     //   teams_list[i.toString()] = [];
@@ -540,8 +528,14 @@ Jane,4,F""";
     List<ListItem> teams_list_data = [];
     // print(teams_list.toString());
     teams_name_list.keys.toList().forEach((value) {
-      teams_list_data.add(HeadingItem(
-          'TEAM#: $value', 'Level total:' + teams_total_score[value].toString()));
+      var players = teams_name_list[value]!.length;
+      var total_score = teams_total_score[value];
+      var avg_score =
+          (teams_total_score[value]! / teams_name_list[value]!.length)
+              .toStringAsFixed(2);
+      print(avg_score);
+      teams_list_data.add(HeadingItem('TEAM#: $value',
+          '$players players with average level  $avg_score and combine level  $total_score'));
       teams_name_list[value]?.toList().forEach((name) {
         teams_list_data.add(MessageItem(name.toString(), name.toString()));
       });
@@ -551,7 +545,8 @@ Jane,4,F""";
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => TeamList(items: teams_list_data, settingsData: settingsData)));
+            builder: (context) =>
+                TeamList(items: teams_list_data, settingsData: settingsData)));
   }
 
   void generateTeams() {
@@ -577,8 +572,9 @@ Jane,4,F""";
           stateManager!.sortAscending(columns[1]);
           stateManager!.sortDescending(columns[2]);
           int player_num = stateManager?.checkedRows.length ?? 1;
-          settingsData.teamCount =  (player_num/settingsData.proportion).round();
-          print("TEASM ${ settingsData.teamCount}");
+          settingsData.teamCount =
+              (player_num / settingsData.proportion).round();
+          print("TEASM ${settingsData.teamCount}");
           //statements;
         }
         break;
@@ -716,8 +712,7 @@ Jane,4,F""";
                   message: 'Add a list of players',
                   child: IconButton(
                     onPressed: () async {
-
-                       List<PlayerModel> players = await Navigator.push(
+                      List<PlayerModel> players = await Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (context) => AddPlayersScreen()));
@@ -753,20 +748,17 @@ Jane,4,F""";
                 Tooltip(
                   message: 'Create Match',
                   child: IconButton(
-                      onPressed: (){
+                      onPressed: () {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => MatchScreen(settingsData)));
-
+                                builder: (context) =>
+                                    MatchScreen(settingsData)));
                       },
                       icon: FaIcon(FontAwesomeIcons.trophy)),
                 ),
                 // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
                 // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
-
-
-
               ],
             ),
             ButtonBar(
@@ -814,10 +806,9 @@ Jane,4,F""";
                     onPressed: () {
                       exportToCsv();
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text("Text Copied. Paste text somewhere to save!"),
+                        content:
+                            Text("Text Copied. Paste text somewhere to save!"),
                       ));
-
-
                     },
                     icon: FaIcon(FontAwesomeIcons.clipboard),
                   ),

@@ -7,7 +7,6 @@ import 'package:teammaker/widget/match.dart';
 import 'package:teammaker/widget/player.dart';
 
 class MatchScreen extends StatefulWidget {
-
   SettingsData settingsData;
 
   MatchScreen(this.settingsData);
@@ -18,7 +17,6 @@ class MatchScreen extends StatefulWidget {
 }
 
 class MatchScreenState extends State<MatchScreen> {
-
   SettingsData settingsData;
 
   MatchScreenState(this.settingsData);
@@ -69,50 +67,45 @@ class MatchScreenState extends State<MatchScreen> {
   void initState() {
     super.initState();
 
-    rounds  = [];
+    rounds = [];
 
-    List <String> team = List.generate( settingsData.teamCount, (index) => "${index+1}");
-    if (team.length.floor().isOdd){
-      team.add("X1");
+    int sub_length = (settingsData.teamCount / 2).round();
+    List<String> subList2 =
+        List.generate(sub_length, (index) => "${2 + index * 2}");
+    List<String> subList1 =
+        List.generate(sub_length, (index) => "${1 + index * 2}");
+    if (settingsData.teamCount.isOdd) {
+      subList2.removeLast();
+      subList2.add("X");
     }
-    int sub_length = (team.length/2).round();
-    List <String> subList2 =  List.generate( sub_length, (index) => "${2+index*2}");
-    List <String> subList1 = List.generate( sub_length, (index) => "${1+ index*2}");
 
-    List <String> games = [];
+    List<String> games = [];
     for (var t = 0; t < sub_length; t++) {
-
       String team1 = subList1.elementAt(t);
       String team2 = subList2.elementAt(t);
       games.add("$team1 VS $team2");
     }
     for (var r = 1; r <= settingsData.gameRounds; r++) {
-      Round c_round  = Round([], "$r");
+      Round c_round = Round([], "$r");
       for (var v = 1; v <= settingsData.gameVenues; v++) {
-        if (games.length ==0){
+        if (games.length == 0) {
           String s_1 = subList1.removeAt(1);
           String s_2 = subList2.removeAt(0);
           subList1.insert(1, s_2);
           subList2.add(s_1);
           for (var t = 0; t < sub_length; t++) {
-
             String team1 = subList1.elementAt(t);
             String team2 = subList2.elementAt(t);
             games.add("$team1 VS $team2");
           }
-
-
         }
         Game g = Game(games.removeAt(0), "$v");
         c_round.matches.add(g);
-
       }
 
       rounds.add(c_round);
     }
-    setState((){
-
-    });
+    setState(() {});
   }
 
   bool useEditor = false;
@@ -148,150 +141,116 @@ class MatchScreenState extends State<MatchScreen> {
             subtitle: TextFormField(
                 decoration: const InputDecoration(
                   label: Text("How many teams are playing?"),
-                  hintText:
-                  'Number of teams',
+                  hintText: 'Number of teams',
                 ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 initialValue: settingsData.teamCount.toString(),
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
                   settingsData.teamCount =
-                      int.tryParse(value) ??
-                          settingsData.teamCount;
+                      int.tryParse(value) ?? settingsData.teamCount;
                 },
                 textAlign: TextAlign.left),
           ),
           ListTile(
             leading: FaIcon(FontAwesomeIcons.flag),
-            subtitle:  TextFormField(
+            subtitle: TextFormField(
                 decoration: const InputDecoration(
                   label: Text("How many sites are available?"),
-                  hintText:
-                  'Number of available nets/sites/venues?',
+                  hintText: 'Number of available nets/sites/venues?',
                 ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 initialValue: settingsData.gameVenues.toString(),
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
                   settingsData.gameVenues =
-                      int.tryParse(value) ??
-                          settingsData.gameVenues;
+                      int.tryParse(value) ?? settingsData.gameVenues;
                 },
                 textAlign: TextAlign.left),
           ),
           ListTile(
-
             leading: FaIcon(FontAwesomeIcons.rotate),
-            subtitle:  TextFormField(
+            subtitle: TextFormField(
                 decoration: const InputDecoration(
                   label: Text("How many rounds of game?"),
-                  hintText:
-                  'Number of rounds or rotations',
+                  hintText: 'Number of rounds or rotations',
                 ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 initialValue: settingsData.gameRounds.toString(),
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
                   settingsData.gameRounds =
-                      int.tryParse(value) ??
-                          settingsData.gameRounds;
+                      int.tryParse(value) ?? settingsData.gameRounds;
                 },
                 textAlign: TextAlign.left),
-
           ),
           ElevatedButton.icon(
-              onPressed: () {
-                rounds  = [];
+            onPressed: () {
+              rounds = [];
 
-                List <String> team = List.generate( settingsData.teamCount, (index) => "${index+1}");
-                if (team.length.floor().isOdd){
-                  team.add("X1");
-                }
-                int sub_length = (team.length/2).round();
-                List <String> subList2 =  List.generate( sub_length, (index) => "${2+index*2}");
-                List <String> subList1 = List.generate( sub_length, (index) => "${1+ index*2}");
+              int sub_length = (settingsData.teamCount / 2).round();
+              List<String> subList2 =
+                  List.generate(sub_length, (index) => "${2 + index * 2}");
+              List<String> subList1 =
+                  List.generate(sub_length, (index) => "${1 + index * 2}");
+              if (settingsData.teamCount.isOdd) {
+                subList2.removeLast();
+                subList2.add("X");
+              }
 
-                List <String> games = [];
-                for (var t = 0; t < sub_length; t++) {
-
-                  String team1 = subList1.elementAt(t);
-                  String team2 = subList2.elementAt(t);
-                  games.add("$team1 VS $team2");
-                }
-                for (var r = 1; r <= settingsData.gameRounds; r++) {
-                  Round c_round  = Round([], "$r");
-                  for (var v = 1; v <= settingsData.gameVenues; v++) {
-                    if (games.length ==0){
-                      String s_1 = subList1.removeAt(1);
-                      String s_2 = subList2.removeAt(0);
-                      subList1.insert(1, s_2);
-                      subList2.add(s_1);
-                      for (var t = 0; t < sub_length; t++) {
-
-                        String team1 = subList1.elementAt(t);
-                        String team2 = subList2.elementAt(t);
-                        games.add("$team1 VS $team2");
-                      }
-
-
+              List<String> games = [];
+              for (var t = 0; t < sub_length; t++) {
+                String team1 = subList1.elementAt(t);
+                String team2 = subList2.elementAt(t);
+                games.add("$team1 VS $team2");
+              }
+              for (var r = 1; r <= settingsData.gameRounds; r++) {
+                Round c_round = Round([], "$r");
+                for (var v = 1; v <= settingsData.gameVenues; v++) {
+                  if (games.length == 0) {
+                    String s_1 = subList1.removeAt(1);
+                    String s_2 = subList2.removeAt(0);
+                    subList1.insert(1, s_2);
+                    subList2.add(s_1);
+                    for (var t = 0; t < sub_length; t++) {
+                      String team1 = subList1.elementAt(t);
+                      String team2 = subList2.elementAt(t);
+                      games.add("$team1 VS $team2");
                     }
-                    Game g = Game(games.removeAt(0), "$v");
-                    c_round.matches.add(g);
-
                   }
-
-                  rounds.add(c_round);
+                  Game g = Game(games.removeAt(0), "$v");
+                  c_round.matches.add(g);
                 }
-                setState((){
 
-                });
-
-              },
-              icon: FaIcon(FontAwesomeIcons.trophy),
-              label: Text("Create matches"),
+                rounds.add(c_round);
+              }
+              setState(() {});
+            },
+            icon: FaIcon(FontAwesomeIcons.trophy),
+            label: Text("Create matches"),
           ),
-
 
           //contains average stars and total reviews card
 
           SizedBox(height: 24.0),
           //the review menu label
 
-
           //contains list of reviews
 
           rounds.length != 0
               ? ListView(
-            shrinkWrap: true,
-            physics: ScrollPhysics(),
-            children: rounds.map((round) {
-              return MatchWidget(
-                round: round,
-              );
-            }).toList(),
-
-
-
-          )
-              :      Padding(
-            padding: EdgeInsets.all(10.0),
-            child:
-            Expanded(
-                child: Text(
-                    'Press generate matches' )
-            ),
-
-
-
-
-          ),
-
+                  shrinkWrap: true,
+                  physics: ScrollPhysics(),
+                  children: rounds.map((round) {
+                    return MatchWidget(
+                      round: round,
+                    );
+                  }).toList(),
+                )
+              : Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: Expanded(child: Text('Press generate matches')),
+                ),
         ],
       ),
     );
