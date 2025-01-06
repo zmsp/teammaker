@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peer-to-Peer Hello World</title>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        button {
+            margin: 10px;
+        }
+        #peer-id {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Peer-to-Peer Hello World</h1>
+    <button id="connect-button">Connect to Peer</button>
+    <input type="text" id="peer-id-input" placeholder="Enter Peer ID" />
+    <div id="peer-id">Your Peer ID: <span id="display-peer-id"></span></div>
+    <p id="message"></p>
+
+    <script>
+        // Initialize the PeerJS object and generate Peer ID
+        const peer = new Peer();
+        const displayPeerId = document.getElementById('display-peer-id');
+        const messageElement = document.getElementById('message');
+        const connectButton = document.getElementById('connect-button');
+        const peerIdInput = document.getElementById('peer-id-input');
+
+        // Display generated Peer ID
+        peer.on('open', (id) => {
+            displayPeerId.textContent = id;
+        });
+
+        // When "Connect to Peer" button is clicked
+        connectButton.addEventListener('click', () => {
+            const peerId = peerIdInput.value; // Get the entered Peer ID
+
+            if (!peerId) {
+                alert('Please enter a valid Peer ID');
+                return;
+            }
+
+            // Connect to the peer with the entered Peer ID
+            const conn = peer.connect(peerId);
+
+            // Handle connection open
+            conn.on('open', () => {
+                messageElement.textContent = 'Connected to ' + peerId;
+                conn.send('Hello from your peer!');
+            });
+
+            // Handle receiving data from the connected peer
+            conn.on('data', (data) => {
+                messageElement.textContent = 'Received: ' + data;
+            });
+
+            // Handle connection errors
+            conn.on('error', (err) => {
+                alert('Failed to connect: ' + err);
+            });
+        });
+
+        // Handle incoming connections (if someone connects to you)
+        peer.on('connection', (conn) => {
+            messageElement.textContent = 'Connected to ' + conn.peer;
+            conn.on('data', (data) => {
+                messageElement.textContent = 'Received: ' + data;
+            });
+
+            conn.send('Hello, I am your peer!');
+        });
+    </script>
+</body>
+</html>
