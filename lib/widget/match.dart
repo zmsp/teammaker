@@ -51,6 +51,8 @@ class _MatchWidgetState extends State<MatchWidget> {
                 }
 
                 return Card(
+                  key: ValueKey(
+                      "match_${match.team}_${match.scoreTeam1}_${match.scoreTeam2}"),
                   margin: const EdgeInsets.symmetric(vertical: 6.0),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -86,107 +88,133 @@ class _MatchWidgetState extends State<MatchWidget> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        child: Column(
                           children: [
-                            Column(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                Text("Team 1 Score",
-                                    style: TextStyle(
-                                        fontSize: 12, color: Colors.grey)),
-                                SizedBox(height: 8),
-                                SizedBox(
-                                  width: 60,
-                                  child: TextFormField(
-                                    initialValue:
-                                        match.scoreTeam1?.toString() ?? '',
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    decoration: InputDecoration(
-                                      isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(
-                                          vertical: 12, horizontal: 8),
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
+                                Column(
+                                  children: [
+                                    const Text("Team 1 Score",
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      width: 60,
+                                      child: TextFormField(
+                                        key: ValueKey("t1_${match.scoreTeam1}"),
+                                        initialValue:
+                                            match.scoreTeam1?.toString() ?? '',
+                                        keyboardType: TextInputType.number,
+                                        textAlign: TextAlign.center,
+                                        decoration: InputDecoration(
+                                          isDense: true,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  vertical: 12, horizontal: 8),
+                                          border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                        ),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            match.scoreTeam1 =
+                                                int.tryParse(val);
+                                          });
+                                        },
+                                      ),
                                     ),
-                                    onChanged: (val) {
-                                      setState(() {
-                                        match.scoreTeam1 = int.tryParse(val);
-                                      });
-                                    },
-                                  ),
+                                  ],
+                                ),
+                                const Text("VS",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey)),
+                                Column(
+                                  children: [
+                                    const Text("Team 2 Score",
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      width: 60,
+                                      child: TextFormField(
+                                        key: ValueKey("t2_${match.scoreTeam2}"),
+                                        initialValue:
+                                            match.scoreTeam2?.toString() ?? '',
+                                        keyboardType: TextInputType.number,
+                                        textAlign: TextAlign.center,
+                                        decoration: InputDecoration(
+                                          isDense: true,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  vertical: 12, horizontal: 8),
+                                          border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                        ),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            match.scoreTeam2 =
+                                                int.tryParse(val);
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                            Text("VS",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey)),
-                            Column(
-                              children: [
-                                Text("Team 2 Score",
-                                    style: TextStyle(
-                                        fontSize: 12, color: Colors.grey)),
-                                SizedBox(height: 8),
-                                SizedBox(
-                                  width: 60,
-                                  child: TextFormField(
-                                    initialValue:
-                                        match.scoreTeam2?.toString() ?? '',
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    decoration: InputDecoration(
-                                      isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(
-                                          vertical: 12, horizontal: 8),
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
-                                    ),
-                                    onChanged: (val) {
-                                      setState(() {
-                                        match.scoreTeam2 = int.tryParse(val);
-                                      });
-                                    },
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(height: 20),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                List<String> teamNames =
+                                    match.team.split(" VS ");
+                                String nameA = teamNames.isNotEmpty
+                                    ? "TEAM ${teamNames[0]}"
+                                    : "TEAM A";
+                                String nameB = teamNames.length > 1
+                                    ? "TEAM ${teamNames[1]}"
+                                    : "TEAM B";
+
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => TapScoreScreen(
+                                            initialScoreA: match.scoreTeam1,
+                                            initialScoreB: match.scoreTeam2,
+                                            initialNameA: nameA,
+                                            initialNameB: nameB,
+                                          )),
+                                );
+
+                                if (result != null && result is Map) {
+                                  setState(() {
+                                    match.scoreTeam1 = result['scoreA'];
+                                    match.scoreTeam2 = result['scoreB'];
+                                  });
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: colorScheme.secondaryContainer,
+                                foregroundColor:
+                                    colorScheme.onSecondaryContainer,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const FaIcon(FontAwesomeIcons.stopwatch,
+                                  size: 16),
+                              label: const Text("Launch Scoreboard",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                             ),
+                            const SizedBox(height: 15),
                           ],
                         ),
-                        const SizedBox(height: 20),
-                        Center(
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const TapScoreScreen()),
-                              );
-
-                              if (result != null && result is Map) {
-                                setState(() {
-                                  match.scoreTeam1 = result['scoreA'];
-                                  match.scoreTeam2 = result['scoreB'];
-                                });
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colorScheme.secondaryContainer,
-                              foregroundColor: colorScheme.onSecondaryContainer,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
-                            ),
-                            icon: const FaIcon(FontAwesomeIcons.stopwatch, size: 16),
-                            label: const Text("Launch Scoreboard",
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               }).toList(),

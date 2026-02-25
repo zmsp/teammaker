@@ -4,7 +4,18 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TapScoreScreen extends StatefulWidget {
-  const TapScoreScreen({super.key});
+  final int? initialScoreA;
+  final int? initialScoreB;
+  final String? initialNameA;
+  final String? initialNameB;
+
+  const TapScoreScreen({
+    super.key,
+    this.initialScoreA,
+    this.initialScoreB,
+    this.initialNameA,
+    this.initialNameB,
+  });
 
   @override
   State<TapScoreScreen> createState() => _TapScoreScreenState();
@@ -42,10 +53,12 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
   void _loadState() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _teamAScore = prefs.getInt('score_a') ?? 0;
-      _teamBScore = prefs.getInt('score_b') ?? 0;
-      _nameAController.text = prefs.getString('name_a') ?? "TEAM A";
-      _nameBController.text = prefs.getString('name_b') ?? "TEAM B";
+      _teamAScore = widget.initialScoreA ?? (prefs.getInt('score_a') ?? 0);
+      _teamBScore = widget.initialScoreB ?? (prefs.getInt('score_b') ?? 0);
+      _nameAController.text =
+          widget.initialNameA ?? (prefs.getString('name_a') ?? "TEAM A");
+      _nameBController.text =
+          widget.initialNameB ?? (prefs.getString('name_b') ?? "TEAM B");
     });
   }
 
