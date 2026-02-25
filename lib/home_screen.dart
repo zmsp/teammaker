@@ -98,12 +98,16 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       }).toList();
 
       if (loadedRows.isNotEmpty) {
-        setState(() {
-          rows = loadedRows;
-          if (stateManager != null) {
-            stateManager!.removeAllRows();
-            stateManager!.appendRows(loadedRows);
-          }
+        if (!mounted) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          setState(() {
+            rows = loadedRows;
+            if (stateManager != null) {
+              stateManager!.removeAllRows();
+              stateManager!.appendRows(loadedRows);
+            }
+          });
         });
       }
     }
@@ -121,52 +125,6 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       frozen: PlutoColumnFrozen.start,
       width: 250,
       type: PlutoColumnType.text(),
-      renderer: (rendererContext) {
-        return Row(
-          children: [
-            Expanded(
-              child: Text(
-                rendererContext.row.cells[rendererContext.column.field]!.value
-                    .toString(),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.white70),
-              ),
-            ),
-            Wrap(
-              children: <Widget>[
-                IconButton(
-                  icon: const Icon(
-                    Icons.add_circle,
-                  ),
-                  onPressed: () {
-                    rendererContext.stateManager.insertRows(
-                      rendererContext.rowIdx,
-                      [rendererContext.stateManager.getNewRow()],
-                    );
-                  },
-                  iconSize: 25,
-                  color: Colors.green,
-                  padding: const EdgeInsets.all(0),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.remove_circle_outlined,
-                  ),
-                  onPressed: () {
-                    rendererContext.stateManager
-                        .removeRows([rendererContext.row]);
-                  },
-                  iconSize: 25,
-                  color: Colors.red,
-                  padding: const EdgeInsets.all(0),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
     ),
     PlutoColumn(
       title: 'Level',
@@ -225,18 +183,22 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      settingsData.teamCount = prefs.getInt('teamCount') ?? 1;
-      settingsData.division = prefs.getInt('division') ?? 2;
-      settingsData.proportion = prefs.getInt('proportion') ?? 6;
-      settingsData.gameVenues = prefs.getInt('gameVenues') ?? 2;
-      settingsData.gameRounds = prefs.getInt('gameRounds') ?? 2;
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        settingsData.teamCount = prefs.getInt('teamCount') ?? 1;
+        settingsData.division = prefs.getInt('division') ?? 2;
+        settingsData.proportion = prefs.getInt('proportion') ?? 6;
+        settingsData.gameVenues = prefs.getInt('gameVenues') ?? 2;
+        settingsData.gameRounds = prefs.getInt('gameRounds') ?? 2;
 
-      String savedOption =
-          prefs.getString('genOption') ?? GEN_OPTION.proportion.toString();
-      settingsData.o = GEN_OPTION.values.firstWhere(
-          (e) => e.toString() == savedOption,
-          orElse: () => GEN_OPTION.proportion);
+        String savedOption =
+            prefs.getString('genOption') ?? GEN_OPTION.proportion.toString();
+        settingsData.o = GEN_OPTION.values.firstWhere(
+            (e) => e.toString() == savedOption,
+            orElse: () => GEN_OPTION.proportion);
+      });
     });
   }
 

@@ -109,156 +109,182 @@ class MatchScreenState extends State<MatchScreen> {
 
   bool useEditor = false;
 
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Are you sure?'),
+            content: const Text(
+                'Do you want to leave without saving? Any unsaved scores will be lost.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false), // don't pop
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true), // do pop
+                child: const Text('Yes', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        )) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
     double screenWidth = screenSize.width;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Game matches'),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton(
-        tooltip: "Add listed players",
-        onPressed: () {
-          Navigator.pop(context, players);
-          // print(rows.length);
-          // showDialog<void>(
-          //   context: context,
-          //   builder: HelpDialog,
-          // );
-        },
-        child: const FaIcon(
-          FontAwesomeIcons.check,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Game matches'),
         ),
-      ),
-      body: ListView(
-        children: <Widget>[
-          SizedBox(height: 12.0),
-          ExpansionTile(
-            leading: const FaIcon(FontAwesomeIcons.gear),
-            title: const Text("Match Settings",
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text("Configure teams, venues, and rounds"),
-            children: [
-              ListTile(
-                leading: const FaIcon(FontAwesomeIcons.userGroup),
-                title: TextFormField(
-                    decoration: const InputDecoration(
-                      label: Text("How many teams are playing?"),
-                      hintText: 'Number of teams',
-                    ),
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    initialValue: settingsData.teamCount.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      settingsData.teamCount =
-                          int.tryParse(value) ?? settingsData.teamCount;
-                    },
-                    textAlign: TextAlign.left),
-              ),
-              ListTile(
-                leading: const FaIcon(FontAwesomeIcons.flag),
-                title: TextFormField(
-                    decoration: const InputDecoration(
-                      label: Text("How many sites are available?"),
-                      hintText: 'Number of available nets/sites/venues?',
-                    ),
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    initialValue: settingsData.gameVenues.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      settingsData.gameVenues =
-                          int.tryParse(value) ?? settingsData.gameVenues;
-                    },
-                    textAlign: TextAlign.left),
-              ),
-              ListTile(
-                leading: const FaIcon(FontAwesomeIcons.rotate),
-                title: TextFormField(
-                    decoration: const InputDecoration(
-                      label: Text("How many rounds of game?"),
-                      hintText: 'Number of rounds or rotations',
-                    ),
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    initialValue: settingsData.gameRounds.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      settingsData.gameRounds =
-                          int.tryParse(value) ?? settingsData.gameRounds;
-                    },
-                    textAlign: TextAlign.left),
-              ),
-            ],
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton: FloatingActionButton(
+          tooltip: "Add listed players",
+          onPressed: () {
+            Navigator.pop(context, players);
+            // print(rows.length);
+            // showDialog<void>(
+            //   context: context,
+            //   builder: HelpDialog,
+            // );
+          },
+          child: const FaIcon(
+            FontAwesomeIcons.check,
           ),
-          ElevatedButton.icon(
-            onPressed: () {
-              rounds = [];
+        ),
+        body: ListView(
+          children: <Widget>[
+            SizedBox(height: 12.0),
+            ExpansionTile(
+              leading: const FaIcon(FontAwesomeIcons.gear),
+              title: const Text("Match Settings",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text("Configure teams, venues, and rounds"),
+              children: [
+                ListTile(
+                  leading: const FaIcon(FontAwesomeIcons.userGroup),
+                  title: TextFormField(
+                      decoration: const InputDecoration(
+                        label: Text("How many teams are playing?"),
+                        hintText: 'Number of teams',
+                      ),
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      initialValue: settingsData.teamCount.toString(),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        settingsData.teamCount =
+                            int.tryParse(value) ?? settingsData.teamCount;
+                      },
+                      textAlign: TextAlign.left),
+                ),
+                ListTile(
+                  leading: const FaIcon(FontAwesomeIcons.flag),
+                  title: TextFormField(
+                      decoration: const InputDecoration(
+                        label: Text("How many sites are available?"),
+                        hintText: 'Number of available nets/sites/venues?',
+                      ),
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      initialValue: settingsData.gameVenues.toString(),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        settingsData.gameVenues =
+                            int.tryParse(value) ?? settingsData.gameVenues;
+                      },
+                      textAlign: TextAlign.left),
+                ),
+                ListTile(
+                  leading: const FaIcon(FontAwesomeIcons.rotate),
+                  title: TextFormField(
+                      decoration: const InputDecoration(
+                        label: Text("How many rounds of game?"),
+                        hintText: 'Number of rounds or rotations',
+                      ),
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      initialValue: settingsData.gameRounds.toString(),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        settingsData.gameRounds =
+                            int.tryParse(value) ?? settingsData.gameRounds;
+                      },
+                      textAlign: TextAlign.left),
+                ),
+              ],
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                rounds = [];
 
-              int sub_length = (settingsData.teamCount / 2).round();
-              List<String> subList2 =
-                  List.generate(sub_length, (index) => "${2 + index * 2}");
-              List<String> subList1 =
-                  List.generate(sub_length, (index) => "${1 + index * 2}");
-              if (settingsData.teamCount.isOdd) {
-                subList2.removeLast();
-                subList2.add("X");
-              }
-
-              List<String> games = [];
-              for (var t = 0; t < sub_length; t++) {
-                String team1 = subList1.elementAt(t);
-                String team2 = subList2.elementAt(t);
-                games.add("$team1 VS $team2");
-              }
-              for (var r = 1; r <= settingsData.gameRounds; r++) {
-                Round c_round = Round([], "$r");
-                for (var v = 1; v <= settingsData.gameVenues; v++) {
-                  if (games.length == 0) {
-                    String s_1 = subList1.removeAt(1);
-                    String s_2 = subList2.removeAt(0);
-                    subList1.insert(1, s_2);
-                    subList2.add(s_1);
-                    for (var t = 0; t < sub_length; t++) {
-                      String team1 = subList1.elementAt(t);
-                      String team2 = subList2.elementAt(t);
-                      games.add("$team1 VS $team2");
-                    }
-                  }
-                  Game g = Game(games.removeAt(0), "$v");
-                  c_round.matches.add(g);
+                int sub_length = (settingsData.teamCount / 2).round();
+                List<String> subList2 =
+                    List.generate(sub_length, (index) => "${2 + index * 2}");
+                List<String> subList1 =
+                    List.generate(sub_length, (index) => "${1 + index * 2}");
+                if (settingsData.teamCount.isOdd) {
+                  subList2.removeLast();
+                  subList2.add("X");
                 }
 
-                rounds.add(c_round);
-              }
-              setState(() {});
-            },
-            icon: FaIcon(FontAwesomeIcons.trophy),
-            label: Text("Create matches"),
-          ),
+                List<String> games = [];
+                for (var t = 0; t < sub_length; t++) {
+                  String team1 = subList1.elementAt(t);
+                  String team2 = subList2.elementAt(t);
+                  games.add("$team1 VS $team2");
+                }
+                for (var r = 1; r <= settingsData.gameRounds; r++) {
+                  Round c_round = Round([], "$r");
+                  for (var v = 1; v <= settingsData.gameVenues; v++) {
+                    if (games.length == 0) {
+                      String s_1 = subList1.removeAt(1);
+                      String s_2 = subList2.removeAt(0);
+                      subList1.insert(1, s_2);
+                      subList2.add(s_1);
+                      for (var t = 0; t < sub_length; t++) {
+                        String team1 = subList1.elementAt(t);
+                        String team2 = subList2.elementAt(t);
+                        games.add("$team1 VS $team2");
+                      }
+                    }
+                    Game g = Game(games.removeAt(0), "$v");
+                    c_round.matches.add(g);
+                  }
 
-          //contains average stars and total reviews card
+                  rounds.add(c_round);
+                }
+                setState(() {});
+              },
+              icon: FaIcon(FontAwesomeIcons.trophy),
+              label: Text("Create matches"),
+            ),
 
-          SizedBox(height: 24.0),
-          //the review menu label
+            //contains average stars and total reviews card
 
-          //contains list of reviews
+            SizedBox(height: 24.0),
+            //the review menu label
 
-          rounds.length != 0
-              ? ListView(
-                  shrinkWrap: true,
-                  physics: ScrollPhysics(),
-                  children: rounds.map((round) {
-                    return MatchWidget(
-                      round: round,
-                    );
-                  }).toList(),
-                )
-              : Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: Expanded(child: Text('Press generate matches')),
-                ),
-        ],
+            //contains list of reviews
+
+            rounds.length != 0
+                ? ListView(
+                    shrinkWrap: true,
+                    physics: ScrollPhysics(),
+                    children: rounds.map((round) {
+                      return MatchWidget(
+                        round: round,
+                      );
+                    }).toList(),
+                  )
+                : Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: Text(
+                        'Press generate matches'), // Removed invalid Expanded inside a ListView!
+                  ),
+          ],
+        ),
       ),
     );
   }
