@@ -1,14 +1,13 @@
 class SettingsData {
-  int teamCount = 2;
-  int division = 2;
-  int proportion = 6; // Standard Volleyball team size
-  int gameVenues = 1; // Default to 1 court/venue
-  int gameRounds = 1; // Default to enough rounds for everyone to play once
+  int teamCount = 2; // How many teams to make
+  int division = 2; // Split by skill levels
+  int proportion = 6; // How many players in one team
+  int gameVenues = 1; // Number of play areas
+  int gameRounds = 1; // Number of games
 
-  bool preferExtraTeam =
-      false; // Toggle for handling remainders in team generation
+  bool preferExtraTeam = false; // Add more teams for extra players
 
-  GEN_OPTION o = GEN_OPTION.even_gender; // Default generation option
+  GEN_OPTION o = GEN_OPTION.even_gender; // Best balance settings
 
   @override
   String toString() {
@@ -52,4 +51,4 @@ class Round {
   }
 }
 
-enum GEN_OPTION { distribute, division, random, proportion, even_gender }
+enum GEN_OPTION { distribute, division, random, even_gender }

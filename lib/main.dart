@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Team Maker',
+      title: 'Team Maker Buddy',
       theme: ThemeData(
         brightness: Brightness.light,
         /* light theme settings */

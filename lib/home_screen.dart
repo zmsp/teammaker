@@ -654,6 +654,7 @@ Jane,4,F""";
     var sortedTeams = teams.keys.toList()..sort();
     return sortedTeams.where((team) => team != 'No team').map((team) {
       return ExpansionTile(
+        initiallyExpanded: true,
         title: Text('Team $team',
             style: const TextStyle(fontWeight: FontWeight.bold)),
         children: teams[team]!
@@ -689,7 +690,7 @@ Jane,4,F""";
     return Scaffold(
       backgroundColor: colorScheme.surfaceVariant.withOpacity(0.3),
       appBar: AppBar(
-        title: const Text('Team Shaker',
+        title: const Text('Team Maker Buddy',
             style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5)),
         centerTitle: true,
         elevation: 0,
@@ -781,74 +782,103 @@ Jane,4,F""";
                     ),
                     createHeader: (stateManager) {
                       return Container(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(12.0),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceVariant.withOpacity(0.5),
+                          color: colorScheme.surfaceVariant.withOpacity(0.3),
                           border: Border(
                               bottom: BorderSide(
                                   color: colorScheme.outlineVariant)),
                         ),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _GridHeaderButton(
-                                onPressed: () async {
-                                  final List<PlayerModel>? players =
-                                      await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  AddPlayersScreen()));
-                                  if (players != null) {
-                                    addPlayers(players);
-                                  }
-                                },
-                                icon: Icons.group_add,
-                                label: 'Quick Add',
-                                color: colorScheme.primary,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              onChanged: (v) {
+                                stateManager.setFilter((row) {
+                                  return row.cells['name_field']?.value
+                                          .toString()
+                                          .toLowerCase()
+                                          .contains(v.toLowerCase()) ??
+                                      false;
+                                });
+                              },
+                              decoration: InputDecoration(
+                                hintText: 'Search players...',
+                                prefixIcon: const Icon(Icons.search, size: 20),
+                                isDense: true,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: colorScheme.surface,
                               ),
-                              const SizedBox(width: 12),
-                              _GridHeaderButton(
-                                onPressed: () {
-                                  stateManager.insertRows(
-                                      0, [stateManager.getNewRow()]);
-                                  _triggerSavePlayers();
-                                },
-                                icon: Icons.person_add,
-                                label: 'Add Row',
-                                color: colorScheme.secondary,
+                            ),
+                            const SizedBox(height: 12),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _GridHeaderButton(
+                                    onPressed: () async {
+                                      final List<PlayerModel>? players =
+                                          await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      AddPlayersScreen()));
+                                      if (players != null) {
+                                        addPlayers(players);
+                                      }
+                                    },
+                                    icon: Icons.group_add,
+                                    label: 'Quick Add',
+                                    color: colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _GridHeaderButton(
+                                    onPressed: () {
+                                      stateManager.insertRows(
+                                          0, [stateManager.getNewRow()]);
+                                      _triggerSavePlayers();
+                                    },
+                                    icon: Icons.person_add,
+                                    label: 'Add Row',
+                                    color: colorScheme.secondary,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _GridHeaderButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _isEditable = !_isEditable;
+                                        for (var col in stateManager.columns) {
+                                          col.enableEditingMode = _isEditable;
+                                        }
+                                        stateManager.notifyListeners();
+                                      });
+                                    },
+                                    icon: _isEditable
+                                        ? Icons.edit_off
+                                        : Icons.edit,
+                                    label: _isEditable ? 'Lock' : 'Edit',
+                                    color: _isEditable
+                                        ? colorScheme.tertiary
+                                        : colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _GridHeaderButton(
+                                    onPressed: () {
+                                      stateManager
+                                          .removeRows(stateManager.checkedRows);
+                                      _triggerSavePlayers();
+                                    },
+                                    icon: Icons.delete_sweep,
+                                    label: 'Clear Selected',
+                                    color: colorScheme.error,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              _GridHeaderButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _isEditable = !_isEditable;
-                                    for (var col in stateManager.columns) {
-                                      col.enableEditingMode = _isEditable;
-                                    }
-                                    stateManager.notifyListeners();
-                                  });
-                                },
-                                icon: _isEditable ? Icons.edit_off : Icons.edit,
-                                label: _isEditable ? 'Lock' : 'Edit',
-                                color: _isEditable
-                                    ? colorScheme.tertiary
-                                    : colorScheme.onSurfaceVariant,
-                              ),
-                              const SizedBox(width: 12),
-                              _GridHeaderButton(
-                                onPressed: () {
-                                  stateManager
-                                      .removeRows(stateManager.checkedRows);
-                                  _triggerSavePlayers();
-                                },
-                                icon: Icons.delete_sweep,
-                                label: 'Clear Selected',
-                                color: colorScheme.error,
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
                     },
@@ -1067,6 +1097,7 @@ Jane,4,F""";
               ),
               margin: const EdgeInsets.only(bottom: 12),
               child: ExpansionTile(
+                initiallyExpanded: true,
                 leading: CircleAvatar(
                     backgroundColor: colorScheme.surfaceVariant,
                     child:
@@ -1085,6 +1116,7 @@ Jane,4,F""";
             ),
             margin: const EdgeInsets.only(bottom: 80.0),
             child: ExpansionTile(
+              initiallyExpanded: true,
               leading: CircleAvatar(
                   backgroundColor:
                       colorScheme.secondaryContainer.withOpacity(0.5),

@@ -133,29 +133,6 @@ class TeamGenerator {
           teams_list[teamKeys[teamIdx]]?.add(players[i]);
         }
       });
-    } else if (settingsData.o == GEN_OPTION.proportion) {
-      // Proportion algorithm
-      tmp_rows.sort((a, b) {
-        int cmp = (a.cells["gender_field"]?.value.toString() ?? "")
-            .compareTo(b.cells["gender_field"]?.value.toString() ?? "");
-        if (cmp != 0) return cmp;
-        return (b.cells["skill_level_field"]?.value as num)
-            .compareTo(a.cells["skill_level_field"]?.value as num);
-      });
-
-      var start = 0;
-      for (var i = 0; i < tmp_rows.length; i = i + size) {
-        int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
-        List<PlutoRow> sublist = tmp_rows.sublist(start, end);
-        keys.shuffle();
-        int key_i = 0;
-
-        sublist.forEach((value) {
-          teams_list[keys[key_i]]?.add(value);
-          key_i++;
-        });
-        start = i + size;
-      }
     } else if (settingsData.o == GEN_OPTION.random) {
       // Random algorithm
       tmp_rows.shuffle();

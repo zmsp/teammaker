@@ -56,7 +56,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ListTile(
                 subtitle: Column(children: <Widget>[
                   ListTile(
-                    title: const Text('Gender and skill balanced team'),
+                    title: const Text('Fair Mix (Recommended)'),
+                    leading: Radio<GEN_OPTION>(
+                      value: GEN_OPTION.even_gender,
+                      groupValue: settingsData.o,
+                      onChanged: (GEN_OPTION? value) {
+                        setState(() {
+                          settingsData.o = value ?? settingsData.o;
+                        });
+                      },
+                    ),
+                    subtitle: settingsData.o == GEN_OPTION.even_gender
+                        ? TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text('Players per team'),
+                              hintText:
+                                  'Mixes players by gender and skill fairly',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.proportion.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.proportion = int.tryParse(value) ??
+                                  settingsData.proportion;
+                            },
+                            textAlign: TextAlign.left)
+                        : const Text(""),
+                  ),
+                  ListTile(
+                    title: const Text('Skill Balance'),
                     leading: Radio<GEN_OPTION>(
                       value: GEN_OPTION.distribute,
                       groupValue: settingsData.o,
@@ -66,32 +96,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         });
                       },
                     ),
-                    subtitle: Column(
-                      children: [
-                        settingsData.o == GEN_OPTION.distribute
-                            ? TextFormField(
-                                decoration: const InputDecoration(
-                                  label: Text("Number of teams"),
-                                  hintText:
-                                      'How many teams do you want to split the players to?',
-                                ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly
-                                ],
-                                initialValue: settingsData.teamCount.toString(),
-                                keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  settingsData.teamCount =
-                                      int.tryParse(value) ??
-                                          settingsData.teamCount;
-                                },
-                                textAlign: TextAlign.left)
-                            : Text(""),
-                      ],
-                    ),
+                    subtitle: settingsData.o == GEN_OPTION.distribute
+                        ? TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("Number of teams"),
+                              hintText: 'Splits players by skill level only',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.teamCount.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.teamCount =
+                                  int.tryParse(value) ?? settingsData.teamCount;
+                            },
+                            textAlign: TextAlign.left)
+                        : const Text(""),
                   ),
                   ListTile(
-                    title: const Text('Division based on skill level'),
+                    title: const Text('Ranked Groups'),
                     leading: Radio<GEN_OPTION>(
                       value: GEN_OPTION.division,
                       groupValue: settingsData.o,
@@ -106,9 +130,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: [
                               TextFormField(
                                   decoration: const InputDecoration(
-                                    label: Text('Number of divisions'),
-                                    hintText:
-                                        'Division number means top teams will have better players',
+                                    label: Text('Number of groups'),
+                                    hintText: 'Keeps strong players together',
                                   ),
                                   inputFormatters: [
                                     FilteringTextInputFormatter.digitsOnly
@@ -125,8 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               TextFormField(
                                   decoration: const InputDecoration(
                                     label: Text("Number of teams"),
-                                    hintText:
-                                        'How many teams do you want to split the players to?',
+                                    hintText: 'Total teams to create',
                                   ),
                                   inputFormatters: [
                                     FilteringTextInputFormatter.digitsOnly
@@ -142,39 +164,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   textAlign: TextAlign.left),
                             ],
                           )
-                        : Text(""),
+                        : const Text(""),
                   ),
                   ListTile(
-                    title: const Text('Skill balanced by team size'),
-                    leading: Radio<GEN_OPTION>(
-                      value: GEN_OPTION.proportion,
-                      groupValue: settingsData.o,
-                      onChanged: (GEN_OPTION? value) {
-                        setState(() {
-                          settingsData.o = value ?? settingsData.o;
-                        });
-                      },
-                    ),
-                    subtitle: settingsData.o == GEN_OPTION.proportion
-                        ? TextFormField(
-                            decoration: const InputDecoration(
-                              label: Text('Number of players per team'),
-                              hintText: 'How many players per team',
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            initialValue: settingsData.proportion.toString(),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              settingsData.proportion = int.tryParse(value) ??
-                                  settingsData.proportion;
-                            },
-                            textAlign: TextAlign.left)
-                        : Text(""),
-                  ),
-                  ListTile(
-                    title: const Text('Random'),
+                    title: const Text('Random Mix'),
                     leading: Radio<GEN_OPTION>(
                       value: GEN_OPTION.random,
                       groupValue: settingsData.o,
@@ -184,65 +177,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         });
                       },
                     ),
-                    subtitle: Column(
-                      children: [
-                        settingsData.o == GEN_OPTION.random
-                            ? TextFormField(
-                                decoration: const InputDecoration(
-                                  label: Text("Number of teams"),
-                                  hintText:
-                                      'How many teams do you want to split the players to?',
-                                ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly
-                                ],
-                                initialValue: settingsData.teamCount.toString(),
-                                keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  settingsData.teamCount =
-                                      int.tryParse(value) ??
-                                          settingsData.teamCount;
-                                },
-                                textAlign: TextAlign.left)
-                            : Text(""),
-                      ],
-                    ),
+                    subtitle: settingsData.o == GEN_OPTION.random
+                        ? TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("Number of teams"),
+                              hintText: 'Pure random splitting',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.teamCount.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.teamCount =
+                                  int.tryParse(value) ?? settingsData.teamCount;
+                            },
+                            textAlign: TextAlign.left)
+                        : const Text(""),
                   ),
-                  ListTile(
-                    title: const Text('Even Gender Split'),
-                    leading: Radio<GEN_OPTION>(
-                      value: GEN_OPTION.even_gender,
-                      groupValue: settingsData.o,
-                      onChanged: (GEN_OPTION? value) {
-                        setState(() {
-                          settingsData.o = value ?? settingsData.o;
-                        });
-                      },
-                    ),
-                    subtitle: Column(
-                      children: [
-                        settingsData.o == GEN_OPTION.even_gender
-                            ? TextFormField(
-                                decoration: const InputDecoration(
-                                  label: Text("Number of teams"),
-                                  hintText:
-                                      'How many teams do you want to split the players to?',
-                                ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly
-                                ],
-                                initialValue: settingsData.teamCount.toString(),
-                                keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  settingsData.teamCount =
-                                      int.tryParse(value) ??
-                                          settingsData.teamCount;
-                                },
-                                textAlign: TextAlign.left)
-                            : Text(""),
-                      ],
-                    ),
-                  )
                 ]),
               ),
               Divider(
