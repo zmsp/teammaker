@@ -132,8 +132,6 @@ class _MatchScreenState extends State<MatchScreen> {
     _generateMatches();
   }
 
-  bool useEditor = false;
-
   bool _anyScoreEntered() {
     for (var round in rounds) {
       for (var match in round.matches) {
@@ -143,25 +141,50 @@ class _MatchScreenState extends State<MatchScreen> {
     return false;
   }
 
-  Future<bool> _onWillPop({bool isDestructive = false}) async {
-    // Show warning if scores exist OR if a match list exists
-    if (!_anyScoreEntered() && rounds.isEmpty) return true;
+  bool useEditor = false;
 
-    return (await showDialog(
+  Future<bool> _showResetWarning() async {
+    if (!_anyScoreEntered()) return true;
+
+    return (await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Discard Scores?'),
-            content: Text(isDestructive
-                ? 'Regenerating matches will overwrite all currently entered scores. Proceed?'
-                : 'Do you want to leave? Any unsaved scores will be lost.'),
+            title: const Text('Reset Scores?'),
+            content: const Text(
+                'Regenerating matches will overwrite all currently entered scores. This cannot be undone.'),
             actions: <Widget>[
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
+                child: const Text('Cancel'),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Yes', style: TextStyle(color: Colors.red)),
+                child: const Text('Reset & Regenerate',
+                    style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        )) ??
+        false;
+  }
+
+  Future<bool> _onWillPop() async {
+    if (!_anyScoreEntered() && rounds.isEmpty) return true;
+
+    return (await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Leave Match Maker?'),
+            content: const Text(
+                'Your current match schedule and any entered scores will be lost.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Stay'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Leave', style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -259,7 +282,7 @@ class _MatchScreenState extends State<MatchScreen> {
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  if (await _onWillPop(isDestructive: true)) {
+                  if (await _showResetWarning()) {
                     setState(() {
                       _generateMatches();
                     });
