@@ -606,8 +606,8 @@ Jane,4,F""";
                   PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) =>
                           RandomTeamScreen(
-                            initialTeamCount: settingsData.teamCount,
-                            initialPlayersPerTeam: settingsData.proportion,
+                            initialTeamCount: 1,
+                            initialPlayersPerTeam: 6,
                           )));
             },
           ),
