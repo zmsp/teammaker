@@ -1,4 +1,4 @@
-class SettingsData{
+class SettingsData {
   int teamCount = 4;
   int division = 2;
   int proportion = 2;
@@ -12,16 +12,15 @@ class SettingsData{
     return 'SettingsData{teamCount: $teamCount, o: $o, division: $division}';
   }
 
-  SettingsData(){
-     teamCount = 4;
-     division = 2;
-     proportion = 2;
-     o = GEN_OPTION.distribute;
+  SettingsData() {
+    teamCount = 4;
+    division = 2;
+    proportion = 2;
+    o = GEN_OPTION.distribute;
   }
 }
 
-
-class Game{
+class Game {
   String team;
   String venue;
 
@@ -32,7 +31,8 @@ class Game{
     return 'Game{teams: $team, venue: $venue}';
   }
 }
-class Round{
+
+class Round {
   List<Game> matches;
   String roundName;
 
@@ -44,4 +44,4 @@ class Round{
   }
 }
 
-enum GEN_OPTION{distribute, division, random, proportion}
+enum GEN_OPTION { distribute, division, random, proportion, even_gender }

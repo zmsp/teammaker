@@ -166,8 +166,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             initialValue: settingsData.proportion.toString(),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
-                              settingsData.proportion =
-                                  int.tryParse(value) ?? settingsData.proportion;
+                              settingsData.proportion = int.tryParse(value) ??
+                                  settingsData.proportion;
                             },
                             textAlign: TextAlign.left)
                         : Text(""),
@@ -186,6 +186,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle: Column(
                       children: [
                         settingsData.o == GEN_OPTION.random
+                            ? TextFormField(
+                                decoration: const InputDecoration(
+                                  label: Text("Number of teams"),
+                                  hintText:
+                                      'How many teams do you want to split the players to?',
+                                ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                initialValue: settingsData.teamCount.toString(),
+                                keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  settingsData.teamCount =
+                                      int.tryParse(value) ??
+                                          settingsData.teamCount;
+                                },
+                                textAlign: TextAlign.left)
+                            : Text(""),
+                      ],
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Even Gender Split'),
+                    leading: Radio<GEN_OPTION>(
+                      value: GEN_OPTION.even_gender,
+                      groupValue: settingsData.o,
+                      onChanged: (GEN_OPTION? value) {
+                        setState(() {
+                          settingsData.o = value ?? settingsData.o;
+                        });
+                      },
+                    ),
+                    subtitle: Column(
+                      children: [
+                        settingsData.o == GEN_OPTION.even_gender
                             ? TextFormField(
                                 decoration: const InputDecoration(
                                   label: Text("Number of teams"),

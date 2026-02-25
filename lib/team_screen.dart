@@ -99,7 +99,7 @@ class HeadingItem implements ListItem {
         color: Colors.primaries[Random().nextInt(Colors.primaries.length)],
         child: Text(
           heading,
-          style: Theme.of(context).textTheme.headline6,
+          style: Theme.of(context).textTheme.titleLarge,
         ));
   }
 

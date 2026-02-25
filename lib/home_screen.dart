@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:localstorage/localstorage.dart';
+
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:pluto_grid_export/pluto_grid_export.dart' as pluto_grid_export;
 import 'package:teammaker/HelpScreen.dart';
@@ -38,7 +38,7 @@ enum Status { none, running, stopped, paused }
 class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   PlutoGridStateManager? stateManager;
   SettingsData settingsData = new SettingsData();
-  final storage = new LocalStorage('my_data.json');
+  // final storage = new LocalStorage('my_data.json');
 
   void exportToCsv() async {
     String title = "pluto_grid_export";
@@ -73,7 +73,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   // }
 
   void loadData() {
-    print(storage.getItem('todos'));
+    // print(storage.getItem('todos'));
   }
 
   List<PlutoColumn> columns = [
@@ -85,7 +85,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
       enableRowChecked: true,
       title: "name",
       field: "name_field",
-      frozen: PlutoColumnFrozen.left,
+      frozen: PlutoColumnFrozen.start,
       width: 250,
       type: PlutoColumnType.text(),
       renderer: (rendererContext) {
@@ -517,7 +517,6 @@ Jane,4,F""";
         );
       } else {
         //TODO unassign team
-
       }
     }
     Map<String, double> teams_avg_score = Map();
@@ -579,9 +578,10 @@ Jane,4,F""";
         }
         break;
 
-      default:
+      case GEN_OPTION.even_gender:
         {
-          //statements;
+          stateManager!.sortAscending(columns[2]);
+          stateManager!.sortDescending(columns[1]);
         }
         break;
     }
@@ -594,7 +594,6 @@ Jane,4,F""";
         tmp_rows.add(dat[i]);
       } else {
         //TODO unassign team
-
       }
     }
 
@@ -693,10 +692,11 @@ Jane,4,F""";
           child: PlutoGrid(
         columns: columns,
         rows: rows,
-        configuration: PlutoGridConfiguration.dark(
-          enableColumnBorder: false,
-          enableMoveDownAfterSelecting: true,
-          enterKeyAction: PlutoGridEnterKeyAction.editingAndMoveDown,
+        configuration: const PlutoGridConfiguration(
+          style: PlutoGridStyleConfig.dark(
+            enableColumnBorderHorizontal: false,
+            enableColumnBorderVertical: false,
+          ),
         ),
         onLoaded: (PlutoGridOnLoadedEvent event) {
           stateManager = event.stateManager;
