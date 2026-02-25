@@ -154,10 +154,11 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
   List<PlutoRow> rows = [
     PlutoRow(
+      checked: false,
       cells: {
-        'name_field': PlutoCell(value: 'Sample Player'),
+        'name_field': PlutoCell(value: 'player level gender and team'),
         'skill_level_field': PlutoCell(value: 3),
-        'team_field': PlutoCell(value: "0"),
+        'team_field': PlutoCell(value: "none"),
         'gender_field': PlutoCell(value: "X"),
       },
     ),
@@ -709,6 +710,156 @@ Jane,4,F""";
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: ExpansionTile(
               leading: const CircleAvatar(
+                  backgroundColor: Colors.teal,
+                  child: Icon(Icons.people, color: Colors.white)),
+              title: const Text('Players Roster',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle:
+                  Text('${stateManager?.rows.length ?? 0} active players'),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final List<PlayerModel>? players = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AddPlayersScreen()));
+                      if (players != null) {
+                        addPlayers(players);
+                      }
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('ADD Players'),
+                  ),
+                ),
+                SizedBox(
+                  height: 400,
+                  child: PlutoGrid(
+                    columns: columns,
+                    rows: rows,
+                    rowColorCallback: (rowContext) {
+                      if (rowContext.row.cells['name_field']?.value ==
+                          'player level gender and team') {
+                        return Colors.grey.withOpacity(0.2);
+                      }
+                      return Colors.transparent;
+                    },
+                    configuration: const PlutoGridConfiguration(
+                      style: PlutoGridStyleConfig.dark(
+                        enableColumnBorderHorizontal: false,
+                        enableColumnBorderVertical: false,
+                      ),
+                    ),
+                    createHeader: (stateManager) {
+                      var style = stateManager.configuration.style;
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Container(
+                          height: style.rowHeight,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: () async {
+                                      final List<PlayerModel>? players =
+                                          await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      AddPlayersScreen()));
+                                      if (players != null) {
+                                        addPlayers(players);
+                                      }
+                                    },
+                                    icon: Icon(Icons.group_add,
+                                        color: style.iconColor),
+                                    label: Text('Add Players',
+                                        style: TextStyle(
+                                            color: style.cellTextStyle.color)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      stateManager.insertRows(
+                                        0,
+                                        [stateManager.getNewRow()],
+                                      );
+                                      _triggerSavePlayers();
+                                    },
+                                    icon: Icon(Icons.person_add,
+                                        color: style.iconColor),
+                                    label: Text('Add Row',
+                                        style: TextStyle(
+                                            color: style.cellTextStyle.color)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        _isEditable = !_isEditable;
+                                        for (var col in stateManager.columns) {
+                                          col.enableEditingMode = _isEditable;
+                                        }
+                                        stateManager.notifyListeners();
+                                      });
+                                    },
+                                    icon: Icon(
+                                        _isEditable
+                                            ? Icons.edit_off
+                                            : Icons.edit,
+                                        color: style.iconColor),
+                                    label: Text(
+                                        _isEditable
+                                            ? 'Disable Edit'
+                                            : 'Edit Mode',
+                                        style: TextStyle(
+                                            color: style.cellTextStyle.color)),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 16),
+                              TextButton.icon(
+                                onPressed: () {
+                                  stateManager
+                                      .removeRows(stateManager.checkedRows);
+                                  _triggerSavePlayers();
+                                },
+                                icon: Icon(Icons.delete_outline,
+                                    color: Colors.red.shade300),
+                                label: Text('Remove Checked',
+                                    style:
+                                        TextStyle(color: Colors.red.shade300)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    onLoaded: (PlutoGridOnLoadedEvent event) {
+                      stateManager = event.stateManager;
+                      stateManager!.addListener(_triggerSavePlayers);
+                      _loadPlayers();
+                    },
+                    onChanged: (PlutoGridOnChangedEvent event) {
+                      _triggerSavePlayers();
+                      setState(() {});
+                    },
+                  ), // closes PlutoGrid
+                ), // closes SizedBox
+              ],
+            ), // closes Players ExpansionTile
+          ), // closes Card
+          Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 12.0),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: ExpansionTile(
+              leading: const CircleAvatar(
                   backgroundColor: Colors.indigo,
                   child: Icon(Icons.psychology, color: Colors.white)),
               title: const Text('Generation Strategy',
@@ -916,149 +1067,6 @@ Jane,4,F""";
                 ),
               ],
             ),
-          ), // closes Card
-          Card(
-            elevation: 2,
-            margin: const EdgeInsets.only(bottom: 12.0),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: ExpansionTile(
-              leading: const CircleAvatar(
-                  backgroundColor: Colors.teal,
-                  child: Icon(Icons.people, color: Colors.white)),
-              title: const Text('Players Roster',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle:
-                  Text('${stateManager?.rows.length ?? 0} active players'),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final List<PlayerModel>? players = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => AddPlayersScreen()));
-                      if (players != null) {
-                        addPlayers(players);
-                      }
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('ADD Players'),
-                  ),
-                ),
-                SizedBox(
-                  height: 400,
-                  child: PlutoGrid(
-                    columns: columns,
-                    rows: rows,
-                    configuration: const PlutoGridConfiguration(
-                      style: PlutoGridStyleConfig.dark(
-                        enableColumnBorderHorizontal: false,
-                        enableColumnBorderVertical: false,
-                      ),
-                    ),
-                    createHeader: (stateManager) {
-                      var style = stateManager.configuration.style;
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Container(
-                          height: style.rowHeight,
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  TextButton.icon(
-                                    onPressed: () {
-                                      stateManager.insertRows(
-                                        0,
-                                        [stateManager.getNewRow()],
-                                      );
-                                      _triggerSavePlayers();
-                                    },
-                                    icon: Icon(Icons.person_add,
-                                        color: style.iconColor),
-                                    label: Text('Add Row',
-                                        style: TextStyle(
-                                            color: style.cellTextStyle.color)),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  TextButton.icon(
-                                    onPressed: () async {
-                                      final List<PlayerModel>? players =
-                                          await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      AddPlayersScreen()));
-                                      if (players != null) {
-                                        addPlayers(players);
-                                      }
-                                    },
-                                    icon: Icon(Icons.group_add,
-                                        color: style.iconColor),
-                                    label: Text('Add Players',
-                                        style: TextStyle(
-                                            color: style.cellTextStyle.color)),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  TextButton.icon(
-                                    onPressed: () {
-                                      setState(() {
-                                        _isEditable = !_isEditable;
-                                        for (var col in stateManager.columns) {
-                                          col.enableEditingMode = _isEditable;
-                                        }
-                                        stateManager.notifyListeners();
-                                      });
-                                    },
-                                    icon: Icon(
-                                        _isEditable
-                                            ? Icons.edit_off
-                                            : Icons.edit,
-                                        color: style.iconColor),
-                                    label: Text(
-                                        _isEditable
-                                            ? 'Disable Edit'
-                                            : 'Edit Mode',
-                                        style: TextStyle(
-                                            color: style.cellTextStyle.color)),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 16),
-                              TextButton.icon(
-                                onPressed: () {
-                                  stateManager
-                                      .removeRows(stateManager.checkedRows);
-                                  _triggerSavePlayers();
-                                },
-                                icon: Icon(Icons.delete_outline,
-                                    color: Colors.red.shade300),
-                                label: Text('Remove Checked',
-                                    style:
-                                        TextStyle(color: Colors.red.shade300)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    onLoaded: (PlutoGridOnLoadedEvent event) {
-                      stateManager = event.stateManager;
-                      stateManager!.addListener(_triggerSavePlayers);
-                      _loadPlayers();
-                    },
-                    onChanged: (PlutoGridOnChangedEvent event) {
-                      _triggerSavePlayers();
-                      setState(() {});
-                    },
-                  ), // closes PlutoGrid
-                ), // closes SizedBox
-              ],
-            ), // closes Players ExpansionTile
           ), // closes Card
 
           if (stateManager != null &&
