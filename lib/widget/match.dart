@@ -37,12 +37,14 @@ class _MatchWidgetState extends State<MatchWidget> {
                   ),
                 ),
                 title: Text(
-                  "Round ${widget.round.roundName}",
+                  "ROUND ${widget.round.roundName}",
                   style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               ...widget.round.matches.map((match) {
                 bool isBye = match.team.contains("None");
                 String scoreSummary = isBye ? "BYE" : "No score recorded";
@@ -52,38 +54,63 @@ class _MatchWidgetState extends State<MatchWidget> {
                       "${match.scoreTeam1 ?? '?'} - ${match.scoreTeam2 ?? '?'}";
                 }
 
+                // Format Venue string
+                String venueDisplay = match.venue == "Waiting"
+                    ? "Waiting..."
+                    : (isBye ? "REST" : "Court ${match.venue}");
+
                 return Card(
                   key: ValueKey(
                       "match_${match.team}_${match.scoreTeam1}_${match.scoreTeam2}"),
-                  margin: const EdgeInsets.symmetric(vertical: 6.0),
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: colorScheme.outlineVariant)),
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                          color: colorScheme.outlineVariant, width: 1.5)),
                   child: ExpansionTile(
                     tilePadding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 4.0),
-                    leading: FaIcon(FontAwesomeIcons.userGroup,
-                        size: 20, color: colorScheme.secondary),
+                        horizontal: 16.0, vertical: 8.0),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.secondary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isBye ? Icons.coffee : Icons.sports_tennis,
+                        size: 24, // Bigger Icon
+                        color: colorScheme.secondary,
+                      ),
+                    ),
                     title: Text(
-                      match.team,
+                      isBye
+                          ? match.team.replaceAll(" VS None", "")
+                          : "${match.team} at $venueDisplay",
                       style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 16),
+                          fontWeight: FontWeight.w900, fontSize: 16),
                     ),
                     subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
+                      padding: const EdgeInsets.only(top: 6.0),
                       child: Row(
                         children: [
-                          FaIcon(FontAwesomeIcons.trophy,
-                              size: 12, color: colorScheme.tertiary),
-                          const SizedBox(width: 4),
+                          Icon(Icons.emoji_events,
+                              size: 16, color: colorScheme.tertiary),
+                          const SizedBox(width: 6),
                           Text("Score: $scoreSummary",
-                              style: TextStyle(fontSize: 12)),
-                          const SizedBox(width: 16),
-                          FaIcon(FontAwesomeIcons.mapLocationDot,
-                              size: 12, color: colorScheme.outline),
-                          const SizedBox(width: 4),
-                          Text(match.venue, style: TextStyle(fontSize: 12)),
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurfaceVariant)),
+                          const SizedBox(width: 20),
+                          Icon(Icons.place,
+                              size: 16, color: colorScheme.outline),
+                          const SizedBox(width: 6),
+                          Text(venueDisplay,
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurfaceVariant)),
                         ],
                       ),
                     ),

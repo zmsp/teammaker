@@ -26,7 +26,7 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
   int _teamBScore = 0;
   int _seconds = 0;
   Timer? _timer;
-  bool _isRunning = false;
+  bool _isRunning = true;
 
   final TextEditingController _nameAController =
       TextEditingController(text: "TEAM A");
@@ -40,6 +40,14 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
   void initState() {
     super.initState();
     _loadState();
+    _isRunning = true;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _seconds++;
+        });
+      }
+    });
   }
 
   @override

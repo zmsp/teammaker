@@ -162,7 +162,7 @@ class _MatchScreenState extends State<MatchScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Game matches'),
+          title: const Text('Match Maker'),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         floatingActionButton: FloatingActionButton(
@@ -202,11 +202,11 @@ class _MatchScreenState extends State<MatchScreen> {
                       textAlign: TextAlign.left),
                 ),
                 ListTile(
-                  leading: const FaIcon(FontAwesomeIcons.flag),
+                  leading: const FaIcon(FontAwesomeIcons.landmark),
                   title: TextFormField(
                       decoration: const InputDecoration(
-                        label: Text("How many sites are available?"),
-                        hintText: 'Number of available nets/sites/venues?',
+                        label: Text("How many courts are available?"),
+                        hintText: 'Number of available courts/venues?',
                       ),
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       initialValue: settingsData.gameVenues.toString(),
