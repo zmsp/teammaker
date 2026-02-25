@@ -95,7 +95,7 @@ class TeamGenerator {
         start = i + size;
       }
     } else if (settingsData.o == GEN_OPTION.even_gender) {
-      // Improved Even Gender algorithm with Snake Distribution
+      // Improved Even Gender algorithm with Snake Distribution and Population Balancing
       tmp_rows.shuffle(); // Initial randomization for variety
 
       // Group by gender
@@ -115,31 +115,68 @@ class TeamGenerator {
 
       List<String> teamKeys = teams_list.keys.toList();
 
-      genderGroups.forEach((gender, players) {
-        teamKeys.shuffle(); // Shuffle teams for each gender group for variety
+      // Sort gender groups by size descending to distribute larger groups first
+      var sortedGenders = genderGroups.keys.toList()
+        ..sort((a, b) =>
+            genderGroups[b]!.length.compareTo(genderGroups[a]!.length));
+
+      for (var gender in sortedGenders) {
+        List<PlutoRow> players = genderGroups[gender]!;
         int n = teamKeys.length;
+        if (n == 0) continue;
 
+        // 1. Generate snake sequence of indices for these players
+        // Sequence: 0, 1, ..., n-1, n-1, n-2, ..., 0
+        List<int> snakeIndices = [];
         for (int i = 0; i < players.length; i++) {
-          // Snake distribution within each gender group
-          // Sequence: 0, 1, ..., n-1, n-1, n-2, ..., 0
           int snakeIdx = i % (2 * n);
-          int teamIdx;
           if (snakeIdx < n) {
-            teamIdx = snakeIdx;
+            snakeIndices.add(snakeIdx);
           } else {
-            teamIdx = (2 * n - 1) - snakeIdx;
+            snakeIndices.add((2 * n - 1) - snakeIdx);
           }
-
-          teams_list[teamKeys[teamIdx]]?.add(players[i]);
         }
-      });
+
+        // 2. Count how many players each relative index will get
+        List<int> distributionCounts = List.generate(n, (index) => 0);
+        for (int idx in snakeIndices) {
+          distributionCounts[idx]++;
+        }
+
+        // 3. Map these indices to actual teams based on current populations
+        // To keep it fair, the indices that get more players (from the partial snake)
+        // should be assigned to the teams that currently have the fewest players.
+
+        // Get teams sorted by current count (ascending)
+        // Shuffle first for random tie-breaking
+        List<String> sortedTeams = List.from(teamKeys)..shuffle();
+        sortedTeams.sort(
+            (a, b) => teams_list[a]!.length.compareTo(teams_list[b]!.length));
+
+        // Get relative indices sorted by their player count (descending)
+        List<int> sortedRelIndices = List.generate(n, (i) => i);
+        sortedRelIndices.sort(
+            (a, b) => distributionCounts[b].compareTo(distributionCounts[a]));
+
+        // Create the mapping: relative_index -> teamKey
+        Map<int, String> indexToTeam = {};
+        for (int i = 0; i < n; i++) {
+          indexToTeam[sortedRelIndices[i]] = sortedTeams[i];
+        }
+
+        // 4. Assign players to the mapped teams
+        for (int i = 0; i < players.length; i++) {
+          String targetTeam = indexToTeam[snakeIndices[i]]!;
+          teams_list[targetTeam]?.add(players[i]);
+        }
+      }
     } else if (settingsData.o == GEN_OPTION.random) {
       // Random algorithm
       tmp_rows.shuffle();
-      var start = 0;
       for (var i = 0; i < tmp_rows.length; i = i + size) {
         int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
-        List<PlutoRow> sublist = tmp_rows.sublist(start, end);
+        List<PlutoRow> sublist = tmp_rows.sublist(i, end);
+        keys.shuffle(); // Shuffle for each batch to distribute leftovers fairly
         int key_i = 0;
 
         sublist.forEach((value) {
@@ -148,7 +185,6 @@ class TeamGenerator {
             key_i++;
           }
         });
-        start = i + size;
       }
     }
 

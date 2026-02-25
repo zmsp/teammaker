@@ -20,6 +20,7 @@ import 'package:teammaker/widgets/strategy_widgets.dart';
 import 'package:teammaker/utils/team_utils.dart';
 import 'package:teammaker/widgets/team_results_view.dart';
 import 'package:teammaker/configs/grid_columns.dart';
+import 'package:teammaker/widgets/tapscore_widget.dart';
 
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
@@ -539,7 +540,8 @@ Jane,4,F""";
   }
 
   void generateTeams() {
-    stateManager!.sortAscending(columns[1]);
+    stateManager!.sortAscending(
+        stateManager!.columns.firstWhere((c) => c.field == 'name_field'));
 
     // Clear team for ALL rows first to ensure unchecked or excluded players are unassigned
     for (var row in stateManager!.rows) {
@@ -584,23 +586,14 @@ Jane,4,F""";
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surfaceVariant.withOpacity(0.3),
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Team Maker Buddy',
             style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5)),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [colorScheme.primary, colorScheme.primaryContainer],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        foregroundColor: colorScheme.onPrimary,
+        backgroundColor: Colors.black,
+        foregroundColor: colorScheme.onSurface,
         actions: [
           IconButton(
             tooltip: 'Export to CSV',
@@ -625,7 +618,7 @@ Jane,4,F""";
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         children: [
           SectionHeader(
               title: '1. PLAYER ROSTER',
@@ -638,8 +631,13 @@ Jane,4,F""";
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: colorScheme.outlineVariant),
             ),
-            margin: const EdgeInsets.only(bottom: 24.0),
+            margin: const EdgeInsets.only(bottom: 8.0),
             child: ExpansionTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              childrenPadding: EdgeInsets.zero,
+              tilePadding:
+                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
               initiallyExpanded: true,
               backgroundColor: colorScheme.surface,
               collapsedBackgroundColor: colorScheme.surface,
@@ -653,7 +651,7 @@ Jane,4,F""";
                   Text('${stateManager?.rows.length ?? 0} Players listed'),
               children: [
                 SizedBox(
-                  height: 450,
+                  height: 400,
                   child: PlutoGrid(
                     columns: columns,
                     rows: rows,
@@ -680,81 +678,75 @@ Jane,4,F""";
                     ),
                     createHeader: (stateManager) {
                       return Container(
-                        padding: const EdgeInsets.all(12.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4.0, vertical: 4.0),
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceVariant.withOpacity(0.3),
                           border: Border(
                               bottom: BorderSide(
                                   color: colorScheme.outlineVariant)),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                  GridHeaderButton(
-                                    onPressed: () async {
-                                      final List<PlayerModel>? players =
-                                          await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      AddPlayersScreen()));
-                                      if (players != null) {
-                                        addPlayers(players);
-                                      }
-                                    },
-                                    icon: Icons.group_add,
-                                    label: 'Quick Add',
-                                    color: colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  GridHeaderButton(
-                                    onPressed: () {
-                                      stateManager.insertRows(
-                                          0, [stateManager.getNewRow()]);
-                                      _triggerSavePlayers();
-                                    },
-                                    icon: Icons.person_add,
-                                    label: 'Add Row',
-                                    color: colorScheme.secondary,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  GridHeaderButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _isEditable = !_isEditable;
-                                        for (var col in stateManager.columns) {
-                                          col.enableEditingMode = _isEditable;
-                                        }
-                                        stateManager.notifyListeners();
-                                      });
-                                    },
-                                    icon: _isEditable
-                                        ? Icons.edit_off
-                                        : Icons.edit,
-                                    label: _isEditable ? 'Lock' : 'Edit',
-                                    color: _isEditable
-                                        ? colorScheme.tertiary
-                                        : colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  GridHeaderButton(
-                                    onPressed: () {
-                                      stateManager
-                                          .removeRows(stateManager.checkedRows);
-                                      _triggerSavePlayers();
-                                    },
-                                    icon: Icons.delete_sweep,
-                                    label: 'Clear Selected',
-                                    color: colorScheme.error,
-                                  ),
-                                ],
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              GridHeaderButton(
+                                onPressed: () async {
+                                  final List<PlayerModel>? players =
+                                      await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  AddPlayersScreen()));
+                                  if (players != null) {
+                                    addPlayers(players);
+                                  }
+                                },
+                                icon: Icons.group_add,
+                                label: 'Quick Add',
+                                color: colorScheme.primary,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 6),
+                              GridHeaderButton(
+                                onPressed: () {
+                                  stateManager.insertRows(
+                                      0, [stateManager.getNewRow()]);
+                                  _triggerSavePlayers();
+                                },
+                                icon: Icons.person_add,
+                                label: 'Add Row',
+                                color: colorScheme.secondary,
+                              ),
+                              const SizedBox(width: 6),
+                              GridHeaderButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _isEditable = !_isEditable;
+                                    for (var col in stateManager.columns) {
+                                      col.enableEditingMode = _isEditable;
+                                    }
+                                    stateManager.notifyListeners();
+                                  });
+                                },
+                                icon: _isEditable ? Icons.edit_off : Icons.edit,
+                                label: _isEditable ? 'Lock' : 'Edit',
+                                color: _isEditable
+                                    ? colorScheme.tertiary
+                                    : colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 6),
+                              GridHeaderButton(
+                                onPressed: () {
+                                  stateManager
+                                      .removeRows(stateManager.checkedRows);
+                                  _triggerSavePlayers();
+                                },
+                                icon: Icons.delete_sweep,
+                                label: 'Clear Selected',
+                                color: colorScheme.error,
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -764,26 +756,19 @@ Jane,4,F""";
                       _loadPlayers();
                     },
                     onRowChecked: (PlutoGridOnRowCheckedEvent event) {
-                      if (event.row != null && !event.row!.checked!) {
-                        setState(() {
+                      setState(() {
+                        if (event.row != null && !event.row!.checked!) {
                           event.row!.cells['team_field']?.value = 'No team';
-                        });
-                        _triggerSavePlayers();
-                      } else if (event.row == null) {
-                        // Handle 'check all' toggles
-                        bool anyUnchecked =
-                            stateManager!.rows.any((r) => r.checked == false);
-                        if (anyUnchecked) {
-                          setState(() {
-                            for (var r in stateManager!.rows) {
-                              if (!r.checked!) {
-                                r.cells['team_field']?.value = 'No team';
-                              }
+                        } else if (event.row == null) {
+                          // Handle 'check all' toggles
+                          for (var r in stateManager!.rows) {
+                            if (!r.checked!) {
+                              r.cells['team_field']?.value = 'No team';
                             }
-                          });
-                          _triggerSavePlayers();
+                          }
                         }
-                      }
+                      });
+                      _triggerSavePlayers();
                     },
                     onChanged: (PlutoGridOnChangedEvent event) {
                       _triggerSavePlayers();
@@ -805,8 +790,13 @@ Jane,4,F""";
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: colorScheme.outlineVariant),
             ),
-            margin: const EdgeInsets.only(bottom: 24.0),
+            margin: const EdgeInsets.only(bottom: 8.0),
             child: ExpansionTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              childrenPadding: EdgeInsets.zero,
+              tilePadding:
+                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
               initiallyExpanded: true,
               backgroundColor: colorScheme.surface,
               collapsedBackgroundColor: colorScheme.surface,
@@ -817,7 +807,10 @@ Jane,4,F""";
               title: const Text('Team Splitting Rules',
                   style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(
-                  'Mode: ${settingsData.o.toString().split('.').last.replaceAll('_', ' ').toUpperCase()}'),
+                'Mode: ${settingsData.o.toString().split('.').last.replaceAll('_', ' ').toUpperCase()} • ${stateManager?.rows.where((r) => r.checked == true).length ?? 0} Players Selected',
+                style: TextStyle(
+                    fontSize: 12, color: colorScheme.onSurfaceVariant),
+              ),
               children: [
                 StrategyOption(
                   option: GEN_OPTION.even_gender,
@@ -1006,8 +999,13 @@ Jane,4,F""";
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(color: colorScheme.tertiary.withOpacity(0.3)),
               ),
-              margin: const EdgeInsets.only(bottom: 12),
+              margin: const EdgeInsets.only(bottom: 8.0),
               child: ExpansionTile(
+                dense: true,
+                visualDensity: VisualDensity.compact,
+                childrenPadding: EdgeInsets.zero,
+                tilePadding:
+                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
                 initiallyExpanded: true,
                 leading: CircleAvatar(
                     backgroundColor: colorScheme.tertiaryContainer,
@@ -1025,6 +1023,11 @@ Jane,4,F""";
               ),
               margin: const EdgeInsets.only(bottom: 12),
               child: ExpansionTile(
+                dense: true,
+                visualDensity: VisualDensity.compact,
+                childrenPadding: EdgeInsets.zero,
+                tilePadding:
+                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
                 initiallyExpanded: true,
                 leading: CircleAvatar(
                     backgroundColor: colorScheme.surfaceVariant,
@@ -1042,8 +1045,13 @@ Jane,4,F""";
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: colorScheme.outlineVariant),
             ),
-            margin: const EdgeInsets.only(bottom: 80.0),
+            margin: const EdgeInsets.only(bottom: 8.0),
             child: ExpansionTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              childrenPadding: EdgeInsets.zero,
+              tilePadding:
+                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
               initiallyExpanded: true,
               leading: CircleAvatar(
                   backgroundColor:
@@ -1058,14 +1066,8 @@ Jane,4,F""";
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
+          color: Colors.black,
+          boxShadow: const [],
         ),
         child: SafeArea(
           child: Padding(
@@ -1105,6 +1107,17 @@ Jane,4,F""";
                   icon: FontAwesomeIcons.trophy,
                   label: 'Match',
                   color: colorScheme.tertiary,
+                ),
+                BottomNavButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const TapScoreScreen()));
+                  },
+                  icon: FontAwesomeIcons.stopwatch20,
+                  label: 'Score',
+                  color: colorScheme.outline,
                 ),
               ],
             ),

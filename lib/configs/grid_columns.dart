@@ -10,15 +10,15 @@ class GridColumns {
         title: "name",
         field: "name_field",
         frozen: PlutoColumnFrozen.start,
-        width: 250,
+        width: 150,
         type: PlutoColumnType.text(),
       ),
       PlutoColumn(
-        title: 'Level',
-        field: 'skill_level_field',
-        type: PlutoColumnType.select([1, 2, 3, 4, 5]),
+        title: 'team',
+        field: 'team_field',
+        textAlign: PlutoColumnTextAlign.center,
         width: 80,
-        textAlign: PlutoColumnTextAlign.right,
+        type: PlutoColumnType.text(),
       ),
       PlutoColumn(
         title: 'gender',
@@ -27,11 +27,11 @@ class GridColumns {
         type: PlutoColumnType.select(["MALE", "FEMALE", "X"]),
       ),
       PlutoColumn(
-        title: 'team',
-        field: 'team_field',
-        textAlign: PlutoColumnTextAlign.right,
+        title: 'Level',
+        field: 'skill_level_field',
+        type: PlutoColumnType.select([1, 2, 3, 4, 5]),
         width: 80,
-        type: PlutoColumnType.text(),
+        textAlign: PlutoColumnTextAlign.right,
       ),
     ];
   }

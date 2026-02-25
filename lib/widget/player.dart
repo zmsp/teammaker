@@ -9,6 +9,8 @@ class PlayerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     // Hide the placeholder empty player
     if (player.name == "None" && player.level == 0)
       return const SizedBox.shrink();
@@ -27,8 +29,8 @@ class PlayerWidget extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: player.getGenderString().toUpperCase() == "FEMALE" ||
                   player.getGenderString().toUpperCase() == "F"
-              ? Colors.pink.shade100
-              : Colors.blue.shade100,
+              ? colorScheme.secondaryContainer
+              : colorScheme.primaryContainer,
           child: FaIcon(
             player.getGenderString().toUpperCase() == "FEMALE" ||
                     player.getGenderString().toUpperCase() == "F"
@@ -36,22 +38,27 @@ class PlayerWidget extends StatelessWidget {
                 : FontAwesomeIcons.person,
             color: player.getGenderString().toUpperCase() == "FEMALE" ||
                     player.getGenderString().toUpperCase() == "F"
-                ? Colors.pink.shade700
-                : Colors.blue.shade700,
+                ? colorScheme.onSecondaryContainer
+                : colorScheme.onPrimaryContainer,
+            size: 18,
           ),
         ),
         title: Text(
           player.name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(player.getGenderString()),
+        subtitle: Text(player.getGenderString(),
+            style:
+                TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(5, (index) {
             return Icon(
               index < player.level ? Icons.star : Icons.star_border,
-              color: Colors.amber,
-              size: 20,
+              color: index < player.level
+                  ? colorScheme.primary
+                  : colorScheme.outlineVariant,
+              size: 16,
             );
           }),
         ),

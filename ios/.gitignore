@@ -1,19 +1,25 @@
-*.mode1v3
-*.mode2v3
-*.moved-aside
-*.pbxuser
-*.perspectivev3
-**/*sync/
-.sconsign.dblite
-.tags*
-**/.vagrant/
-**/DerivedData/
-Icon?
-**/Pods/
-**/.symlinks/
-profile
-xcuserdata
-**/.generated/
+# Xcode
+#
+# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+
+## User settings
+xcuserdata/
+
+## Groupes de travail (workspaces)
+*.xcworkspace/
+!contents.xcworkspace
+
+## Built products
+*.app
+*.framework
+*.dSYM
+*.ipa
+
+## Dependency managers
+Pods/
+Podfile.lock
+
+## Flutter-specific
 Flutter/App.framework
 Flutter/Flutter.framework
 Flutter/Flutter.podspec
@@ -23,8 +29,21 @@ Flutter/app.flx
 Flutter/app.zip
 Flutter/flutter_assets/
 Flutter/flutter_export_environment.sh
-ServiceDefinitions.json
 Runner/GeneratedPluginRegistrant.*
+
+# Miscellaneous
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+**/*sync/
+.sconsign.dblite
+.tags*
+/DerivedData/
+Icon?
+.generated/
+ServiceDefinitions.json
 
 # Exceptions to above rules.
 !default.mode1v3

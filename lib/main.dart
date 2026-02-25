@@ -11,18 +11,28 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Team Maker Buddy',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.light,
-        /* light theme settings */
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1A237E), // Professional Indigo
+          brightness: Brightness.light,
+        ),
+        fontFamily: 'Roboto',
       ),
       darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        /* dark theme settings */
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1A237E),
+          brightness: Brightness.dark,
+          surface: Colors.black,
+          surfaceContainer:
+              const Color(0xFF121212), // Slightly lighter for cards
+        ),
+        scaffoldBackgroundColor: Colors.black,
+        fontFamily: 'Roboto',
       ),
       themeMode: ThemeMode.dark,
-      // theme: ThemeData.from(colorScheme: ColorScheme.dark()),
-      // darkTheme: ThemeData.from(colorScheme: ColorScheme.dark()),
-
       home: CellRendererScreen(),
     );
   }
