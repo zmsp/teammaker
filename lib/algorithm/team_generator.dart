@@ -95,28 +95,44 @@ class TeamGenerator {
         start = i + size;
       }
     } else if (settingsData.o == GEN_OPTION.even_gender) {
-      // Even Gender algorithm
-      tmp_rows.sort((a, b) {
-        int cmp = (a.cells["gender_field"]?.value.toString() ?? "")
-            .compareTo(b.cells["gender_field"]?.value.toString() ?? "");
-        if (cmp != 0) return cmp;
-        return (b.cells["skill_level_field"]?.value as num)
-            .compareTo(a.cells["skill_level_field"]?.value as num);
+      // Improved Even Gender algorithm with Snake Distribution
+      tmp_rows.shuffle(); // Initial randomization for variety
+
+      // Group by gender
+      Map<String, List<PlutoRow>> genderGroups = {};
+      for (var row in tmp_rows) {
+        String gender = row.cells["gender_field"]?.value.toString() ?? "X";
+        genderGroups.putIfAbsent(gender, () => []).add(row);
+      }
+
+      // Sort within each gender by level (descending)
+      genderGroups.forEach((gender, players) {
+        players.sort((a, b) {
+          return (b.cells["skill_level_field"]?.value as num)
+              .compareTo(a.cells["skill_level_field"]?.value as num);
+        });
       });
 
-      var start = 0;
-      for (var i = 0; i < tmp_rows.length; i = i + size) {
-        int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
-        List<PlutoRow> sublist = tmp_rows.sublist(start, end);
-        keys.shuffle();
-        int key_i = 0;
+      List<String> teamKeys = teams_list.keys.toList();
 
-        sublist.forEach((value) {
-          teams_list[keys[key_i]]?.add(value);
-          key_i++;
-        });
-        start = i + size;
-      }
+      genderGroups.forEach((gender, players) {
+        teamKeys.shuffle(); // Shuffle teams for each gender group for variety
+        int n = teamKeys.length;
+
+        for (int i = 0; i < players.length; i++) {
+          // Snake distribution within each gender group
+          // Sequence: 0, 1, ..., n-1, n-1, n-2, ..., 0
+          int snakeIdx = i % (2 * n);
+          int teamIdx;
+          if (snakeIdx < n) {
+            teamIdx = snakeIdx;
+          } else {
+            teamIdx = (2 * n - 1) - snakeIdx;
+          }
+
+          teams_list[teamKeys[teamIdx]]?.add(players[i]);
+        }
+      });
     } else if (settingsData.o == GEN_OPTION.proportion) {
       // Proportion algorithm
       tmp_rows.sort((a, b) {

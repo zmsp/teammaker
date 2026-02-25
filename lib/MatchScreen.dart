@@ -63,49 +63,61 @@ class MatchScreenState extends State<MatchScreen> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-
+  void _generateMatches() {
     rounds = [];
-
-    int sub_length = (settingsData.teamCount / 2).round();
+    int sub_length = (settingsData.teamCount / 2).ceil();
     List<String> subList2 =
         List.generate(sub_length, (index) => "${2 + index * 2}");
     List<String> subList1 =
         List.generate(sub_length, (index) => "${1 + index * 2}");
     if (settingsData.teamCount.isOdd) {
-      subList2.removeLast();
-      subList2.add("X");
+      if (subList2.isNotEmpty) {
+        subList2.removeLast();
+        subList2.add("X");
+      }
     }
 
     List<String> games = [];
     for (var t = 0; t < sub_length; t++) {
-      String team1 = subList1.elementAt(t);
-      String team2 = subList2.elementAt(t);
-      games.add("$team1 VS $team2");
+      if (subList1.length > t && subList2.length > t) {
+        String team1 = subList1.elementAt(t);
+        String team2 = subList2.elementAt(t);
+        games.add("$team1 VS $team2");
+      }
     }
+
     for (var r = 1; r <= settingsData.gameRounds; r++) {
       Round c_round = Round([], "$r");
       for (var v = 1; v <= settingsData.gameVenues; v++) {
-        if (games.length == 0) {
-          String s_1 = subList1.removeAt(1);
-          String s_2 = subList2.removeAt(0);
-          subList1.insert(1, s_2);
-          subList2.add(s_1);
+        if (games.isEmpty) {
+          if (subList1.length > 1 && subList2.length > 0) {
+            String s_1 = subList1.removeAt(1);
+            String s_2 = subList2.removeAt(0);
+            subList1.insert(1, s_2);
+            subList2.add(s_1);
+          }
           for (var t = 0; t < sub_length; t++) {
-            String team1 = subList1.elementAt(t);
-            String team2 = subList2.elementAt(t);
-            games.add("$team1 VS $team2");
+            if (subList1.length > t && subList2.length > t) {
+              String team1 = subList1.elementAt(t);
+              String team2 = subList2.elementAt(t);
+              games.add("$team1 VS $team2");
+            }
           }
         }
-        Game g = Game(games.removeAt(0), "$v");
-        c_round.matches.add(g);
+        if (games.isNotEmpty) {
+          Game g = Game(games.removeAt(0), "$v");
+          c_round.matches.add(g);
+        }
       }
 
       rounds.add(c_round);
     }
-    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _generateMatches();
   }
 
   bool useEditor = false;
@@ -216,50 +228,24 @@ class MatchScreenState extends State<MatchScreen> {
                 ),
               ],
             ),
-            ElevatedButton.icon(
-              onPressed: () {
-                rounds = [];
-
-                int sub_length = (settingsData.teamCount / 2).round();
-                List<String> subList2 =
-                    List.generate(sub_length, (index) => "${2 + index * 2}");
-                List<String> subList1 =
-                    List.generate(sub_length, (index) => "${1 + index * 2}");
-                if (settingsData.teamCount.isOdd) {
-                  subList2.removeLast();
-                  subList2.add("X");
-                }
-
-                List<String> games = [];
-                for (var t = 0; t < sub_length; t++) {
-                  String team1 = subList1.elementAt(t);
-                  String team2 = subList2.elementAt(t);
-                  games.add("$team1 VS $team2");
-                }
-                for (var r = 1; r <= settingsData.gameRounds; r++) {
-                  Round c_round = Round([], "$r");
-                  for (var v = 1; v <= settingsData.gameVenues; v++) {
-                    if (games.length == 0) {
-                      String s_1 = subList1.removeAt(1);
-                      String s_2 = subList2.removeAt(0);
-                      subList1.insert(1, s_2);
-                      subList2.add(s_1);
-                      for (var t = 0; t < sub_length; t++) {
-                        String team1 = subList1.elementAt(t);
-                        String team2 = subList2.elementAt(t);
-                        games.add("$team1 VS $team2");
-                      }
-                    }
-                    Game g = Game(games.removeAt(0), "$v");
-                    c_round.matches.add(g);
-                  }
-
-                  rounds.add(c_round);
-                }
-                setState(() {});
-              },
-              icon: FaIcon(FontAwesomeIcons.trophy),
-              label: Text("Create matches"),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _generateMatches();
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const FaIcon(FontAwesomeIcons.trophy),
+                label: const Text("Create matches",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
             ),
 
             //contains average stars and total reviews card

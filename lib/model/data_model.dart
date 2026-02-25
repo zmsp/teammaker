@@ -1,22 +1,28 @@
 class SettingsData {
-  int teamCount = 1;
+  int teamCount = 2;
   int division = 2;
-  int proportion = 6; // Set default 6 players per team
-  int gameVenues = 2;
-  int gameRounds = 2;
+  int proportion = 6; // Standard Volleyball team size
+  int gameVenues = 1; // Default to 1 court/venue
+  int gameRounds = 1; // Default to enough rounds for everyone to play once
 
-  GEN_OPTION o = GEN_OPTION.proportion; // Default generation option
+  bool preferExtraTeam =
+      false; // Toggle for handling remainders in team generation
+
+  GEN_OPTION o = GEN_OPTION.even_gender; // Default generation option
 
   @override
   String toString() {
-    return 'SettingsData{teamCount: $teamCount, o: $o, division: $division}';
+    return 'SettingsData{teamCount: $teamCount, o: $o, division: $division, preferExtraTeam: $preferExtraTeam}';
   }
 
   SettingsData() {
-    teamCount = 1;
+    teamCount = 2;
     division = 2;
+    gameVenues = 1;
+    gameRounds = 1;
     proportion = 6;
-    o = GEN_OPTION.proportion;
+    o = GEN_OPTION.even_gender;
+    preferExtraTeam = false;
   }
 }
 
