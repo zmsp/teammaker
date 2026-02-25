@@ -8,7 +8,6 @@ import 'package:pluto_grid/pluto_grid.dart';
 import 'package:pluto_grid_export/pluto_grid_export.dart' as pluto_grid_export;
 import 'package:teammaker/HelpScreen.dart';
 import 'package:teammaker/MatchScreen.dart';
-import 'package:teammaker/SettingsScreen.dart';
 import 'package:teammaker/add_players.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/model/player_model.dart';
@@ -707,33 +706,205 @@ Jane,4,F""";
                   MaterialPageRoute(builder: (context) => HelpExample()));
             },
           ),
-          IconButton(
-            tooltip: 'Team-maker settings',
-            icon: const FaIcon(FontAwesomeIcons.gear),
-            onPressed: () async {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => SettingsScreen(settingsData)));
-              print(settingsData.o);
-            },
+        ],
+      ),
+      body: Column(
+        children: [
+          ExpansionTile(
+            leading: const Icon(Icons.psychology),
+            title: const Text('Generation Strategy',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text('How do you want your teams to be balanced?'),
+            children: <Widget>[
+              ListTile(
+                title: const Text('Gender and skill balanced team'),
+                leading: Radio<GEN_OPTION>(
+                  value: GEN_OPTION.distribute,
+                  groupValue: settingsData.o,
+                  onChanged: (GEN_OPTION? value) {
+                    setState(() {
+                      settingsData.o = value ?? settingsData.o;
+                    });
+                  },
+                ),
+                subtitle: settingsData.o == GEN_OPTION.distribute
+                    ? TextFormField(
+                        decoration: const InputDecoration(
+                          label: Text("Number of teams"),
+                          hintText:
+                              'How many teams do you want to split the players to?',
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        initialValue: settingsData.teamCount.toString(),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          settingsData.teamCount =
+                              int.tryParse(value) ?? settingsData.teamCount;
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              ListTile(
+                title: const Text('Division based on skill level'),
+                leading: Radio<GEN_OPTION>(
+                  value: GEN_OPTION.division,
+                  groupValue: settingsData.o,
+                  onChanged: (GEN_OPTION? value) {
+                    setState(() {
+                      settingsData.o = value ?? settingsData.o;
+                    });
+                  },
+                ),
+                subtitle: settingsData.o == GEN_OPTION.division
+                    ? Column(
+                        children: [
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text('Number of divisions'),
+                              hintText:
+                                  'Division number means top teams will have better players',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.division.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.division =
+                                  int.tryParse(value) ?? settingsData.division;
+                            },
+                          ),
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("Number of teams"),
+                              hintText:
+                                  'How many teams do you want to split the players to?',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.teamCount.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.teamCount =
+                                  int.tryParse(value) ?? settingsData.teamCount;
+                            },
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              ListTile(
+                title: const Text('Skill balanced by team size'),
+                leading: Radio<GEN_OPTION>(
+                  value: GEN_OPTION.proportion,
+                  groupValue: settingsData.o,
+                  onChanged: (GEN_OPTION? value) {
+                    setState(() {
+                      settingsData.o = value ?? settingsData.o;
+                    });
+                  },
+                ),
+                subtitle: settingsData.o == GEN_OPTION.proportion
+                    ? TextFormField(
+                        decoration: const InputDecoration(
+                          label: Text('Number of players per team'),
+                          hintText: 'How many players per team',
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        initialValue: settingsData.proportion.toString(),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          settingsData.proportion =
+                              int.tryParse(value) ?? settingsData.proportion;
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              ListTile(
+                title: const Text('Random'),
+                leading: Radio<GEN_OPTION>(
+                  value: GEN_OPTION.random,
+                  groupValue: settingsData.o,
+                  onChanged: (GEN_OPTION? value) {
+                    setState(() {
+                      settingsData.o = value ?? settingsData.o;
+                    });
+                  },
+                ),
+                subtitle: settingsData.o == GEN_OPTION.random
+                    ? TextFormField(
+                        decoration: const InputDecoration(
+                          label: Text("Number of teams"),
+                          hintText:
+                              'How many teams do you want to split the players to?',
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        initialValue: settingsData.teamCount.toString(),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          settingsData.teamCount =
+                              int.tryParse(value) ?? settingsData.teamCount;
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              ListTile(
+                title: const Text('Even Gender Split'),
+                leading: Radio<GEN_OPTION>(
+                  value: GEN_OPTION.even_gender,
+                  groupValue: settingsData.o,
+                  onChanged: (GEN_OPTION? value) {
+                    setState(() {
+                      settingsData.o = value ?? settingsData.o;
+                    });
+                  },
+                ),
+                subtitle: settingsData.o == GEN_OPTION.even_gender
+                    ? TextFormField(
+                        decoration: const InputDecoration(
+                          label: Text("Number of teams"),
+                          hintText:
+                              'How many teams do you want to split the players to?',
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        initialValue: settingsData.teamCount.toString(),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          settingsData.teamCount =
+                              int.tryParse(value) ?? settingsData.teamCount;
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+          Expanded(
+            child: Container(
+                child: PlutoGrid(
+              columns: columns,
+              rows: rows,
+              configuration: const PlutoGridConfiguration(
+                style: PlutoGridStyleConfig.dark(
+                  enableColumnBorderHorizontal: false,
+                  enableColumnBorderVertical: false,
+                ),
+              ),
+              onLoaded: (PlutoGridOnLoadedEvent event) {
+                stateManager = event.stateManager;
+              },
+            )),
           ),
         ],
       ),
-      body: Container(
-          child: PlutoGrid(
-        columns: columns,
-        rows: rows,
-        configuration: const PlutoGridConfiguration(
-          style: PlutoGridStyleConfig.dark(
-            enableColumnBorderHorizontal: false,
-            enableColumnBorderVertical: false,
-          ),
-        ),
-        onLoaded: (PlutoGridOnLoadedEvent event) {
-          stateManager = event.stateManager;
-        },
-      )),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: generateTeams,
         icon: const FaIcon(FontAwesomeIcons.dice),

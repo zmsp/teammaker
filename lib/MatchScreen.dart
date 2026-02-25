@@ -136,53 +136,61 @@ class MatchScreenState extends State<MatchScreen> {
       body: ListView(
         children: <Widget>[
           SizedBox(height: 12.0),
-          ListTile(
-            leading: FaIcon(FontAwesomeIcons.userGroup),
-            subtitle: TextFormField(
-                decoration: const InputDecoration(
-                  label: Text("How many teams are playing?"),
-                  hintText: 'Number of teams',
-                ),
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                initialValue: settingsData.teamCount.toString(),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  settingsData.teamCount =
-                      int.tryParse(value) ?? settingsData.teamCount;
-                },
-                textAlign: TextAlign.left),
-          ),
-          ListTile(
-            leading: FaIcon(FontAwesomeIcons.flag),
-            subtitle: TextFormField(
-                decoration: const InputDecoration(
-                  label: Text("How many sites are available?"),
-                  hintText: 'Number of available nets/sites/venues?',
-                ),
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                initialValue: settingsData.gameVenues.toString(),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  settingsData.gameVenues =
-                      int.tryParse(value) ?? settingsData.gameVenues;
-                },
-                textAlign: TextAlign.left),
-          ),
-          ListTile(
-            leading: FaIcon(FontAwesomeIcons.rotate),
-            subtitle: TextFormField(
-                decoration: const InputDecoration(
-                  label: Text("How many rounds of game?"),
-                  hintText: 'Number of rounds or rotations',
-                ),
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                initialValue: settingsData.gameRounds.toString(),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  settingsData.gameRounds =
-                      int.tryParse(value) ?? settingsData.gameRounds;
-                },
-                textAlign: TextAlign.left),
+          ExpansionTile(
+            leading: const FaIcon(FontAwesomeIcons.gear),
+            title: const Text("Match Settings",
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text("Configure teams, venues, and rounds"),
+            children: [
+              ListTile(
+                leading: const FaIcon(FontAwesomeIcons.userGroup),
+                title: TextFormField(
+                    decoration: const InputDecoration(
+                      label: Text("How many teams are playing?"),
+                      hintText: 'Number of teams',
+                    ),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    initialValue: settingsData.teamCount.toString(),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      settingsData.teamCount =
+                          int.tryParse(value) ?? settingsData.teamCount;
+                    },
+                    textAlign: TextAlign.left),
+              ),
+              ListTile(
+                leading: const FaIcon(FontAwesomeIcons.flag),
+                title: TextFormField(
+                    decoration: const InputDecoration(
+                      label: Text("How many sites are available?"),
+                      hintText: 'Number of available nets/sites/venues?',
+                    ),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    initialValue: settingsData.gameVenues.toString(),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      settingsData.gameVenues =
+                          int.tryParse(value) ?? settingsData.gameVenues;
+                    },
+                    textAlign: TextAlign.left),
+              ),
+              ListTile(
+                leading: const FaIcon(FontAwesomeIcons.rotate),
+                title: TextFormField(
+                    decoration: const InputDecoration(
+                      label: Text("How many rounds of game?"),
+                      hintText: 'Number of rounds or rotations',
+                    ),
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    initialValue: settingsData.gameRounds.toString(),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      settingsData.gameRounds =
+                          int.tryParse(value) ?? settingsData.gameRounds;
+                    },
+                    textAlign: TextAlign.left),
+              ),
+            ],
           ),
           ElevatedButton.icon(
             onPressed: () {
