@@ -134,20 +134,33 @@ class _MatchScreenState extends State<MatchScreen> {
 
   bool useEditor = false;
 
-  Future<bool> _onWillPop() async {
+  bool _anyScoreEntered() {
+    for (var round in rounds) {
+      for (var match in round.matches) {
+        if (match.scoreTeam1 != null || match.scoreTeam2 != null) return true;
+      }
+    }
+    return false;
+  }
+
+  Future<bool> _onWillPop({bool isDestructive = false}) async {
+    // Show warning if scores exist OR if a match list exists
+    if (!_anyScoreEntered() && rounds.isEmpty) return true;
+
     return (await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Are you sure?'),
-            content: const Text(
-                'Do you want to leave without saving? Any unsaved scores will be lost.'),
+            title: const Text('Discard Scores?'),
+            content: Text(isDestructive
+                ? 'Regenerating matches will overwrite all currently entered scores. Proceed?'
+                : 'Do you want to leave? Any unsaved scores will be lost.'),
             actions: <Widget>[
               TextButton(
-                onPressed: () => Navigator.of(context).pop(false), // don't pop
+                onPressed: () => Navigator.of(context).pop(false),
                 child: const Text('No'),
               ),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(true), // do pop
+                onPressed: () => Navigator.of(context).pop(true),
                 child: const Text('Yes', style: TextStyle(color: Colors.red)),
               ),
             ],
@@ -166,9 +179,11 @@ class _MatchScreenState extends State<MatchScreen> {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         floatingActionButton: FloatingActionButton(
-          tooltip: "Add listed players",
-          onPressed: () {
-            Navigator.pop(context, players);
+          tooltip: "Finish and Return",
+          onPressed: () async {
+            if (await _onWillPop()) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            }
           },
           child: const FaIcon(
             FontAwesomeIcons.check,
@@ -243,10 +258,12 @@ class _MatchScreenState extends State<MatchScreen> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _generateMatches();
-                  });
+                onPressed: () async {
+                  if (await _onWillPop(isDestructive: true)) {
+                    setState(() {
+                      _generateMatches();
+                    });
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
