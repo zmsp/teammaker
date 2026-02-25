@@ -6,456 +6,376 @@ import 'package:teammaker/widget/player.dart';
 
 class AddPlayersScreen extends StatefulWidget {
   @override
-  AddPlayersScreenState createState() {
-    return new AddPlayersScreenState();
-  }
+  AddPlayersScreenState createState() => AddPlayersScreenState();
 }
 
 class AddPlayersScreenState extends State<AddPlayersScreen> {
   final List<int> _levels = [1, 2, 3, 4, 5];
-  final List<String> _genders = ["MALE", "FEMALE", "x"];
-  final TextEditingController _batch_text = TextEditingController();
-  final TextEditingController _player_text = TextEditingController();
-  final FocusNode myFocusNode = FocusNode();
+
+  final TextEditingController _batchController = TextEditingController();
+  final TextEditingController _playerNameController = TextEditingController();
+  final FocusNode _nameFocusNode = FocusNode();
 
   int _selectedLevel = 3;
   String _selectedGender = "MALE";
-  TextEditingController textarea = TextEditingController();
+  bool _useBulkMode = false;
 
   List<PlayerModel> players = [];
 
-  showTextDialog(BuildContext context, String title, String message) {
-    // set up the button
-    Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        Navigator.pop(context);
-      },
-    );
+  void _addSinglePlayer() {
+    if (_playerNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a player name")),
+      );
+      return;
+    }
 
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("$title"),
-      content: SingleChildScrollView(
-        child: Text("$message"),
-      ),
-      actions: [
-        okButton,
-      ],
-    );
+    setState(() {
+      players.insert(
+          0,
+          PlayerModel(_selectedLevel, _playerNameController.text.trim(), "0",
+              _selectedGender));
+      _playerNameController.clear();
+    });
+    _nameFocusNode.requestFocus();
+  }
 
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
+  void _processBulkPlayers() {
+    if (_batchController.text.trim().isEmpty) return;
+
+    var lines = _batchController.text.split("\n");
+    int addedCount = 0;
+
+    for (var line in lines) {
+      if (line.trim().isEmpty) continue;
+      PlayerModel player = PlayerModel(3, "Unknown", "0", "X");
+      var data = line.split(",");
+
+      if (data.isNotEmpty) player.name = data[0].trim();
+      if (data.length > 1) player.level = int.tryParse(data[1].trim()) ?? 3;
+      if (data.length > 2) {
+        String g = data[2].trim().toUpperCase();
+        if (g.startsWith("M")) {
+          player.gender = "MALE";
+        } else if (g.startsWith("F")) {
+          player.gender = "FEMALE";
+        } else {
+          player.gender = "X";
+        }
+      }
+      if (data.length > 3) player.team = data[3].trim();
+
+      players.insert(0, player);
+      addedCount++;
+    }
+
+    setState(() {
+      _batchController.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("$addedCount players added from text")),
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-  }
+  void _formatMeetup() {
+    String text = _batchController.text;
+    var lines = text.split("\n");
+    var playerLines = [];
+    var dateFieldRegex = RegExp(r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
+    var recordFlag = true;
 
-  bool useEditor = false;
+    for (var i = 0; i < lines.length; i++) {
+      String line = lines[i].trim();
+      if (line.isEmpty) continue;
+
+      if (recordFlag && !dateFieldRegex.hasMatch(line)) {
+        playerLines.add("$line,3,M");
+        recordFlag = false;
+        continue;
+      }
+
+      if (dateFieldRegex.hasMatch(line)) {
+        recordFlag = true;
+      }
+    }
+
+    setState(() {
+      _batchController.text = playerLines.join("\n");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    Size screenSize = MediaQuery.of(context).size;
-    double screenWidth = screenSize.width;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Players'),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton(
-        tooltip: "Add listed players",
-        onPressed: () {
-          Navigator.pop(context, players);
-          // print(rows.length);
-          // showDialog<void>(
-          //   context: context,
-          //   builder: HelpDialog,
-          // );
-        },
-        child: const FaIcon(
-          FontAwesomeIcons.check,
-        ),
-      ),
-      body: ListView(
-        children: <Widget>[
-          SizedBox(height: 12.0),
-          ListTile(
-            title: const Text('Add from text'),
-            leading: Switch(
-              value: useEditor,
-              onChanged: (value) {
-                setState(() {
-                  useEditor = value;
-                  print(useEditor);
-                });
-              },
-              // activeTrackColor: Colors.lightGreenAccent,
-              // activeColor: Colors.green,
+        title: const Text('Add Players',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          if (players.isNotEmpty)
+            TextButton.icon(
+              onPressed: () => setState(() => players.clear()),
+              icon: const Icon(Icons.clear_all, size: 20),
+              label: const Text("Clear List"),
+              style: TextButton.styleFrom(foregroundColor: colorScheme.error),
             ),
-          ),
-
-          !useEditor
-              ? Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        Container(
-                          width: screenWidth * 0.4,
-                          child: TextField(
-                            textInputAction: TextInputAction.done,
-                            focusNode: myFocusNode,
-                            onSubmitted: (value) {
-                              setState(() {
-                                players.add(PlayerModel(
-                                    _selectedLevel,
-                                    _player_text.text,
-                                    "team",
-                                    _selectedGender));
-                              });
-                              _player_text.text = "";
-                              myFocusNode.requestFocus();
-                            },
-                            controller: _player_text,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.all(10),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              hintText: "Player name",
-                              labelText: "Name",
-                            ),
-                          ),
-                        ),
-                        Container(
-                          child: DropdownButton(
-                            hint: Text("Levels"),
-                            elevation: 0,
-                            value: _selectedLevel,
-                            items: _levels.map((star) {
-                              return DropdownMenuItem<int>(
-                                child: Text(star.toString()),
-                                value: star,
-                              );
-                            }).toList(),
-                            onChanged: (int? item) {
-                              setState(() {
-                                _selectedLevel = item ?? 3;
-                              });
-                            },
-                          ),
-                        ),
-                        Container(
-                          child: DropdownButton(
-                            hint: Text("Genders"),
-                            elevation: 0,
-                            value: _selectedGender,
-                            items: _genders.map((gender) {
-                              return DropdownMenuItem<String>(
-                                child: Text(gender.toString()),
-                                value: gender,
-                              );
-                            }).toList(),
-                            onChanged: (String? item) {
-                              setState(() {
-                                _selectedGender = item ?? "MALE";
-                              });
-                            },
-                          ),
-                        ),
-                        Container(
-                          child: Builder(
-                            builder: (BuildContext context) {
-                              return IconButton(
-                                icon: FaIcon(FontAwesomeIcons.personCirclePlus),
-                                onPressed: () {
-                                  setState(() {
-                                    players.add(PlayerModel(
-                                        _selectedLevel,
-                                        _player_text.text,
-                                        "0",
-                                        _selectedGender));
-                                  });
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Wrap(
-                              spacing: 8.0,
-                              runSpacing: 8.0,
-                              alignment: WrapAlignment.center,
-                              children: <Widget>[
-                                ElevatedButton.icon(
-                                    icon: const Icon(FontAwesomeIcons.clipboard,
-                                        size: 18.0),
-                                    onPressed: () {
-                                      Clipboard.setData(ClipboardData(
-                                          text: _batch_text.text));
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(const SnackBar(
-                                              content: Text("Text Copied")));
-                                    },
-                                    label: const Text("Copy")),
-                                ElevatedButton.icon(
-                                    icon: const Icon(FontAwesomeIcons.meetup,
-                                        size: 18.0),
-                                    onPressed: () {
-                                      String text = _batch_text.text;
-                                      var lines = text.split("\n");
-                                      var player_line = [];
-                                      var date_field_regex = RegExp(
-                                          r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
-                                      var record_flag = true;
-                                      for (var i = 0;
-                                          i <= lines.length - 1;
-                                          i++) {
-                                        if ((record_flag == true) &&
-                                            (lines[i].trim() != "")) {
-                                          player_line
-                                              .add(lines[i] + ",3" + ",M");
-                                          record_flag = false;
-                                          continue;
-                                        }
-                                        if (date_field_regex
-                                                .hasMatch(lines[i]) ==
-                                            true) {
-                                          record_flag = true;
-                                        }
-                                      }
-                                      setState(() {
-                                        _batch_text.text =
-                                            player_line.join("\n");
-                                      });
-                                    },
-                                    label: const Text("Meetup Format")),
-                                ElevatedButton.icon(
-                                    icon: const Icon(
-                                        FontAwesomeIcons.alignRight,
-                                        size: 18.0),
-                                    onPressed: () {
-                                      var lines = _batch_text.text.split("\n");
-                                      var string_data = [];
-                                      for (var i = 0;
-                                          i <= lines.length - 1;
-                                          i++) {
-                                        var map_data = {
-                                          "name": "x",
-                                          "level": 3,
-                                          "gender": "MALE",
-                                          "team": "None"
-                                        };
-                                        var data = lines[i].split(",");
-                                        for (var j = 0; j < data.length; j++) {
-                                          switch (j) {
-                                            case 0:
-                                              map_data["name"] = data[0];
-                                              break;
-                                            case 1:
-                                              map_data["level"] =
-                                                  double.tryParse(data[1]) ?? 3;
-                                              break;
-                                            case 2:
-                                              if (data[2]
-                                                  .trim()
-                                                  .toUpperCase()
-                                                  .startsWith("M")) {
-                                                map_data["gender"] = "MALE";
-                                              } else if (data[2]
-                                                  .trim()
-                                                  .toUpperCase()
-                                                  .startsWith("F")) {
-                                                map_data["gender"] = "FEMALE";
-                                              } else {
-                                                map_data["gender"] = "X";
-                                              }
-                                              break;
-                                            case 3:
-                                              map_data["team"] = data[3];
-                                              break;
-                                          }
-                                        }
-                                        string_data
-                                            .add(map_data.toString() + "\n");
-                                      }
-                                      showTextDialog(
-                                          context,
-                                          "Following players will be added",
-                                          string_data.join("\n"));
-                                    },
-                                    label: const Text("Apply Defaults")),
-                                OutlinedButton.icon(
-                                    icon: const Icon(FontAwesomeIcons.eraser,
-                                        size: 18.0),
-                                    onPressed: () {
-                                      _batch_text.text = "";
-                                    },
-                                    label: const Text("Clear")),
-                              ],
-                            ),
-                            const SizedBox(height: 16.0),
-                            TextField(
-                              controller: _batch_text,
-                              keyboardType: TextInputType.multiline,
-                              maxLines: 7,
-                              decoration: InputDecoration(
-                                  hintText:
-                                      "Enter players levels and gender. See help menu for details. One player per line.\nFormat: <Name>,<Level>,<Gender>\nExample:\nZobair,3,M\nMary,2,F",
-                                  border: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10.0)),
-                                  focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      borderSide: const BorderSide(
-                                          width: 2, color: Colors.blueAccent))),
-                            ),
-                            const SizedBox(height: 16.0),
-                            Wrap(
-                              spacing: 8.0,
-                              alignment: WrapAlignment.center,
-                              children: <Widget>[
-                                OutlinedButton.icon(
-                                    icon: const Icon(
-                                        FontAwesomeIcons.circleXmark,
-                                        size: 18.0),
-                                    onPressed: () {
-                                      setState(() {
-                                        players = [];
-                                      });
-                                    },
-                                    label: const Text("Reset List")),
-                                ElevatedButton.icon(
-                                    icon: const Icon(
-                                        FontAwesomeIcons.circlePlus,
-                                        size: 18.0),
-                                    onPressed: () {
-                                      var lines = _batch_text.text.split("\n");
-                                      for (var i = 0;
-                                          i <= lines.length - 1;
-                                          i++) {
-                                        if (lines[i].trim().isEmpty) continue;
-                                        PlayerModel player =
-                                            PlayerModel(3, "X", "X", "X");
-                                        var data = lines[i].split(",");
-                                        for (var j = 0; j < data.length; j++) {
-                                          switch (j) {
-                                            case 0:
-                                              player.name = data[0];
-                                              break;
-                                            case 1:
-                                              player.level =
-                                                  int.tryParse(data[1]) ?? 3;
-                                              break;
-                                            case 2:
-                                              if (data[2]
-                                                  .trim()
-                                                  .toUpperCase()
-                                                  .startsWith("M")) {
-                                                player.gender = "MALE";
-                                              } else if (data[2]
-                                                  .trim()
-                                                  .toUpperCase()
-                                                  .startsWith("F")) {
-                                                player.gender = "FEMALE";
-                                              } else {
-                                                player.gender = "X";
-                                              }
-                                              break;
-                                            case 3:
-                                              player.team = data[3];
-                                              break;
-                                          }
-                                        }
-                                        players.add(player);
-                                      }
-                                      setState(() {});
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(const SnackBar(
-                                              content: Text("Players Added")));
-                                    },
-                                    label: const Text("Confirm & Add")),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-          //contains average stars and total reviews card
-
-          SizedBox(height: 24.0),
-          //the review menu label
-          Container(
-            color: Theme.of(context).secondaryHeaderColor,
-            padding: EdgeInsets.all(10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Icon(Icons.person),
-                SizedBox(width: 10.0),
-                Text(
-                  "We will add ${players.length} players",
-                  style: TextStyle(fontSize: 18),
-                ),
-                IconButton(
-                  icon: Icon(Icons.close),
-                  color: Colors.red,
-                  onPressed: () {
-                    setState(() {
-                      players = [];
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          //contains list of reviews
-
-          players.length != 0
-              ? ListView(
-                  shrinkWrap: true,
-                  physics: ScrollPhysics(),
-                  children: players.reversed.map((player) {
-                    return PlayerWidget(
-                      player: player,
-                    );
-                  }).toList(),
-                )
-              : PlayerWidget(
-                  player: PlayerModel(0, "None", "", "x"),
-                ),
-          ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context, players);
-              },
-              icon: FaIcon(FontAwesomeIcons.peopleGroup),
-              label: Text("Add players to team maker"))
         ],
       ),
+      floatingActionButton: players.isNotEmpty
+          ? FloatingActionButton.extended(
+              onPressed: () => Navigator.pop(context, players),
+              label: const Text("Confirm & Add"),
+              icon: const Icon(Icons.check),
+            )
+          : null,
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Mode Toggle
+                  Center(
+                    child: SegmentedButton<bool>(
+                      segments: const [
+                        ButtonSegment(
+                          value: false,
+                          label: Text("Single"),
+                          icon: Icon(Icons.person_add_alt_1),
+                        ),
+                        ButtonSegment(
+                          value: true,
+                          label: Text("Bulk/Text"),
+                          icon: Icon(Icons.view_headline),
+                        ),
+                      ],
+                      selected: {_useBulkMode},
+                      onSelectionChanged: (value) {
+                        setState(() => _useBulkMode = value.first);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Input Section
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child:
+                        _useBulkMode ? _buildBulkInput() : _buildSingleInput(),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // List Header
+                  if (players.isNotEmpty)
+                    Row(
+                      children: [
+                        Icon(Icons.people, color: colorScheme.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Added Players (${players.length})",
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        const Spacer(),
+                        const Text("Recent on top",
+                            style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
+                    ),
+                  if (players.isNotEmpty) const Divider(),
+                ],
+              ),
+            ),
+          ),
+
+          // Players List
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final player = players[index];
+                return Dismissible(
+                  key: Key("${player.name}_$index"),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    color: colorScheme.error,
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  onDismissed: (direction) {
+                    setState(() => players.removeAt(index));
+                  },
+                  child: PlayerWidget(player: player),
+                );
+              },
+              childCount: players.length,
+            ),
+          ),
+
+          if (players.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.group_add_outlined,
+                        size: 64, color: colorScheme.outlineVariant),
+                    const SizedBox(height: 16),
+                    Text(
+                      "No players added yet",
+                      style: theme.textTheme.bodyLarge
+                          ?.copyWith(color: colorScheme.outline),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 80)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleInput() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _playerNameController,
+              focusNode: _nameFocusNode,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                labelText: "Player Name",
+                hintText: "Enter name",
+                prefixIcon: const Icon(Icons.person),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onSubmitted: (_) => _addSinglePlayer(),
+            ),
+            const SizedBox(height: 20),
+            Text("Skill Level", style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Center(
+              child: SegmentedButton<int>(
+                segments: _levels
+                    .map((l) => ButtonSegment(
+                          value: l,
+                          label: Text(l.toString()),
+                        ))
+                    .toList(),
+                selected: {_selectedLevel},
+                onSelectionChanged: (val) =>
+                    setState(() => _selectedLevel = val.first),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text("Gender", style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            Center(
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                    value: "MALE",
+                    label: Text("Male"),
+                    icon: Icon(Icons.male),
+                  ),
+                  ButtonSegment(
+                    value: "FEMALE",
+                    label: Text("Female"),
+                    icon: Icon(Icons.female),
+                  ),
+                  ButtonSegment(
+                    value: "X",
+                    label: Text("Other"),
+                    icon: Icon(Icons.horizontal_rule),
+                  ),
+                ],
+                selected: {_selectedGender},
+                onSelectionChanged: (val) =>
+                    setState(() => _selectedGender = val.first),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _addSinglePlayer,
+                icon: const Icon(Icons.add),
+                label: const Text("Add to List"),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBulkInput() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        TextField(
+          controller: _batchController,
+          maxLines: 8,
+          decoration: InputDecoration(
+            hintText: "Name, Level, Gender\nJohn, 3, M\nJane, 4, F",
+            helperText: "Format: Name, Level (1-5), Gender (M/F/X)",
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor:
+                colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _formatMeetup,
+                icon: const FaIcon(FontAwesomeIcons.meetup, size: 16),
+                label: const Text("Meetup Format"),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: _processBulkPlayers,
+                icon: const Icon(Icons.playlist_add),
+                label: const Text("Add All"),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

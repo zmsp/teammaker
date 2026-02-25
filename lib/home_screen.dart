@@ -16,7 +16,6 @@ import 'package:teammaker/team_screen.dart';
 import 'package:teammaker/algorithm/team_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teammaker/widgets/app_components.dart';
-import 'package:teammaker/widgets/player_search_bar.dart';
 import 'package:teammaker/widgets/strategy_widgets.dart';
 import 'package:teammaker/utils/team_utils.dart';
 import 'package:teammaker/widgets/team_results_view.dart';
@@ -691,8 +690,6 @@ Jane,4,F""";
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            PlayerSearchBar(stateManager: stateManager),
-                            const SizedBox(height: 12),
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: Row(
