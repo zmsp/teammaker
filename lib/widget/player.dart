@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/model/player_model.dart';
 
 class PlayerWidget extends StatelessWidget {
@@ -8,32 +9,53 @@ class PlayerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Padding(
-          padding: EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  '${player.name} - ( ${player.getGenderString()} )' )
-                ),
+    // Hide the placeholder empty player
+    if (player.name == "None" && player.level == 0)
+      return const SizedBox.shrink();
 
-              Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(5, (index) {
-                    return Icon(
-                      index < player.level ? Icons.star : Icons.star_border,
-                    );
-                  })),
-            ],
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      shape: RoundedRectangleBorder(
+        side:
+            BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+        leading: CircleAvatar(
+          backgroundColor: player.getGenderString().toUpperCase() == "FEMALE" ||
+                  player.getGenderString().toUpperCase() == "F"
+              ? Colors.pink.shade100
+              : Colors.blue.shade100,
+          child: FaIcon(
+            player.getGenderString().toUpperCase() == "FEMALE" ||
+                    player.getGenderString().toUpperCase() == "F"
+                ? FontAwesomeIcons.personDress
+                : FontAwesomeIcons.person,
+            color: player.getGenderString().toUpperCase() == "FEMALE" ||
+                    player.getGenderString().toUpperCase() == "F"
+                ? Colors.pink.shade700
+                : Colors.blue.shade700,
           ),
         ),
-        Divider(
-          color: Colors.grey,
-        )
-      ],
+        title: Text(
+          player.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(player.getGenderString()),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(5, (index) {
+            return Icon(
+              index < player.level ? Icons.star : Icons.star_border,
+              color: Colors.amber,
+              size: 20,
+            );
+          }),
+        ),
+      ),
     );
   }
 }

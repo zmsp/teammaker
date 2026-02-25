@@ -37,6 +37,7 @@ enum Status { none, running, stopped, paused }
 class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   PlutoGridStateManager? stateManager;
   SettingsData settingsData = new SettingsData();
+  bool _isEditable = false;
   // final storage = new LocalStorage('my_data.json');
 
   void exportToCsv() async {
@@ -898,6 +899,67 @@ Jane,4,F""";
                   enableColumnBorderVertical: false,
                 ),
               ),
+              createHeader: (stateManager) {
+                var style = stateManager.configuration.style;
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Container(
+                    height: style.rowHeight,
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            TextButton.icon(
+                              onPressed: () {
+                                stateManager.insertRows(
+                                  stateManager.rows.length,
+                                  [stateManager.getNewRow()],
+                                );
+                              },
+                              icon: Icon(Icons.person_add,
+                                  color: style.iconColor),
+                              label: Text('Add Row',
+                                  style: TextStyle(
+                                      color: style.cellTextStyle.color)),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _isEditable = !_isEditable;
+                                  for (var col in stateManager.columns) {
+                                    col.enableEditingMode = _isEditable;
+                                  }
+                                  stateManager.notifyListeners();
+                                });
+                              },
+                              icon: Icon(
+                                  _isEditable ? Icons.edit_off : Icons.edit,
+                                  color: style.iconColor),
+                              label: Text(
+                                  _isEditable ? 'Disable Edit' : 'Edit Mode',
+                                  style: TextStyle(
+                                      color: style.cellTextStyle.color)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 16),
+                        TextButton.icon(
+                          onPressed: () {
+                            stateManager.removeRows(stateManager.checkedRows);
+                          },
+                          icon: Icon(Icons.delete_outline,
+                              color: Colors.red.shade300),
+                          label: Text('Remove Checked',
+                              style: TextStyle(color: Colors.red.shade300)),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
               onLoaded: (PlutoGridOnLoadedEvent event) {
                 stateManager = event.stateManager;
               },

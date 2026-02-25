@@ -1,0 +1,119 @@
+@@ -883,11 +883,10 @@
+             ],
+           ),
+           Expanded(
+-            child: SizedBox(
+-                child: PlutoGrid(
++            child: PlutoGrid(
+               columns: columns,
+               rows: rows,
+-              configuration: const PlutoGridConfiguration(
++              configuration: PlutoGridConfiguration(
+                 style: PlutoGridStyleConfig.dark(
+                   enableColumnBorderHorizontal: false,
+                   enableColumnBorderVertical: false,
+@@ -898,59 +897,63 @@
+                 return SizedBox(
+                   height: style.rowHeight,
+                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+-                  child: Row(
+-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-                    children: [
+-                      Row(
+-                        children: [
+-                          TextButton.icon(
+-                            onPressed: () {
+-                               stateManager.insertRows(
+-                                 stateManager.rows.length,
+-                                 [stateManager.getNewRow()],
+-                               );
+-                            },
+-                            icon:
+-                                Icon(Icons.person_add, color: style.iconColor),
+-                            label: Text('Add Row',
+-                                style: TextStyle(
+-                                    color: style.cellTextStyle.color)),
+-                          ),
+-                          const SizedBox(width: 8),
+-                          TextButton.icon(
+-                            onPressed: () {
+-                              setState(() {
+-                                _isEditable = !_isEditable;
+-                                for (var col in stateManager.columns) {
+-                                  col.enableEditingMode = _isEditable;
+-                                }
+-                                stateManager.notifyListeners();
+-                              });
+-                            },
+-                            icon: Icon(
+-                                _isEditable ? Icons.edit_off : Icons.edit,
+-                                color: style.iconColor),
+-                            label: Text(
+-                                _isEditable ? 'Disable Edit' : 'Edit Mode',
+-                                style: TextStyle(
+-                                    color: style.cellTextStyle.color)),
+-                          ),
+-                        ],
+-                      ),
+-                      TextButton.icon(
+-                        onPressed: () {
+-                          stateManager.removeRows(stateManager.checkedRows);
+-                        },
+-                        icon: Icon(Icons.delete_outline,
+-                            color: Colors.red.shade300),
+-                        label: Text('Remove Checked',
+-                            style: TextStyle(color: Colors.red.shade300)),
+-                      ),
+-                    ],
++                  child: SingleChildScrollView(
++                    scrollDirection: Axis.horizontal,
++                    child: Row(
++                      mainAxisAlignment: MainAxisAlignment.start,
++                      children: [
++                        TextButton.icon(
++                          onPressed: () {
++                            stateManager.insertRows(
++                              stateManager.rows.length,
++                              [stateManager.getNewRow()],
++                            );
++                          },
++                          icon: Icon(Icons.person_add, color: style.iconColor),
++                          label: Text('Add Row',
++                              style:
++                                  TextStyle(color: style.cellTextStyle.color)),
++                        ),
++                        const SizedBox(width: 8),
++                        TextButton.icon(
++                          onPressed: () {
++                            setState(() {
++                              _isEditable = !_isEditable;
++                              for (var col in stateManager.columns) {
++                                col.enableEditingMode = _isEditable;
++                              }
++                              stateManager.notifyListeners();
++                            });
++                          },
++                          icon: Icon(_isEditable ? Icons.edit_off : Icons.edit,
++                              color: style.iconColor),
++                          label: Text(
++                              _isEditable ? 'Disable Edit' : 'Edit Mode',
++                              style:
++                                  TextStyle(color: style.cellTextStyle.color)),
++                        ),
++                        const SizedBox(width: 8),
++                        TextButton.icon(
++                          onPressed: () {
++                            stateManager.removeRows(stateManager.checkedRows);
++                          },
++                          icon: Icon(Icons.delete_outline,
++                              color: Colors.red.shade300),
++                          label: Text('Remove Checked',
++                              style: TextStyle(color: Colors.red.shade300)),
++                        ),
++                      ],
++                    ),
+                   ),
+                 );
+               },
+               onLoaded: (PlutoGridOnLoadedEvent event) {
+-
