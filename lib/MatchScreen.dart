@@ -1,4 +1,3 @@
-// ignore_for_file: must_be_immutable, unused_field, unused_local_variable, deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,54 +6,35 @@ import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/widget/match.dart';
 
 class MatchScreen extends StatefulWidget {
-  SettingsData settingsData;
+  final SettingsData settingsData;
 
-  MatchScreen(this.settingsData);
+  const MatchScreen(this.settingsData, {super.key});
+
   @override
-  MatchScreenState createState() {
-    return new MatchScreenState(settingsData);
-  }
+  _MatchScreenState createState() => _MatchScreenState();
 }
 
-class MatchScreenState extends State<MatchScreen> {
-  SettingsData settingsData;
-
-  MatchScreenState(this.settingsData);
-
-  final List<int> _levels = [1, 2, 3, 4, 5];
-  final List<String> _genders = ["MALE", "FEMALE", "x"];
-  final TextEditingController _batch_text = TextEditingController();
-  final TextEditingController _player_text = TextEditingController();
-  final FocusNode myFocusNode = FocusNode();
-
-  int _selectedLevel = 3;
-  String _selectedGender = "MALE";
-  TextEditingController textarea = TextEditingController();
-
-  List<PlayerModel> players = [];
+class _MatchScreenState extends State<MatchScreen> {
+  SettingsData get settingsData => widget.settingsData;
   List<Round> rounds = [];
+  List<PlayerModel> players = [];
 
-  showTextDialog(BuildContext context, String title, String message) {
-    // set up the button
+  void reportingDialog(BuildContext context) {
     Widget okButton = TextButton(
-      child: Text("OK"),
+      child: const Text("OK"),
       onPressed: () {
         Navigator.pop(context);
       },
     );
 
-    // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title: Text("$title"),
-      content: SingleChildScrollView(
-        child: Text("$message"),
-      ),
+      title: const Text("Help"),
+      content: const Text("Help message goes here"),
       actions: [
         okButton,
       ],
     );
 
-    // show the dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -65,52 +45,84 @@ class MatchScreenState extends State<MatchScreen> {
 
   void _generateMatches() {
     rounds = [];
-    int sub_length = (settingsData.teamCount / 2).ceil();
-    List<String> subList2 =
-        List.generate(sub_length, (index) => "${2 + index * 2}");
-    List<String> subList1 =
-        List.generate(sub_length, (index) => "${1 + index * 2}");
-    if (settingsData.teamCount.isOdd) {
-      if (subList2.isNotEmpty) {
-        subList2.removeLast();
-        subList2.add("X");
-      }
+    int n = settingsData.teamCount;
+    bool isOdd = n.isOdd;
+    int numTeams = isOdd ? n + 1 : n;
+
+    // Tracker for how many times each team has actually played
+    Map<String, int> playCounts = {};
+    for (int i = 1; i <= n; i++) {
+      playCounts[i.toString()] = 0;
     }
 
-    List<String> games = [];
-    for (var t = 0; t < sub_length; t++) {
-      if (subList1.length > t && subList2.length > t) {
-        String team1 = subList1.elementAt(t);
-        String team2 = subList2.elementAt(t);
-        games.add("$team1 VS $team2");
-      }
+    // Create team list [1, 2, ..., numTeams]
+    List<String> teams = List.generate(numTeams, (i) => (i + 1).toString());
+    if (isOdd) {
+      teams[numTeams - 1] = "None";
     }
 
-    for (var r = 1; r <= settingsData.gameRounds; r++) {
-      Round c_round = Round([], "$r");
-      for (var v = 1; v <= settingsData.gameVenues; v++) {
-        if (games.isEmpty) {
-          if (subList1.length > 1 && subList2.length > 0) {
-            String s_1 = subList1.removeAt(1);
-            String s_2 = subList2.removeAt(0);
-            subList1.insert(1, s_2);
-            subList2.add(s_1);
-          }
-          for (var t = 0; t < sub_length; t++) {
-            if (subList1.length > t && subList2.length > t) {
-              String team1 = subList1.elementAt(t);
-              String team2 = subList2.elementAt(t);
-              games.add("$team1 VS $team2");
-            }
-          }
-        }
-        if (games.isNotEmpty) {
-          Game g = Game(games.removeAt(0), "$v");
-          c_round.matches.add(g);
+    int numCycles = numTeams - 1;
+    int requestedRounds =
+        settingsData.gameRounds > 0 ? settingsData.gameRounds : numCycles;
+
+    for (int r = 0; r < requestedRounds; r++) {
+      Round round = Round([], "${r + 1}");
+      List<Game> pairingPool = [];
+      List<Game> byeGames = [];
+
+      // Split teams into two rows for the circle method
+      int half = numTeams ~/ 2;
+      for (int i = 0; i < half; i++) {
+        String t1 = teams[i];
+        String t2 = teams[numTeams - 1 - i];
+
+        if (t1 == "None" || t2 == "None") {
+          String activeTeam = t1 == "None" ? t2 : t1;
+          byeGames.add(Game("$activeTeam VS None", "BYE"));
+        } else {
+          pairingPool.add(Game("$t1 VS $t2", "0"));
         }
       }
 
-      rounds.add(c_round);
+      // SORT pairing pool based on the combined participation of the teams
+      // We want to prioritize teams that have played the LEAST so far
+      pairingPool.sort((a, b) {
+        List<String> teamsA = a.team.split(" VS ");
+        List<String> teamsB = b.team.split(" VS ");
+
+        int sumA = (playCounts[teamsA[0]] ?? 0) + (playCounts[teamsA[1]] ?? 0);
+        int sumB = (playCounts[teamsB[0]] ?? 0) + (playCounts[teamsB[1]] ?? 0);
+
+        return sumA.compareTo(sumB);
+      });
+
+      // Assign games to venues
+      int venueCount = settingsData.gameVenues;
+      for (int i = 0; i < pairingPool.length; i++) {
+        Game game = pairingPool[i];
+        if (i < venueCount) {
+          game.venue = (i + 1).toString();
+          // Log participation for these teams
+          List<String> tNames = game.team.split(" VS ");
+          playCounts[tNames[0]] = (playCounts[tNames[0]] ?? 0) + 1;
+          playCounts[tNames[1]] = (playCounts[tNames[1]] ?? 0) + 1;
+          round.matches.add(game);
+        } else {
+          game.venue = "Waiting";
+          round.matches.add(game);
+        }
+      }
+
+      // Add BYEs
+      for (var bye in byeGames) {
+        round.matches.add(bye);
+      }
+
+      rounds.add(round);
+
+      // Rotate (Circle Method)
+      String last = teams.removeLast();
+      teams.insert(1, last);
     }
   }
 
@@ -146,24 +158,17 @@ class MatchScreenState extends State<MatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Size screenSize = MediaQuery.of(context).size;
-    double screenWidth = screenSize.width;
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Game matches'),
+          title: const Text('Game matches'),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         floatingActionButton: FloatingActionButton(
           tooltip: "Add listed players",
           onPressed: () {
             Navigator.pop(context, players);
-            // print(rows.length);
-            // showDialog<void>(
-            //   context: context,
-            //   builder: HelpDialog,
-            // );
           },
           child: const FaIcon(
             FontAwesomeIcons.check,
@@ -171,7 +176,7 @@ class MatchScreenState extends State<MatchScreen> {
         ),
         body: ListView(
           children: <Widget>[
-            SizedBox(height: 12.0),
+            const SizedBox(height: 12.0),
             ExpansionTile(
               leading: const FaIcon(FontAwesomeIcons.gear),
               title: const Text("Match Settings",
@@ -189,8 +194,10 @@ class MatchScreenState extends State<MatchScreen> {
                       initialValue: settingsData.teamCount.toString(),
                       keyboardType: TextInputType.number,
                       onChanged: (value) {
-                        settingsData.teamCount =
-                            int.tryParse(value) ?? settingsData.teamCount;
+                        setState(() {
+                          settingsData.teamCount =
+                              int.tryParse(value) ?? settingsData.teamCount;
+                        });
                       },
                       textAlign: TextAlign.left),
                 ),
@@ -205,8 +212,10 @@ class MatchScreenState extends State<MatchScreen> {
                       initialValue: settingsData.gameVenues.toString(),
                       keyboardType: TextInputType.number,
                       onChanged: (value) {
-                        settingsData.gameVenues =
-                            int.tryParse(value) ?? settingsData.gameVenues;
+                        setState(() {
+                          settingsData.gameVenues =
+                              int.tryParse(value) ?? settingsData.gameVenues;
+                        });
                       },
                       textAlign: TextAlign.left),
                 ),
@@ -221,8 +230,10 @@ class MatchScreenState extends State<MatchScreen> {
                       initialValue: settingsData.gameRounds.toString(),
                       keyboardType: TextInputType.number,
                       onChanged: (value) {
-                        settingsData.gameRounds =
-                            int.tryParse(value) ?? settingsData.gameRounds;
+                        setState(() {
+                          settingsData.gameRounds =
+                              int.tryParse(value) ?? settingsData.gameRounds;
+                        });
                       },
                       textAlign: TextAlign.left),
                 ),
@@ -247,28 +258,20 @@ class MatchScreenState extends State<MatchScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
-
-            //contains average stars and total reviews card
-
-            SizedBox(height: 24.0),
-            //the review menu label
-
-            //contains list of reviews
-
-            rounds.length != 0
+            const SizedBox(height: 24.0),
+            rounds.isNotEmpty
                 ? ListView(
                     shrinkWrap: true,
-                    physics: ScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     children: rounds.map((round) {
                       return MatchWidget(
                         round: round,
                       );
                     }).toList(),
                   )
-                : Padding(
+                : const Padding(
                     padding: EdgeInsets.all(10.0),
-                    child: Text(
-                        'Press generate matches'), // Removed invalid Expanded inside a ListView!
+                    child: Center(child: Text('Press generate matches')),
                   ),
           ],
         ),

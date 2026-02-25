@@ -21,6 +21,7 @@ import 'package:teammaker/utils/team_utils.dart';
 import 'package:teammaker/widgets/team_results_view.dart';
 import 'package:teammaker/configs/grid_columns.dart';
 import 'package:teammaker/widgets/tapscore_widget.dart';
+import 'package:teammaker/widgets/random_team_widget.dart';
 
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
@@ -596,6 +597,21 @@ Jane,4,F""";
         foregroundColor: colorScheme.onSurface,
         actions: [
           IconButton(
+            tooltip: 'Team Picker',
+            icon: const FaIcon(FontAwesomeIcons.dice,
+                size: 20, color: Color(0xFF2196F3)),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          RandomTeamScreen(
+                            initialTeamCount: settingsData.teamCount,
+                            initialPlayersPerTeam: settingsData.proportion,
+                          )));
+            },
+          ),
+          IconButton(
             tooltip: 'Export to CSV',
             icon: const FaIcon(FontAwesomeIcons.fileExport, size: 20),
             onPressed: () {
@@ -1095,10 +1111,26 @@ Jane,4,F""";
                 ),
                 BottomNavButton(
                   onPressed: () {
-                    // Default to 1 venue and calculate rounds so each team plays at least once
+                    // Sync team count to actually generated teams to exclude empty ones
+                    // We calculate this based on the unique team assignments in the grid
+                    var activeTeams = stateManager!.rows
+                        .where((r) => r.checked == true)
+                        .map((r) => r.cells['team_field']?.value.toString())
+                        .where(
+                            (t) => t != null && t != "None" && t != "No team")
+                        .toSet()
+                        .length;
+
+                    if (activeTeams >= 2) {
+                      settingsData.teamCount = activeTeams;
+                    }
+
+                    // Default to 1 venue and calculate rounds for a full round-robin
                     settingsData.gameVenues = 1;
-                    settingsData.gameRounds =
-                        (settingsData.teamCount / 2).ceil();
+                    settingsData.gameRounds = settingsData.teamCount.isOdd
+                        ? settingsData.teamCount
+                        : (settingsData.teamCount - 1).clamp(1, 99);
+
                     Navigator.push(
                         context,
                         MaterialPageRoute(

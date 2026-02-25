@@ -44,8 +44,10 @@ class _MatchWidgetState extends State<MatchWidget> {
               ),
               const SizedBox(height: 8),
               ...widget.round.matches.map((match) {
-                String scoreSummary = "No score recorded";
-                if (match.scoreTeam1 != null || match.scoreTeam2 != null) {
+                bool isBye = match.team.contains("None");
+                String scoreSummary = isBye ? "BYE" : "No score recorded";
+                if (!isBye &&
+                    (match.scoreTeam1 != null || match.scoreTeam2 != null)) {
                   scoreSummary =
                       "${match.scoreTeam1 ?? '?'} - ${match.scoreTeam2 ?? '?'}";
                 }
@@ -166,50 +168,61 @@ class _MatchWidgetState extends State<MatchWidget> {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                List<String> teamNames =
-                                    match.team.split(" VS ");
-                                String nameA = teamNames.isNotEmpty
-                                    ? "TEAM ${teamNames[0]}"
-                                    : "TEAM A";
-                                String nameB = teamNames.length > 1
-                                    ? "TEAM ${teamNames[1]}"
-                                    : "TEAM B";
+                            if (!isBye)
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  List<String> teamNames =
+                                      match.team.split(" VS ");
+                                  String nameA = teamNames.isNotEmpty
+                                      ? "TEAM ${teamNames[0]}"
+                                      : "TEAM A";
+                                  String nameB = teamNames.length > 1
+                                      ? "TEAM ${teamNames[1]}"
+                                      : "TEAM B";
 
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => TapScoreScreen(
-                                            initialScoreA: match.scoreTeam1,
-                                            initialScoreB: match.scoreTeam2,
-                                            initialNameA: nameA,
-                                            initialNameB: nameB,
-                                          )),
-                                );
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => TapScoreScreen(
+                                              initialScoreA: match.scoreTeam1,
+                                              initialScoreB: match.scoreTeam2,
+                                              initialNameA: nameA,
+                                              initialNameB: nameB,
+                                            )),
+                                  );
 
-                                if (result != null && result is Map) {
-                                  setState(() {
-                                    match.scoreTeam1 = result['scoreA'];
-                                    match.scoreTeam2 = result['scoreB'];
-                                  });
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: colorScheme.secondaryContainer,
-                                foregroundColor:
-                                    colorScheme.onSecondaryContainer,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)),
+                                  if (result != null && result is Map) {
+                                    setState(() {
+                                      match.scoreTeam1 = result['scoreA'];
+                                      match.scoreTeam2 = result['scoreB'];
+                                    });
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      colorScheme.secondaryContainer,
+                                  foregroundColor:
+                                      colorScheme.onSecondaryContainer,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
+                                ),
+                                icon: const FaIcon(FontAwesomeIcons.stopwatch,
+                                    size: 16),
+                                label: const Text("Launch Scoreboard",
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
                               ),
-                              icon: const FaIcon(FontAwesomeIcons.stopwatch,
-                                  size: 16),
-                              label: const Text("Launch Scoreboard",
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                            ),
+                            if (isBye)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Text("REST ROUND / BYE",
+                                    style: TextStyle(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 2)),
+                              ),
                             const SizedBox(height: 15),
                           ],
                         ),
