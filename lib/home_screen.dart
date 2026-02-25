@@ -15,6 +15,12 @@ import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/team_screen.dart';
 import 'package:teammaker/algorithm/team_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teammaker/widgets/app_components.dart';
+import 'package:teammaker/widgets/player_search_bar.dart';
+import 'package:teammaker/widgets/strategy_widgets.dart';
+import 'package:teammaker/utils/team_utils.dart';
+import 'package:teammaker/widgets/team_results_view.dart';
+import 'package:teammaker/configs/grid_columns.dart';
 
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
@@ -114,55 +120,9 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     }
   }
 
-  List<PlutoColumn> columns = [
-    /// Text Column definition
+  List<PlutoColumn> columns = GridColumns.getColumns();
 
-    PlutoColumn(
-      enableRowDrag: true,
-      enableHideColumnMenuItem: false,
-      enableRowChecked: true,
-      title: "name",
-      field: "name_field",
-      frozen: PlutoColumnFrozen.start,
-      width: 250,
-      type: PlutoColumnType.text(),
-    ),
-    PlutoColumn(
-      title: 'Level',
-      field: 'skill_level_field',
-      type: PlutoColumnType.select([1, 2, 3, 4, 5]),
-      width: 80,
-      textAlign: PlutoColumnTextAlign.right,
-    ),
-
-    PlutoColumn(
-        title: 'gender',
-        field: 'gender_field',
-        width: 80,
-        type: PlutoColumnType.select(["MALE", "FEMALE", "X"])),
-
-    /// Number Column definition
-
-    PlutoColumn(
-      title: 'team',
-      field: 'team_field',
-      textAlign: PlutoColumnTextAlign.right,
-      width: 80,
-      type: PlutoColumnType.text(),
-    ),
-  ];
-
-  List<PlutoRow> rows = [
-    PlutoRow(
-      checked: false,
-      cells: {
-        'name_field': PlutoCell(value: 'player level gender and team'),
-        'skill_level_field': PlutoCell(value: 3),
-        'team_field': PlutoCell(value: "none"),
-        'gender_field': PlutoCell(value: "X"),
-      },
-    ),
-  ];
+  List<PlutoRow> rows = [];
 
   void rebuild_options() {
     // var team_list = new List<int>.generate(level, (i) => i + 1);
@@ -581,6 +541,12 @@ Jane,4,F""";
 
   void generateTeams() {
     stateManager!.sortAscending(columns[1]);
+
+    // Clear team for ALL rows first to ensure unchecked or excluded players are unassigned
+    for (var row in stateManager!.rows) {
+      row.cells['team_field']?.value = 'No team';
+    }
+
     List<PlutoRow> dat = [];
     stateManager?.rows.forEach((element) {
       if (element.checked!) {
@@ -611,75 +577,6 @@ Jane,4,F""";
     });
 
     _navigateToTeam();
-  }
-
-  String _normalizeTeamName(String? name) {
-    if (name == null || name.trim().isEmpty) return 'No team';
-    String lower = name.trim().toLowerCase();
-    if (lower == '0' || lower == 'x' || lower == 'none') {
-      return 'No team';
-    }
-    return name.trim();
-  }
-
-  List<Widget> _buildWhoGoesWhere() {
-    if (stateManager == null) return [];
-    var sorted = List<PlutoRow>.from(stateManager!.rows);
-    sorted.sort((a, b) =>
-        (a.cells['name_field']?.value.toString().toLowerCase() ?? '').compareTo(
-            b.cells['name_field']?.value.toString().toLowerCase() ?? ''));
-    return sorted.map((row) {
-      String teamName =
-          _normalizeTeamName(row.cells['team_field']?.value.toString());
-      return ListTile(
-        title: Text(row.cells['name_field']?.value.toString() ?? ''),
-        trailing: Text(teamName == 'No team' ? 'No team' : 'Team: $teamName',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-      );
-    }).toList();
-  }
-
-  List<Widget> _buildTeams() {
-    if (stateManager == null) return [];
-    Map<String, List<String>> teams = {};
-    for (var row in stateManager!.rows) {
-      String name = row.cells['name_field']?.value.toString() ?? '';
-      String team =
-          _normalizeTeamName(row.cells['team_field']?.value.toString());
-      if (!teams.containsKey(team)) {
-        teams[team] = [];
-      }
-      teams[team]!.add(name);
-    }
-    var sortedTeams = teams.keys.toList()..sort();
-    return sortedTeams.where((team) => team != 'No team').map((team) {
-      return ExpansionTile(
-        initiallyExpanded: true,
-        title: Text('Team $team',
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        children: teams[team]!
-            .map((player) => ListTile(
-                leading: const Icon(Icons.person, size: 16),
-                title: Text(player)))
-            .toList(),
-      );
-    }).toList();
-  }
-
-  List<Widget> _buildUnassignedPlayers() {
-    if (stateManager == null) return [];
-    var unassigned = stateManager!.rows.where((row) =>
-        _normalizeTeamName(row.cells['team_field']?.value.toString()) ==
-        'No team');
-    if (unassigned.isEmpty)
-      return [const ListTile(title: Text('All players assigned!'))];
-    return unassigned
-        .map((row) => ListTile(
-              leading:
-                  const Icon(Icons.person_off, size: 16, color: Colors.grey),
-              title: Text(row.cells['name_field']?.value.toString() ?? ''),
-            ))
-        .toList();
   }
 
   @override
@@ -731,8 +628,10 @@ Jane,4,F""";
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
         children: [
-          _buildSectionHeader(
-              '1. PLAYER ROSTER', FontAwesomeIcons.users, colorScheme.primary),
+          SectionHeader(
+              title: '1. PLAYER ROSTER',
+              icon: FontAwesomeIcons.users,
+              color: colorScheme.primary),
           Card(
             elevation: 0,
             clipBehavior: Clip.antiAlias,
@@ -792,33 +691,13 @@ Jane,4,F""";
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextField(
-                              onChanged: (v) {
-                                stateManager.setFilter((row) {
-                                  return row.cells['name_field']?.value
-                                          .toString()
-                                          .toLowerCase()
-                                          .contains(v.toLowerCase()) ??
-                                      false;
-                                });
-                              },
-                              decoration: InputDecoration(
-                                hintText: 'Search players...',
-                                prefixIcon: const Icon(Icons.search, size: 20),
-                                isDense: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                filled: true,
-                                fillColor: colorScheme.surface,
-                              ),
-                            ),
+                            PlayerSearchBar(stateManager: stateManager),
                             const SizedBox(height: 12),
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: [
-                                  _GridHeaderButton(
+                                  GridHeaderButton(
                                     onPressed: () async {
                                       final List<PlayerModel>? players =
                                           await Navigator.push(
@@ -835,7 +714,7 @@ Jane,4,F""";
                                     color: colorScheme.primary,
                                   ),
                                   const SizedBox(width: 12),
-                                  _GridHeaderButton(
+                                  GridHeaderButton(
                                     onPressed: () {
                                       stateManager.insertRows(
                                           0, [stateManager.getNewRow()]);
@@ -846,7 +725,7 @@ Jane,4,F""";
                                     color: colorScheme.secondary,
                                   ),
                                   const SizedBox(width: 12),
-                                  _GridHeaderButton(
+                                  GridHeaderButton(
                                     onPressed: () {
                                       setState(() {
                                         _isEditable = !_isEditable;
@@ -865,7 +744,7 @@ Jane,4,F""";
                                         : colorScheme.onSurfaceVariant,
                                   ),
                                   const SizedBox(width: 12),
-                                  _GridHeaderButton(
+                                  GridHeaderButton(
                                     onPressed: () {
                                       stateManager
                                           .removeRows(stateManager.checkedRows);
@@ -887,6 +766,28 @@ Jane,4,F""";
                       stateManager!.addListener(_triggerSavePlayers);
                       _loadPlayers();
                     },
+                    onRowChecked: (PlutoGridOnRowCheckedEvent event) {
+                      if (event.row != null && !event.row!.checked!) {
+                        setState(() {
+                          event.row!.cells['team_field']?.value = 'No team';
+                        });
+                        _triggerSavePlayers();
+                      } else if (event.row == null) {
+                        // Handle 'check all' toggles
+                        bool anyUnchecked =
+                            stateManager!.rows.any((r) => r.checked == false);
+                        if (anyUnchecked) {
+                          setState(() {
+                            for (var r in stateManager!.rows) {
+                              if (!r.checked!) {
+                                r.cells['team_field']?.value = 'No team';
+                              }
+                            }
+                          });
+                          _triggerSavePlayers();
+                        }
+                      }
+                    },
                     onChanged: (PlutoGridOnChangedEvent event) {
                       _triggerSavePlayers();
                       setState(() {});
@@ -896,8 +797,10 @@ Jane,4,F""";
               ],
             ),
           ),
-          _buildSectionHeader('2. BALANCE STRATEGY', FontAwesomeIcons.gears,
-              colorScheme.secondary),
+          SectionHeader(
+              title: '2. BALANCE STRATEGY',
+              icon: FontAwesomeIcons.gears,
+              color: colorScheme.secondary),
           Card(
             elevation: 0,
             clipBehavior: Clip.antiAlias,
@@ -919,14 +822,21 @@ Jane,4,F""";
               subtitle: Text(
                   'Mode: ${settingsData.o.toString().split('.').last.replaceAll('_', ' ').toUpperCase()}'),
               children: [
-                _buildStrategyOption(
-                  context,
-                  GEN_OPTION.even_gender,
-                  'Fair Mix (Best)',
-                  'Mix players by gender and skill correctly. Grows teams naturally (${settingsData.proportion}/team).',
-                  Icons.wc,
-                  settingsData.o == GEN_OPTION.even_gender,
-                  Column(
+                StrategyOption(
+                  option: GEN_OPTION.even_gender,
+                  groupValue: settingsData.o,
+                  title: 'Fair Mix (Best)',
+                  subtitle:
+                      'Mix players by gender and skill correctly. Grows teams naturally (${settingsData.proportion}/team).',
+                  icon: Icons.wc,
+                  isSelected: settingsData.o == GEN_OPTION.even_gender,
+                  onChanged: (GEN_OPTION? value) {
+                    setState(() {
+                      settingsData.o = value ?? settingsData.o;
+                      _saveSettings();
+                    });
+                  },
+                  configWidget: Column(
                     children: [
                       TextFormField(
                         decoration: const InputDecoration(
@@ -961,14 +871,20 @@ Jane,4,F""";
                     ],
                   ),
                 ),
-                _buildStrategyOption(
-                  context,
-                  GEN_OPTION.distribute,
-                  'Skill Balance',
-                  'Spread top players across teams fairly.',
-                  Icons.balance,
-                  settingsData.o == GEN_OPTION.distribute,
-                  TextFormField(
+                StrategyOption(
+                  option: GEN_OPTION.distribute,
+                  groupValue: settingsData.o,
+                  title: 'Skill Balance',
+                  subtitle: 'Spread top players across teams fairly.',
+                  icon: Icons.balance,
+                  isSelected: settingsData.o == GEN_OPTION.distribute,
+                  onChanged: (GEN_OPTION? value) {
+                    setState(() {
+                      settingsData.o = value ?? settingsData.o;
+                      _saveSettings();
+                    });
+                  },
+                  configWidget: TextFormField(
                     decoration: const InputDecoration(
                       labelText: 'Total Teams',
                       prefixIcon: Icon(Icons.grid_view),
@@ -982,14 +898,21 @@ Jane,4,F""";
                     }),
                   ),
                 ),
-                _buildStrategyOption(
-                  context,
-                  GEN_OPTION.division,
-                  'Ranked Groups',
-                  'Put strong players together and new players together.',
-                  Icons.military_tech,
-                  settingsData.o == GEN_OPTION.division,
-                  Column(
+                StrategyOption(
+                  option: GEN_OPTION.division,
+                  groupValue: settingsData.o,
+                  title: 'Ranked Groups',
+                  subtitle:
+                      'Put strong players together and new players together.',
+                  icon: Icons.military_tech,
+                  isSelected: settingsData.o == GEN_OPTION.division,
+                  onChanged: (GEN_OPTION? value) {
+                    setState(() {
+                      settingsData.o = value ?? settingsData.o;
+                      _saveSettings();
+                    });
+                  },
+                  configWidget: Column(
                     children: [
                       TextFormField(
                         decoration: const InputDecoration(
@@ -1017,14 +940,20 @@ Jane,4,F""";
                     ],
                   ),
                 ),
-                _buildStrategyOption(
-                  context,
-                  GEN_OPTION.random,
-                  'Random',
-                  'Mix players with no rules.',
-                  Icons.shuffle,
-                  settingsData.o == GEN_OPTION.random,
-                  TextFormField(
+                StrategyOption(
+                  option: GEN_OPTION.random,
+                  groupValue: settingsData.o,
+                  title: 'Random',
+                  subtitle: 'Mix players with no rules.',
+                  icon: Icons.shuffle,
+                  isSelected: settingsData.o == GEN_OPTION.random,
+                  onChanged: (GEN_OPTION? value) {
+                    setState(() {
+                      settingsData.o = value ?? settingsData.o;
+                      _saveSettings();
+                    });
+                  },
+                  configWidget: TextFormField(
                     decoration: const InputDecoration(
                       labelText: 'Total Teams',
                       prefixIcon: Icon(Icons.grid_view),
@@ -1066,11 +995,13 @@ Jane,4,F""";
           ),
           if (stateManager != null &&
               stateManager!.rows.any((element) =>
-                  _normalizeTeamName(
+                  TeamUtils.normalizeTeamName(
                       element.cells['team_field']?.value.toString()) !=
                   "No team")) ...[
-            _buildSectionHeader(
-                '3. RESULTS', FontAwesomeIcons.trophy, colorScheme.tertiary),
+            SectionHeader(
+                title: '3. RESULTS',
+                icon: FontAwesomeIcons.trophy,
+                color: colorScheme.tertiary),
             Card(
               elevation: 4,
               shadowColor: colorScheme.tertiary.withOpacity(0.2),
@@ -1086,7 +1017,7 @@ Jane,4,F""";
                     child: Icon(Icons.groups, color: colorScheme.tertiary)),
                 title: const Text('Active Teams',
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                children: _buildTeams(),
+                children: [TeamResultsView(stateManager: stateManager)],
               ),
             ),
             Card(
@@ -1104,7 +1035,7 @@ Jane,4,F""";
                         Icon(Icons.map, color: colorScheme.onSurfaceVariant)),
                 title: const Text('Player/Team Directory',
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                children: _buildWhoGoesWhere(),
+                children: [PlayerTeamDirectoryView(stateManager: stateManager)],
               ),
             ),
           ],
@@ -1123,7 +1054,7 @@ Jane,4,F""";
                   child: Icon(Icons.person_off, color: colorScheme.secondary)),
               title: const Text('Unassigned List',
                   style: TextStyle(fontWeight: FontWeight.bold)),
-              children: _buildUnassignedPlayers(),
+              children: [UnassignedPlayersView(stateManager: stateManager)],
             ),
           ),
         ],
@@ -1145,7 +1076,7 @@ Jane,4,F""";
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _BottomNavButton(
+                BottomNavButton(
                   onPressed: () async {
                     final List<PlayerModel>? players = await Navigator.push(
                         context,
@@ -1157,13 +1088,13 @@ Jane,4,F""";
                   label: 'Add',
                   color: colorScheme.primary,
                 ),
-                _BottomNavButton(
+                BottomNavButton(
                   onPressed: _navigateToTeam,
                   icon: FontAwesomeIcons.usersViewfinder,
                   label: 'Teams',
                   color: colorScheme.secondary,
                 ),
-                _BottomNavButton(
+                BottomNavButton(
                   onPressed: () {
                     // Default to 1 venue and calculate rounds so each team plays at least once
                     settingsData.gameVenues = 1;
@@ -1181,137 +1112,6 @@ Jane,4,F""";
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
-      child: Row(
-        children: [
-          FaIcon(icon, size: 14, color: color.withOpacity(0.7)),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: color.withOpacity(0.8),
-              letterSpacing: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStrategyOption(
-    BuildContext context,
-    GEN_OPTION option,
-    String title,
-    String subtitle,
-    IconData icon,
-    bool isSelected,
-    Widget configWidget,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color:
-            isSelected ? colorScheme.secondaryContainer.withOpacity(0.2) : null,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          RadioListTile<GEN_OPTION>(
-            value: option,
-            groupValue: settingsData.o,
-            activeColor: colorScheme.secondary,
-            secondary:
-                Icon(icon, color: isSelected ? colorScheme.secondary : null),
-            title: Text(title,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-            onChanged: (GEN_OPTION? value) {
-              setState(() {
-                settingsData.o = value ?? settingsData.o;
-                _saveSettings();
-              });
-            },
-          ),
-          if (isSelected)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(72, 0, 16, 16),
-              child: configWidget,
-            ),
-          const Divider(height: 1, indent: 72),
-        ],
-      ),
-    );
-  }
-}
-
-class _GridHeaderButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _GridHeaderButton({
-    required this.onPressed,
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, color: color, size: 18),
-      label: Text(label,
-          style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        backgroundColor: color.withOpacity(0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
-  }
-}
-
-class _BottomNavButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _BottomNavButton({
-    required this.onPressed,
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FaIcon(icon, size: 20, color: color),
-            const SizedBox(height: 4),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.bold, color: color)),
-          ],
         ),
       ),
     );
