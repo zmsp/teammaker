@@ -103,8 +103,8 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
 
           !useEditor
               ? Column(
-                children: [
-                  Row(
+                  children: [
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: <Widget>[
                         Container(
@@ -114,8 +114,11 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
                             focusNode: myFocusNode,
                             onSubmitted: (value) {
                               setState(() {
-                                players.add(PlayerModel(_selectedLevel,
-                                    _player_text.text, "team", _selectedGender));
+                                players.add(PlayerModel(
+                                    _selectedLevel,
+                                    _player_text.text,
+                                    "team",
+                                    _selectedGender));
                               });
                               _player_text.text = "";
                               myFocusNode.requestFocus();
@@ -174,8 +177,11 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
                                 icon: FaIcon(FontAwesomeIcons.personCirclePlus),
                                 onPressed: () {
                                   setState(() {
-                                    players.add(PlayerModel(_selectedLevel,
-                                        _player_text.text, "0", _selectedGender));
+                                    players.add(PlayerModel(
+                                        _selectedLevel,
+                                        _player_text.text,
+                                        "0",
+                                        _selectedGender));
                                   });
                                 },
                               );
@@ -184,307 +190,217 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
                         ),
                       ],
                     ),
-
-
-                ],
-              )
-              :
-          Column(
+                  ],
+                )
+              : Column(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        ElevatedButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.clipboard,
-                              size: 25.0,
-                            ),
-                            onPressed: () {
-                              Clipboard.setData(
-                                  new ClipboardData(text: _batch_text.text));
-                              print(_batch_text.text);
-                            },
-                            label: Text("Copy")),
-
-                        ElevatedButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.meetup,
-                              size: 25.0,
-                            ),
-                            onPressed: () {
-                              String text = _batch_text.text;
-                              print(text);
-                              var lines = text.split("\n");
-                              var player_line = [];
-                              var date_field_regex =
-                                  RegExp(r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
-                              var record_flag = true;
-                              for (var i = 0; i <= lines.length - 1; i++) {
-                                if ((record_flag == true) &&
-                                    (lines[i].trim() != "")) {
-                                  print(lines[i]);
-                                  player_line.add(lines[i] + ",3" + ",M");
-                                  record_flag = false;
-                                  continue;
-                                }
-                                // Here if we find a pattern for date field, we record the next line.
-                                print(lines[i]);
-                                print(date_field_regex.hasMatch(lines[i]));
-                                if (date_field_regex.hasMatch(lines[i]) ==
-                                    true) {
-                                  // print()
-                                  record_flag = true;
-                                }
-                              }
-
-                              setState(() {
-                                _batch_text.text = player_line.join("\n");
-                              });
-                            },
-                            label: Text("Meetup")),
-
-                        ElevatedButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.alignRight,
-                              size: 25.0,
-                            ),
-                            onPressed: () {
-                              var lines = _batch_text.text.split("\n");
-                              var string_data = [];
-
-                              for (var i = 0; i <= lines.length - 1; i++) {
-                                var map_data = {
-                                  "name": "x",
-                                  "level": 3,
-                                  "gender": "MALE",
-                                  "team": "None"
-                                };
-
-                                var data = lines[i].split(",");
-                                for (var j = 0; j < data.length; j++) {
-                                  switch (j) {
-                                    case 0:
-                                      {
-                                        map_data["name"] = data[0];
-                                      }
-                                      break;
-                                    case 1:
-                                      {
-                                        map_data["level"] =
-                                            double.tryParse(data[1]) ?? 3;
-                                      }
-                                      break;
-                                    case 2:
-                                      {
-                                        if (data[2]
-                                            .trim()
-                                            .toUpperCase()
-                                            .startsWith("M")) {
-                                          map_data["gender"] = "MALE";
-                                        } else if (data[2]
-                                            .trim()
-                                            .toUpperCase()
-                                            .startsWith("F")) {
-                                          map_data["gender"] = "FEMALE";
-                                        } else {
-                                          map_data["gender"] = "X";
+                    Card(
+                      elevation: 2,
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Wrap(
+                              spacing: 8.0,
+                              runSpacing: 8.0,
+                              alignment: WrapAlignment.center,
+                              children: <Widget>[
+                                ElevatedButton.icon(
+                                    icon: const Icon(FontAwesomeIcons.clipboard,
+                                        size: 18.0),
+                                    onPressed: () {
+                                      Clipboard.setData(ClipboardData(
+                                          text: _batch_text.text));
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text("Text Copied")));
+                                    },
+                                    label: const Text("Copy")),
+                                ElevatedButton.icon(
+                                    icon: const Icon(FontAwesomeIcons.meetup,
+                                        size: 18.0),
+                                    onPressed: () {
+                                      String text = _batch_text.text;
+                                      var lines = text.split("\n");
+                                      var player_line = [];
+                                      var date_field_regex = RegExp(
+                                          r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
+                                      var record_flag = true;
+                                      for (var i = 0;
+                                          i <= lines.length - 1;
+                                          i++) {
+                                        if ((record_flag == true) &&
+                                            (lines[i].trim() != "")) {
+                                          player_line
+                                              .add(lines[i] + ",3" + ",M");
+                                          record_flag = false;
+                                          continue;
+                                        }
+                                        if (date_field_regex
+                                                .hasMatch(lines[i]) ==
+                                            true) {
+                                          record_flag = true;
                                         }
                                       }
-                                      break;
-                                    case 3:
-                                      {
-                                        map_data["team"] = data[3];
-                                      }
-                                      break;
-                                    default:
-                                      {
-                                        break;
-                                      }
-                                  }
-                                }
-                                string_data.add(map_data.toString() + "\n");
-                              }
-                              showTextDialog(
-                                  context,
-                                  "Following players will be added",
-                                  string_data.join("\n"));
-                            },
-                            label: Text("Defaults")),
-                        ElevatedButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.eraser,
-                              size: 25.0,
-                            ),
-                            onPressed: () {
-                              _batch_text.text = "";
-                            },
-                            label: Text("Clear")),
-                        // ElevatedButton(
-                        //     onPressed: (){
-                        //       print(textarea.text);
-                        //     },
-                        //     child: Text("Paste Meetup")
-                        // ),
-                      ],
-                    ),
-                    SizedBox(height: 12.0),
-                    TextField(
-                      controller: _batch_text,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: 7,
-                      decoration: InputDecoration(
-                          hintText:
-                              "Enter players levels and gender. See help menu for details on adding from text or meetup. One player per line.\nFormat: <Name>,<Level>,<Gender>"
-                              "\n---Example--- \nZobair,3,M, \nMary,2,Female \nZach,5,male",
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 1, color: Colors.redAccent))),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        ElevatedButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.circleXmark,
-                              size: 25.0,
-                            ),
-                            onPressed: () {
-                              // Navigator.pop(context);
-
-                              setState(() {
-                                players = [];
-                              });
-                            },
-                            label: Text("Cancel")),
-                        ElevatedButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.circleCheck,
-                              size: 25.0,
-                            ),
-                            onPressed: () {
-                              var lines = _batch_text.text.split("\n");
-                              var string_data = [];
-
-                              for (var i = 0; i <= lines.length - 1; i++) {
-                                var map_data = {
-                                  "name": "x",
-                                  "level": 3,
-                                  "gender": "MALE",
-                                  "team": "None"
-                                };
-
-                                var data = lines[i].split(",");
-                                for (var j = 0; j < data.length; j++) {
-                                  switch (j) {
-                                    case 0:
-                                      {
-                                        map_data["name"] = data[0];
-                                      }
-                                      break;
-                                    case 1:
-                                      {
-                                        map_data["level"] =
-                                            double.tryParse(data[1]) ?? 3;
-                                      }
-                                      break;
-                                    case 2:
-                                      {
-                                        if (data[2]
-                                            .trim()
-                                            .toUpperCase()
-                                            .startsWith("M")) {
-                                          map_data["gender"] = "MALE";
-                                        } else if (data[2]
-                                            .trim()
-                                            .toUpperCase()
-                                            .startsWith("F")) {
-                                          map_data["gender"] = "FEMALE";
-                                        } else {
-                                          map_data["gender"] = "X";
+                                      setState(() {
+                                        _batch_text.text =
+                                            player_line.join("\n");
+                                      });
+                                    },
+                                    label: const Text("Meetup Format")),
+                                ElevatedButton.icon(
+                                    icon: const Icon(
+                                        FontAwesomeIcons.alignRight,
+                                        size: 18.0),
+                                    onPressed: () {
+                                      var lines = _batch_text.text.split("\n");
+                                      var string_data = [];
+                                      for (var i = 0;
+                                          i <= lines.length - 1;
+                                          i++) {
+                                        var map_data = {
+                                          "name": "x",
+                                          "level": 3,
+                                          "gender": "MALE",
+                                          "team": "None"
+                                        };
+                                        var data = lines[i].split(",");
+                                        for (var j = 0; j < data.length; j++) {
+                                          switch (j) {
+                                            case 0:
+                                              map_data["name"] = data[0];
+                                              break;
+                                            case 1:
+                                              map_data["level"] =
+                                                  double.tryParse(data[1]) ?? 3;
+                                              break;
+                                            case 2:
+                                              if (data[2]
+                                                  .trim()
+                                                  .toUpperCase()
+                                                  .startsWith("M")) {
+                                                map_data["gender"] = "MALE";
+                                              } else if (data[2]
+                                                  .trim()
+                                                  .toUpperCase()
+                                                  .startsWith("F")) {
+                                                map_data["gender"] = "FEMALE";
+                                              } else {
+                                                map_data["gender"] = "X";
+                                              }
+                                              break;
+                                            case 3:
+                                              map_data["team"] = data[3];
+                                              break;
+                                          }
                                         }
+                                        string_data
+                                            .add(map_data.toString() + "\n");
                                       }
-                                      break;
-                                    case 3:
-                                      {
-                                        map_data["team"] = data[3];
-                                      }
-                                      break;
-                                    default:
-                                      {
-                                        break;
-                                      }
-                                  }
-                                }
-                                string_data.add(map_data.toString() + "\n");
-                              }
-                              showTextDialog(
-                                  context,
-                                  "Following players will be added",
-                                  string_data.join("\n"));
-                            },
-                            label: Text("Check")),
-                        ElevatedButton.icon(
-                            icon: Icon(
-                              FontAwesomeIcons.circlePlus,
-                              size: 25.0,
+                                      showTextDialog(
+                                          context,
+                                          "Following players will be added",
+                                          string_data.join("\n"));
+                                    },
+                                    label: const Text("Apply Defaults")),
+                                OutlinedButton.icon(
+                                    icon: const Icon(FontAwesomeIcons.eraser,
+                                        size: 18.0),
+                                    onPressed: () {
+                                      _batch_text.text = "";
+                                    },
+                                    label: const Text("Clear")),
+                              ],
                             ),
-                            onPressed: () {
-                              var lines = _batch_text.text.split("\n");
-                              var string_data = [];
-
-                              for (var i = 0; i <= lines.length - 1; i++) {
-                                PlayerModel player =
-                                    PlayerModel(3, "X", "X", "X");
-
-                                var data = lines[i].split(",");
-                                for (var j = 0; j < data.length; j++) {
-                                  switch (j) {
-                                    case 0:
-                                      {
-                                        player.name = data[0];
-                                      }
-                                      break;
-                                    case 1:
-                                      {
-                                        player.level =
-                                            int.tryParse(data[1]) ?? 3;
-                                      }
-                                      break;
-                                    case 2:
-                                      {
-                                        if (data[2]
-                                            .trim()
-                                            .toUpperCase()
-                                            .startsWith("M")) {
-                                          player.gender = "MALE";
-                                        } else if (data[2]
-                                            .trim()
-                                            .toUpperCase()
-                                            .startsWith("F")) {
-                                          player.gender = "FEMALE";
-                                        } else {
-                                          player.gender = "X";
+                            const SizedBox(height: 16.0),
+                            TextField(
+                              controller: _batch_text,
+                              keyboardType: TextInputType.multiline,
+                              maxLines: 7,
+                              decoration: InputDecoration(
+                                  hintText:
+                                      "Enter players levels and gender. See help menu for details. One player per line.\nFormat: <Name>,<Level>,<Gender>\nExample:\nZobair,3,M\nMary,2,F",
+                                  border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(10.0)),
+                                  focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10.0),
+                                      borderSide: const BorderSide(
+                                          width: 2, color: Colors.blueAccent))),
+                            ),
+                            const SizedBox(height: 16.0),
+                            Wrap(
+                              spacing: 8.0,
+                              alignment: WrapAlignment.center,
+                              children: <Widget>[
+                                OutlinedButton.icon(
+                                    icon: const Icon(
+                                        FontAwesomeIcons.circleXmark,
+                                        size: 18.0),
+                                    onPressed: () {
+                                      setState(() {
+                                        players = [];
+                                      });
+                                    },
+                                    label: const Text("Reset List")),
+                                ElevatedButton.icon(
+                                    icon: const Icon(
+                                        FontAwesomeIcons.circlePlus,
+                                        size: 18.0),
+                                    onPressed: () {
+                                      var lines = _batch_text.text.split("\n");
+                                      for (var i = 0;
+                                          i <= lines.length - 1;
+                                          i++) {
+                                        if (lines[i].trim().isEmpty) continue;
+                                        PlayerModel player =
+                                            PlayerModel(3, "X", "X", "X");
+                                        var data = lines[i].split(",");
+                                        for (var j = 0; j < data.length; j++) {
+                                          switch (j) {
+                                            case 0:
+                                              player.name = data[0];
+                                              break;
+                                            case 1:
+                                              player.level =
+                                                  int.tryParse(data[1]) ?? 3;
+                                              break;
+                                            case 2:
+                                              if (data[2]
+                                                  .trim()
+                                                  .toUpperCase()
+                                                  .startsWith("M")) {
+                                                player.gender = "MALE";
+                                              } else if (data[2]
+                                                  .trim()
+                                                  .toUpperCase()
+                                                  .startsWith("F")) {
+                                                player.gender = "FEMALE";
+                                              } else {
+                                                player.gender = "X";
+                                              }
+                                              break;
+                                            case 3:
+                                              player.team = data[3];
+                                              break;
+                                          }
                                         }
+                                        players.add(player);
                                       }
-                                      break;
-                                    case 3:
-                                      {
-                                        player.team = data[3];
-                                      }
-                                      break;
-                                    default:
-                                      {
-                                        break;
-                                      }
-                                  }
-                                }
-                                players.add(player);
-                              }
-
-                              setState(() {});
-                            },
-                            label: Text("Add")),
-                      ],
+                                      setState(() {});
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text("Players Added")));
+                                    },
+                                    label: const Text("Confirm & Add")),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -529,11 +445,9 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
                     );
                   }).toList(),
                 )
-              :
-
-          PlayerWidget(
-            player: PlayerModel(0, "None", "", "x"),
-          ),
+              : PlayerWidget(
+                  player: PlayerModel(0, "None", "", "x"),
+                ),
           ElevatedButton.icon(
               onPressed: () {
                 Navigator.pop(context, players);

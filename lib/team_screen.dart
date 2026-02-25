@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/MatchScreen.dart';
@@ -96,15 +94,39 @@ class HeadingItem implements ListItem {
   @override
   Widget buildTitle(BuildContext context) {
     return Container(
-        color: Colors.primaries[Random().nextInt(Colors.primaries.length)],
-        child: Text(
-          heading,
-          style: Theme.of(context).textTheme.titleLarge,
+        margin: const EdgeInsets.only(top: 16.0, bottom: 4.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(12.0),
+            boxShadow: const [
+              BoxShadow(
+                  color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+            ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              heading,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4.0),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onPrimaryContainer
+                      .withOpacity(0.8)),
+            ),
+          ],
         ));
   }
 
   @override
-  Widget buildSubtitle(BuildContext context) => Text(subtitle);
+  Widget buildSubtitle(BuildContext context) => const SizedBox.shrink();
 }
 
 /// A ListItem that contains data to display a message.
@@ -115,8 +137,31 @@ class MessageItem implements ListItem {
   MessageItem(this.sender, this.body);
 
   @override
-  Widget buildTitle(BuildContext context) => Text(sender);
+  Widget buildTitle(BuildContext context) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+      shape: RoundedRectangleBorder(
+        side:
+            BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+        leading: CircleAvatar(
+          radius: 16,
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          child: FaIcon(FontAwesomeIcons.userAstronaut,
+              size: 16,
+              color: Theme.of(context).colorScheme.onSecondaryContainer),
+        ),
+        title:
+            Text(sender, style: const TextStyle(fontWeight: FontWeight.w500)),
+      ),
+    );
+  }
 
   @override
-  Widget buildSubtitle(BuildContext context) => SizedBox();
+  Widget buildSubtitle(BuildContext context) => const SizedBox.shrink();
 }

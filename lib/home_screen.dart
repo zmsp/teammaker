@@ -687,6 +687,38 @@ Jane,4,F""";
     return Scaffold(
       appBar: AppBar(
         title: const Text('Team Shaker'),
+        elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Export to CSV',
+            icon: const FaIcon(FontAwesomeIcons.clipboard),
+            onPressed: () {
+              exportToCsv();
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Text Copied. Paste text somewhere to save!"),
+              ));
+            },
+          ),
+          IconButton(
+            tooltip: 'Get help',
+            icon: const FaIcon(FontAwesomeIcons.circleQuestion),
+            onPressed: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => HelpExample()));
+            },
+          ),
+          IconButton(
+            tooltip: 'Team-maker settings',
+            icon: const FaIcon(FontAwesomeIcons.gear),
+            onPressed: () async {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => SettingsScreen(settingsData)));
+              print(settingsData.o);
+            },
+          ),
+        ],
       ),
       body: Container(
           child: PlutoGrid(
@@ -702,52 +734,55 @@ Jane,4,F""";
           stateManager = event.stateManager;
         },
       )),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: generateTeams,
+        icon: const FaIcon(FontAwesomeIcons.dice),
+        label: const Text('Generate',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        elevation: 4,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ButtonBar(
-              children: [
-                Tooltip(
-                  message: 'Add a list of players',
-                  child: IconButton(
-                    onPressed: () async {
-                      List<PlayerModel> players = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => AddPlayersScreen()));
-
-                      addPlayers(players);
-                    },
-
-                    //
-                    // onPressed: () {
-                    //   // print(rows.length);
-                    //   showDialog<void>(
-                    //     context: context,
-                    //     builder: reportingDialog,
-                    //   );
-                    // },
-                    icon: FaIcon(FontAwesomeIcons.plus),
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Tooltip(
+                    message: 'Add Players',
+                    child: IconButton(
+                      iconSize: 28,
+                      onPressed: () async {
+                        final List<PlayerModel> players = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AddPlayersScreen()));
+                        addPlayers(players);
+                      },
+                      icon: const FaIcon(FontAwesomeIcons.userPlus),
+                    ),
                   ),
-                ),
-                Tooltip(
-                  message: 'Shuffle players into teams!',
-                  child: IconButton(
-                      onPressed: generateTeams,
-                      icon: FaIcon(FontAwesomeIcons.dice)),
-                ),
-
-                Tooltip(
-                  message: 'View Current Teams',
-                  child: IconButton(
+                ],
+              ),
+              Row(
+                children: [
+                  Tooltip(
+                    message: 'View Teams',
+                    child: IconButton(
+                      iconSize: 28,
                       onPressed: navigateToTeam,
-                      icon: FaIcon(FontAwesomeIcons.usersViewfinder)),
-                ),
-
-                Tooltip(
-                  message: 'Create Match',
-                  child: IconButton(
+                      icon: const FaIcon(FontAwesomeIcons.usersViewfinder),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Tooltip(
+                    message: 'Create Match',
+                    child: IconButton(
+                      iconSize: 28,
                       onPressed: () {
                         Navigator.push(
                             context,
@@ -755,98 +790,13 @@ Jane,4,F""";
                                 builder: (context) =>
                                     MatchScreen(settingsData)));
                       },
-                      icon: FaIcon(FontAwesomeIcons.trophy)),
-                ),
-                // IconButton(onPressed: saveData, icon: Icon(Icons.save)),
-                // IconButton(onPressed: loadData, icon: Icon(Icons.cloud_download)),
-              ],
-            ),
-            ButtonBar(
-              children: [
-                // IconButton(
-                //     onPressed: () {
-                //       showDialog<void>(
-                //         context: context,
-                //         builder: todo,
-                //       );
-                //     },
-                //     icon: Icon(Icons.add)),
-                // IconButton(
-                //     onPressed: () {
-                //       showDialog<void>(
-                //         context: context,
-                //         builder: todo,
-                //       );
-                //     },
-                //     icon: Icon(Icons.person_off)),
-                // IconButton(
-                //     onPressed: () {
-                //       showDialog<void>(
-                //         context: context,
-                //         builder: todo,
-                //       );
-                //     },
-                //     icon: Icon(Icons.remove)),
-                //
-                Tooltip(
-                  message: 'Get help',
-                  child: IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => HelpExample()));
-                    },
-                    icon: FaIcon(FontAwesomeIcons.questionCircle),
+                      icon: const FaIcon(FontAwesomeIcons.trophy),
+                    ),
                   ),
-                ),
-                Tooltip(
-                  message: 'Export',
-                  child: IconButton(
-                    onPressed: () {
-                      exportToCsv();
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content:
-                            Text("Text Copied. Paste text somewhere to save!"),
-                      ));
-                    },
-                    icon: FaIcon(FontAwesomeIcons.clipboard),
-                  ),
-                ),
-                Tooltip(
-                  message: 'Team-maker settings',
-                  child: IconButton(
-                    onPressed: () async {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  SettingsScreen(settingsData)));
-
-                      print(settingsData.o);
-                    },
-                    icon: FaIcon(FontAwesomeIcons.cog),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final List<PlayerModel> players = await Navigator.push(context,
-              MaterialPageRoute(builder: (context) => AddPlayersScreen()));
-
-          addPlayers(players);
-          // print(rows.length);
-          // showDialog<void>(
-          //   context: context,
-          //   builder: HelpDialog,
-          // );
-        },
-        child: const FaIcon(
-          FontAwesomeIcons.plus,
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
