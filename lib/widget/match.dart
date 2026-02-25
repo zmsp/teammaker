@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/model/data_model.dart';
-import 'package:teammaker/model/player_model.dart';
 
 class MatchWidget extends StatelessWidget {
   final Round round;
@@ -15,7 +14,7 @@ class MatchWidget extends StatelessWidget {
         Padding(
           padding: EdgeInsets.all(10.0),
           child: ListTile(
-            leading:CircleAvatar(
+            leading: CircleAvatar(
               backgroundColor: Colors.green,
               child: Text(
                 round.roundName,
@@ -27,31 +26,96 @@ class MatchWidget extends StatelessWidget {
             ),
             title: Text("Round " + round.roundName),
 
-            subtitle: Column(
-              children: round.matches.map((match) {
-                return Row(
-                  //   mainAxisAlignment:MainAxisAlignment.end,
-                  // mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-
-                     mainAxisAlignment:MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  // MainAxisSize mainAxisSize = MainAxisSize.max,
-                  // CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
-
-                  children: [
-                    FaIcon(FontAwesomeIcons.userGroup, size: 12,),
-                    SizedBox(width: 10),
-                    Text(match.team ),
-                    SizedBox(width: 50),
-                    FaIcon(FontAwesomeIcons.flag, size: 12,),
-                    SizedBox(width: 10),
-                    Text(match.venue),
-
-
-                  ],
-                );
-              }).toList(),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Column(
+                children: round.matches.map((match) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          flex: 4,
+                          child: Row(
+                            children: [
+                              FaIcon(FontAwesomeIcons.userGroup, size: 12),
+                              SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  match.team,
+                                  style: TextStyle(fontSize: 14),
+                                  overflow: TextOverflow.visible,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 35,
+                                child: TextFormField(
+                                  initialValue:
+                                      match.scoreTeam1?.toString() ?? '',
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.all(8),
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (val) {
+                                    match.scoreTeam1 = int.tryParse(val);
+                                  },
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4.0),
+                                child: Text('-'),
+                              ),
+                              SizedBox(
+                                width: 35,
+                                child: TextFormField(
+                                  initialValue:
+                                      match.scoreTeam2?.toString() ?? '',
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.all(8),
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (val) {
+                                    match.scoreTeam2 = int.tryParse(val);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              FaIcon(FontAwesomeIcons.flag, size: 12),
+                              SizedBox(width: 8),
+                              Text(match.venue),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
 
             //

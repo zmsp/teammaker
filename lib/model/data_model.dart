@@ -1,11 +1,11 @@
 class SettingsData {
-  int teamCount = 4;
+  int teamCount = 1;
   int division = 2;
-  int proportion = 2;
+  int proportion = 6; // Set default 6 players per team
   int gameVenues = 2;
   int gameRounds = 2;
 
-  GEN_OPTION o = GEN_OPTION.distribute;
+  GEN_OPTION o = GEN_OPTION.proportion; // Default generation option
 
   @override
   String toString() {
@@ -13,22 +13,24 @@ class SettingsData {
   }
 
   SettingsData() {
-    teamCount = 4;
+    teamCount = 1;
     division = 2;
-    proportion = 2;
-    o = GEN_OPTION.distribute;
+    proportion = 6;
+    o = GEN_OPTION.proportion;
   }
 }
 
 class Game {
   String team;
   String venue;
+  int? scoreTeam1;
+  int? scoreTeam2;
 
-  Game(this.team, this.venue);
+  Game(this.team, this.venue, {this.scoreTeam1, this.scoreTeam2});
 
   @override
   String toString() {
-    return 'Game{teams: $team, venue: $venue}';
+    return 'Game{teams: $team, venue: $venue, score: $scoreTeam1 - $scoreTeam2}';
   }
 }
 

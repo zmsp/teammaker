@@ -12,6 +12,7 @@ import 'package:teammaker/add_players.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/team_screen.dart';
+import 'package:teammaker/algorithm/team_generator.dart';
 
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
@@ -93,7 +94,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
           children: [
             Expanded(
               child: Text(
-                rendererContext.row!.cells[rendererContext.column!.field]!.value
+                rendererContext.row.cells[rendererContext.column.field]!.value
                     .toString(),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -108,9 +109,9 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                     Icons.add_circle,
                   ),
                   onPressed: () {
-                    rendererContext.stateManager!.insertRows(
-                      rendererContext.rowIdx!,
-                      [rendererContext.stateManager!.getNewRow()],
+                    rendererContext.stateManager.insertRows(
+                      rendererContext.rowIdx,
+                      [rendererContext.stateManager.getNewRow()],
                     );
                   },
                   iconSize: 25,
@@ -122,7 +123,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                     Icons.remove_circle_outlined,
                   ),
                   onPressed: () {
-                    rendererContext.stateManager!
+                    rendererContext.stateManager
                         .removeRows([rendererContext.row]);
                   },
                   iconSize: 25,
@@ -250,10 +251,10 @@ Jane,4,F""";
                 size: 25.0,
               ),
               style: ButtonStyle(
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>(
+                padding: WidgetStateProperty.all<EdgeInsetsGeometry?>(
                     EdgeInsets.fromLTRB(20, 15, 10, 20)),
                 backgroundColor:
-                    MaterialStateProperty.all<Color>(Colors.redAccent),
+                    WidgetStateProperty.all<Color>(Colors.redAccent),
               ),
               label: const Text('Format Text from meetup'),
               onPressed: () {
@@ -289,10 +290,10 @@ Jane,4,F""";
                 size: 25.0,
               ),
               style: ButtonStyle(
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>(
+                padding: WidgetStateProperty.all<EdgeInsetsGeometry?>(
                     EdgeInsets.fromLTRB(20, 15, 10, 20)),
                 backgroundColor:
-                    MaterialStateProperty.all<Color>(Colors.redAccent),
+                    WidgetStateProperty.all<Color>(Colors.redAccent),
               ),
               label: const Text('Add default level and gender'),
               onPressed: () {
@@ -312,10 +313,10 @@ Jane,4,F""";
                 size: 25.0,
               ),
               style: ButtonStyle(
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry?>(
+                padding: WidgetStateProperty.all<EdgeInsetsGeometry?>(
                     EdgeInsets.fromLTRB(20, 15, 10, 20)),
                 backgroundColor:
-                    MaterialStateProperty.all<Color>(Colors.redAccent),
+                    WidgetStateProperty.all<Color>(Colors.redAccent),
               ),
               label: const Text("Check/Validate"),
               onPressed: () {
@@ -473,7 +474,7 @@ Jane,4,F""";
     }
   }
 
-  void navigateToTeam() {
+  void _navigateToTeam() {
     //sort by team name
 
     stateManager!.sortAscending(columns[3]);
@@ -488,30 +489,30 @@ Jane,4,F""";
     for (var i = 0; i < dat.length; i++) {
       if (dat[i]?.checked ?? false) {
         // teams_name_list.update(dat[i]?.cells?["team_field"]?.value?? "None", (value) => null)
-        var t = dat[i]?.cells?["skill_level_field"]?.value;
+        var t = dat[i]?.cells["skill_level_field"]?.value;
         print(t.runtimeType);
         teams_total_score.update(
-          dat[i]?.cells?["team_field"]?.value ?? "None",
+          dat[i]?.cells["team_field"]?.value ?? "None",
           // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
           (existingValue) =>
               existingValue +
-              (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
+              (dat[i]?.cells["skill_level_field"]?.value ?? 0).toDouble(),
           ifAbsent: () =>
-              (dat[i]?.cells?["skill_level_field"]?.value ?? 0).toDouble(),
+              (dat[i]?.cells["skill_level_field"]?.value ?? 0).toDouble(),
         );
 
         teams_name_list.update(
-          dat[i]?.cells?["team_field"]?.value ?? "None",
+          dat[i]?.cells["team_field"]?.value ?? "None",
           // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
           (existingValue) {
-            existingValue.add(dat[i]?.cells?["name_field"]?.value +
-                "\n     ${dat[i]?.cells?["gender_field"]?.value} with level ${dat[i]?.cells?["skill_level_field"]?.value.toString()}"
+            existingValue.add(dat[i]?.cells["name_field"]?.value +
+                "\n     ${dat[i]?.cells["gender_field"]?.value} with level ${dat[i]?.cells["skill_level_field"]?.value.toString()}"
                     .toLowerCase());
             return existingValue;
           },
           ifAbsent: () => [
-            (dat[i]?.cells?["name_field"]?.value +
-                "\n     ${dat[i]?.cells?["gender_field"]?.value} with level  ${dat[i]?.cells?["skill_level_field"]?.value.toString()}"
+            (dat[i]?.cells["name_field"]?.value +
+                "\n     ${dat[i]?.cells["gender_field"]?.value} with level  ${dat[i]?.cells["skill_level_field"]?.value.toString()}"
                     .toLowerCase())
           ],
         );
@@ -527,6 +528,7 @@ Jane,4,F""";
     List<ListItem> teams_list_data = [];
     // print(teams_list.toString());
     teams_name_list.keys.toList().forEach((value) {
+      if (value == "None") return;
       var players = teams_name_list[value]!.length;
       var total_score = teams_total_score[value];
       var avg_score =
@@ -549,137 +551,33 @@ Jane,4,F""";
   }
 
   void generateTeams() {
-    switch (settingsData.o) {
-      case GEN_OPTION.random:
-        {}
-        break;
-
-      case GEN_OPTION.division:
-        {
-          stateManager!.sortAscending(columns[1]);
-        }
-        break;
-      case GEN_OPTION.distribute:
-        {
-          stateManager!.sortAscending(columns[1]);
-          stateManager!.sortDescending(columns[2]);
-          //statements;
-        }
-        break;
-      case GEN_OPTION.proportion:
-        {
-          stateManager!.sortAscending(columns[1]);
-          stateManager!.sortDescending(columns[2]);
-          int player_num = stateManager?.checkedRows.length ?? 1;
-          settingsData.teamCount =
-              (player_num / settingsData.proportion).round();
-          print("TEASM ${settingsData.teamCount}");
-          //statements;
-        }
-        break;
-
-      case GEN_OPTION.even_gender:
-        {
-          stateManager!.sortAscending(columns[2]);
-          stateManager!.sortDescending(columns[1]);
-        }
-        break;
-    }
-
-    List<PlutoRow?> dat = stateManager?.rows ?? [];
-
-    List<PlutoRow?> tmp_rows = [];
-    for (var i = 0; i < dat.length; i++) {
-      if (dat[i]?.checked ?? false) {
-        tmp_rows.add(dat[i]);
-      } else {
-        //TODO unassign team
+    stateManager!.sortAscending(columns[1]);
+    List<PlutoRow> dat = [];
+    stateManager?.rows.forEach((element) {
+      if (element.checked!) {
+        dat.add(element);
       }
+    });
+
+    if (settingsData.o == GEN_OPTION.proportion) {
+      int player_num = dat.length;
+      settingsData.teamCount = (player_num / settingsData.proportion).round();
+      if (settingsData.teamCount == 0) settingsData.teamCount = 1;
+      print("TEASM ${settingsData.teamCount}");
     }
 
-    Map<String, List<String>> teams_list = Map();
-    for (var i = 1; i <= settingsData.teamCount; i++) {
-      teams_list[i.toString()] = [];
-    }
-    var keys = teams_list.keys.toList();
-    int size = teams_list.length;
-    print(tmp_rows.length);
-    var start = 0;
-    if (settingsData.o == GEN_OPTION.division) {
-      var subKeys = keys.length / settingsData.division;
-      var chunks = [];
-      for (var i = 0; i < keys.length; i += 2) {
-        chunks.add(keys.sublist(i, i + 2 > keys.length ? keys.length : i + 2));
-      }
-      double dat = (tmp_rows.length / chunks.length);
+    Map<String, List<PlutoRow>> teams_list =
+        TeamGenerator.generateTeams(dat, settingsData);
 
-      int size = chunks.length;
-
-      for (var i = 0; i < tmp_rows.length; i = i + size) {
-        int row = (i / dat).toInt();
-        int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
-        List<PlutoRow?> sublist = tmp_rows.sublist(start, end);
-        var key1 = chunks[row];
-        key1.shuffle();
-        int key_i = 0;
-
-        sublist.forEach((value) {
-          var text = value?.cells?["name_field"]?.value.toString() ?? "";
-
-          setState(() {
-            value?.cells?["team_field"]?.value = key1[key_i].toString();
-          });
-          print(text);
-
-          teams_list[key1[key_i]]?.add(text);
-          key_i++;
+    teams_list.forEach((key, value) {
+      value.forEach((element) {
+        setState(() {
+          element.cells["team_field"]?.value = key;
         });
-        start = i + size;
+      });
+    });
 
-        // print(keys);
-        // for (var j = 0; j <= keys.length - 1; j+teams) {
-        //   if (tmp_rows[j] == null) {
-        //     continue;
-        //   }
-        //
-        //
-        // }
-      }
-    } else {
-      for (var i = 0; i < tmp_rows.length; i = i + size) {
-        int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
-        List<PlutoRow?> sublist = tmp_rows.sublist(start, end);
-        keys.shuffle();
-        int key_i = 0;
-
-        sublist.forEach((value) {
-          var text = value?.cells?["name_field"]?.value.toString() ?? "";
-
-          print(value?.cells?["name_field"]?.value);
-          print(value?.cells?["gender_field"]?.value);
-          print(value?.cells?["skill_level_field"]?.value);
-          setState(() {
-            value?.cells?["team_field"]?.value = keys[key_i].toString();
-          });
-          print(text);
-
-          teams_list[keys[key_i]]?.add(text);
-          key_i++;
-        });
-        start = i + size;
-
-        // print(keys);
-        // for (var j = 0; j <= keys.length - 1; j+teams) {
-        //   if (tmp_rows[j] == null) {
-        //     continue;
-        //   }
-        //
-        //
-        // }
-      }
-    }
-
-    navigateToTeam();
+    _navigateToTeam();
   }
 
   @override
@@ -718,7 +616,7 @@ Jane,4,F""";
             subtitle: const Text('How do you want your teams to be balanced?'),
             children: <Widget>[
               ListTile(
-                title: const Text('Gender and skill balanced team'),
+                title: const Text('Fair Teams (Prioritize Skill)'),
                 leading: Radio<GEN_OPTION>(
                   value: GEN_OPTION.distribute,
                   groupValue: settingsData.o,
@@ -728,27 +626,32 @@ Jane,4,F""";
                     });
                   },
                 ),
-                subtitle: settingsData.o == GEN_OPTION.distribute
-                    ? TextFormField(
-                        decoration: const InputDecoration(
-                          label: Text("Number of teams"),
-                          hintText:
-                              'How many teams do you want to split the players to?',
+                subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                          'Aggressively balances teams by distributing the best and worst players evenly, ensuring all teams have roughly the same average skill rating. Best for competitive play.'),
+                      if (settingsData.o == GEN_OPTION.distribute)
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            label: Text("Number of teams"),
+                            hintText:
+                                'How many teams do you want to split the players to?',
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          initialValue: settingsData.teamCount.toString(),
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            settingsData.teamCount =
+                                int.tryParse(value) ?? settingsData.teamCount;
+                          },
                         ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        initialValue: settingsData.teamCount.toString(),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          settingsData.teamCount =
-                              int.tryParse(value) ?? settingsData.teamCount;
-                        },
-                      )
-                    : const SizedBox.shrink(),
+                    ]),
               ),
               ListTile(
-                title: const Text('Division based on skill level'),
+                title: const Text('Ranked Divisions'),
                 leading: Radio<GEN_OPTION>(
                   value: GEN_OPTION.division,
                   groupValue: settingsData.o,
@@ -758,47 +661,52 @@ Jane,4,F""";
                     });
                   },
                 ),
-                subtitle: settingsData.o == GEN_OPTION.division
-                    ? Column(
-                        children: [
-                          TextFormField(
-                            decoration: const InputDecoration(
-                              label: Text('Number of divisions'),
-                              hintText:
-                                  'Division number means top teams will have better players',
+                subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                          'Separates players into tiered divisions so highly skilled players only play against each other, and beginners play against beginners.'),
+                      if (settingsData.o == GEN_OPTION.division)
+                        Column(
+                          children: [
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                label: Text('Number of divisions'),
+                                hintText:
+                                    'Division number means top teams will have better players',
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              initialValue: settingsData.division.toString(),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                settingsData.division = int.tryParse(value) ??
+                                    settingsData.division;
+                              },
                             ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            initialValue: settingsData.division.toString(),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              settingsData.division =
-                                  int.tryParse(value) ?? settingsData.division;
-                            },
-                          ),
-                          TextFormField(
-                            decoration: const InputDecoration(
-                              label: Text("Number of teams"),
-                              hintText:
-                                  'How many teams do you want to split the players to?',
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                label: Text("Number of teams"),
+                                hintText:
+                                    'How many teams do you want to split the players to?',
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              initialValue: settingsData.teamCount.toString(),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                settingsData.teamCount = int.tryParse(value) ??
+                                    settingsData.teamCount;
+                              },
                             ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            initialValue: settingsData.teamCount.toString(),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              settingsData.teamCount =
-                                  int.tryParse(value) ?? settingsData.teamCount;
-                            },
-                          ),
-                        ],
-                      )
-                    : const SizedBox.shrink(),
+                          ],
+                        )
+                    ]),
               ),
               ListTile(
-                title: const Text('Skill balanced by team size'),
+                title: const Text('Fixed Roster Size (Pickup Mode)'),
                 leading: Radio<GEN_OPTION>(
                   value: GEN_OPTION.proportion,
                   groupValue: settingsData.o,
@@ -808,26 +716,31 @@ Jane,4,F""";
                     });
                   },
                 ),
-                subtitle: settingsData.o == GEN_OPTION.proportion
-                    ? TextFormField(
-                        decoration: const InputDecoration(
-                          label: Text('Number of players per team'),
-                          hintText: 'How many players per team',
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        initialValue: settingsData.proportion.toString(),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          settingsData.proportion =
-                              int.tryParse(value) ?? settingsData.proportion;
-                        },
-                      )
-                    : const SizedBox.shrink(),
+                subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                          'Creates teams with a specific number of players on each roster, balanced by skill and gender. Perfect for setting up 5v5s or 6v6s pickup games.'),
+                      if (settingsData.o == GEN_OPTION.proportion)
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            label: Text('Number of players per team'),
+                            hintText: 'How many players per team',
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          initialValue: settingsData.proportion.toString(),
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            settingsData.proportion =
+                                int.tryParse(value) ?? settingsData.proportion;
+                          },
+                        )
+                    ]),
               ),
               ListTile(
-                title: const Text('Random'),
+                title: const Text('Pure Randomizer'),
                 leading: Radio<GEN_OPTION>(
                   value: GEN_OPTION.random,
                   groupValue: settingsData.o,
@@ -837,27 +750,32 @@ Jane,4,F""";
                     });
                   },
                 ),
-                subtitle: settingsData.o == GEN_OPTION.random
-                    ? TextFormField(
-                        decoration: const InputDecoration(
-                          label: Text("Number of teams"),
-                          hintText:
-                              'How many teams do you want to split the players to?',
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        initialValue: settingsData.teamCount.toString(),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          settingsData.teamCount =
-                              int.tryParse(value) ?? settingsData.teamCount;
-                        },
-                      )
-                    : const SizedBox.shrink(),
+                subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                          'Randomly assigns players to teams with zero sorting. Complete luck of the draw.'),
+                      if (settingsData.o == GEN_OPTION.random)
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            label: Text("Number of teams"),
+                            hintText:
+                                'How many teams do you want to split the players to?',
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          initialValue: settingsData.teamCount.toString(),
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            settingsData.teamCount =
+                                int.tryParse(value) ?? settingsData.teamCount;
+                          },
+                        )
+                    ]),
               ),
               ListTile(
-                title: const Text('Even Gender Split'),
+                title: const Text('Fair Teams (Prioritize Gender)'),
                 leading: Radio<GEN_OPTION>(
                   value: GEN_OPTION.even_gender,
                   groupValue: settingsData.o,
@@ -867,24 +785,29 @@ Jane,4,F""";
                     });
                   },
                 ),
-                subtitle: settingsData.o == GEN_OPTION.even_gender
-                    ? TextFormField(
-                        decoration: const InputDecoration(
-                          label: Text("Number of teams"),
-                          hintText:
-                              'How many teams do you want to split the players to?',
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        initialValue: settingsData.teamCount.toString(),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          settingsData.teamCount =
-                              int.tryParse(value) ?? settingsData.teamCount;
-                        },
-                      )
-                    : const SizedBox.shrink(),
+                subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                          'Prioritizes creating an equal mix of men and women evenly across all teams, followed by balancing overall skill level. Best for mixed casual games.'),
+                      if (settingsData.o == GEN_OPTION.even_gender)
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            label: Text("Number of teams"),
+                            hintText:
+                                'How many teams do you want to split the players to?',
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          initialValue: settingsData.teamCount.toString(),
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            settingsData.teamCount =
+                                int.tryParse(value) ?? settingsData.teamCount;
+                          },
+                        )
+                    ]),
               ),
             ],
           ),
@@ -1007,7 +930,7 @@ Jane,4,F""";
                     message: 'View Teams',
                     child: IconButton(
                       iconSize: 28,
-                      onPressed: navigateToTeam,
+                      onPressed: _navigateToTeam,
                       icon: const FaIcon(FontAwesomeIcons.usersViewfinder),
                     ),
                   ),

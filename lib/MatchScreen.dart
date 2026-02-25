@@ -4,7 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/widget/match.dart';
-import 'package:teammaker/widget/player.dart';
 
 class MatchScreen extends StatefulWidget {
   SettingsData settingsData;
