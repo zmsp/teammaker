@@ -606,8 +606,7 @@ Jane,4,F""";
                   PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) =>
                           RandomTeamScreen(
-                            initialTeamCount: 1,
-                            initialPlayersPerTeam: 6,
+                            initialTotal: 6,
                           )));
             },
           ),
@@ -636,6 +635,57 @@ Jane,4,F""";
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         children: [
+          SectionHeader(
+              title: 'QUICK TOOLS',
+              icon: FontAwesomeIcons.bolt,
+              color: Colors.orangeAccent),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  QuickToolCard(
+                    title: 'TAP SCORE',
+                    icon: FontAwesomeIcons.stopwatch20,
+                    color: Colors.blue,
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const TapScoreScreen()));
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  QuickToolCard(
+                    title: 'MATCH MAKER',
+                    icon: FontAwesomeIcons.trophy,
+                    color: Colors.amber,
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MatchScreen(settingsData)));
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  QuickToolCard(
+                    title: 'PLAYER QUEUE',
+                    icon: FontAwesomeIcons.dice,
+                    color: Colors.purpleAccent,
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                              pageBuilder: (context, anim, sec) =>
+                                  const RandomTeamScreen(initialTotal: 6)));
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
           SectionHeader(
               title: '1. PLAYER ROSTER',
               icon: FontAwesomeIcons.users,
