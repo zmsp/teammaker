@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -15,11 +16,11 @@
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RD19H2EW3Q"></script>
   <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
 
-  gtag('config', 'G-RD19H2EW3Q');
+    gtag('config', 'G-RD19H2EW3Q');
 
   </script>
   <!-- End Google Tag Manager -->
@@ -35,19 +36,29 @@
   <meta name="apple-mobile-web-app-title" content="teammaker">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-  <title>teammaker</title>
+  <title>Team Buddy</title>
   <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0A0A0A">
+  <style>
+    body {
+      background-color: #0A0A0A;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
 </head>
-<body>
-<!-- Google Tag Manager (noscript) -->
-<noscript>
-  <iframe height="0"
-          src="https://www.googletagmanager.com/ns.html?id=GTM-PGDBNL3"
-          style="display:none;visibility:hidden" width="0"></iframe>
-</noscript>
-<!-- End Google Tag Manager (noscript) -->
 
-<!-- Service worker removed as it is deprecated in Flutter -->
-<script src="main.dart.js" type="application/javascript"></script>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript>
+    <iframe height="0" src="https://www.googletagmanager.com/ns.html?id=GTM-PGDBNL3"
+      style="display:none;visibility:hidden" width="0"></iframe>
+  </noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <!-- Service worker removed as it is deprecated in Flutter -->
+  <script src="main.dart.js" type="application/javascript"></script>
 </body>
+
 </html>
