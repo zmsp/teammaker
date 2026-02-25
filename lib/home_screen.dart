@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use, unused_local_variable
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -494,6 +495,7 @@ Jane,4,F""";
         )
       ]);
     }
+    setState(() {});
   }
 
   void _navigateToTeam() {
@@ -602,6 +604,74 @@ Jane,4,F""";
     _navigateToTeam();
   }
 
+  String _normalizeTeamName(String? name) {
+    if (name == null || name.trim().isEmpty) return 'No team';
+    String lower = name.trim().toLowerCase();
+    if (lower == '0' || lower == 'x' || lower == 'none') {
+      return 'No team';
+    }
+    return name.trim();
+  }
+
+  List<Widget> _buildWhoGoesWhere() {
+    if (stateManager == null) return [];
+    var sorted = List<PlutoRow>.from(stateManager!.rows);
+    sorted.sort((a, b) =>
+        (a.cells['name_field']?.value.toString().toLowerCase() ?? '').compareTo(
+            b.cells['name_field']?.value.toString().toLowerCase() ?? ''));
+    return sorted.map((row) {
+      String teamName =
+          _normalizeTeamName(row.cells['team_field']?.value.toString());
+      return ListTile(
+        title: Text(row.cells['name_field']?.value.toString() ?? ''),
+        trailing: Text(teamName == 'No team' ? 'No team' : 'Team: $teamName',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      );
+    }).toList();
+  }
+
+  List<Widget> _buildTeams() {
+    if (stateManager == null) return [];
+    Map<String, List<String>> teams = {};
+    for (var row in stateManager!.rows) {
+      String name = row.cells['name_field']?.value.toString() ?? '';
+      String team =
+          _normalizeTeamName(row.cells['team_field']?.value.toString());
+      if (!teams.containsKey(team)) {
+        teams[team] = [];
+      }
+      teams[team]!.add(name);
+    }
+    var sortedTeams = teams.keys.toList()..sort();
+    return sortedTeams.where((team) => team != 'No team').map((team) {
+      return ExpansionTile(
+        title: Text('Team $team',
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        children: teams[team]!
+            .map((player) => ListTile(
+                leading: const Icon(Icons.person, size: 16),
+                title: Text(player)))
+            .toList(),
+      );
+    }).toList();
+  }
+
+  List<Widget> _buildUnassignedPlayers() {
+    if (stateManager == null) return [];
+    var unassigned = stateManager!.rows.where((row) =>
+        _normalizeTeamName(row.cells['team_field']?.value.toString()) ==
+        'No team');
+    if (unassigned.isEmpty)
+      return [const ListTile(title: Text('All players assigned!'))];
+    return unassigned
+        .map((row) => ListTile(
+              leading:
+                  const Icon(Icons.person_off, size: 16, color: Colors.grey),
+              title: Text(row.cells['name_field']?.value.toString() ?? ''),
+            ))
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -629,362 +699,467 @@ Jane,4,F""";
           ),
         ],
       ),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.all(12.0),
         children: [
-          ExpansionTile(
-            leading: const Icon(Icons.psychology),
-            title: const Text('Generation Strategy',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text('How do you want your teams to be balanced?'),
-            children: <Widget>[
-              ListTile(
-                title: const Text('Fair Teams (Prioritize Skill)'),
-                leading: Radio<GEN_OPTION>(
-                  value: GEN_OPTION.distribute,
-                  groupValue: settingsData.o,
-                  onChanged: (GEN_OPTION? value) {
-                    setState(() {
-                      settingsData.o = value ?? settingsData.o;
-                    });
-                  },
-                ),
-                subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                          'Aggressively balances teams by distributing the best and worst players evenly, ensuring all teams have roughly the same average skill rating. Best for competitive play.'),
-                      if (settingsData.o == GEN_OPTION.distribute)
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            label: Text("Number of teams"),
-                            hintText:
-                                'How many teams do you want to split the players to?',
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
-                          initialValue: settingsData.teamCount.toString(),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            settingsData.teamCount =
-                                int.tryParse(value) ?? settingsData.teamCount;
-                          },
-                        ),
-                    ]),
-              ),
-              ListTile(
-                title: const Text('Ranked Divisions'),
-                leading: Radio<GEN_OPTION>(
-                  value: GEN_OPTION.division,
-                  groupValue: settingsData.o,
-                  onChanged: (GEN_OPTION? value) {
-                    setState(() {
-                      settingsData.o = value ?? settingsData.o;
-                    });
-                  },
-                ),
-                subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                          'Separates players into tiered divisions so highly skilled players only play against each other, and beginners play against beginners.'),
-                      if (settingsData.o == GEN_OPTION.division)
-                        Column(
-                          children: [
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                label: Text('Number of divisions'),
-                                hintText:
-                                    'Division number means top teams will have better players',
-                              ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
-                              ],
-                              initialValue: settingsData.division.toString(),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) {
-                                settingsData.division = int.tryParse(value) ??
-                                    settingsData.division;
-                                _saveSettings();
-                              },
-                            ),
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                label: Text("Number of teams"),
-                                hintText:
-                                    'How many teams do you want to split the players to?',
-                              ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
-                              ],
-                              initialValue: settingsData.teamCount.toString(),
-                              keyboardType: TextInputType.number,
-                              onChanged: (value) {
-                                settingsData.teamCount = int.tryParse(value) ??
-                                    settingsData.teamCount;
-                                _saveSettings();
-                              },
-                            ),
-                          ],
-                        )
-                    ]),
-              ),
-              ListTile(
-                title: const Text('Fixed Roster Size (Pickup Mode)'),
-                leading: Radio<GEN_OPTION>(
-                  value: GEN_OPTION.proportion,
-                  groupValue: settingsData.o,
-                  onChanged: (GEN_OPTION? value) {
-                    setState(() {
-                      settingsData.o = value ?? settingsData.o;
-                    });
-                  },
-                ),
-                subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                          'Creates teams with a specific number of players on each roster, balanced by skill and gender. Perfect for setting up 5v5s or 6v6s pickup games.'),
-                      if (settingsData.o == GEN_OPTION.proportion)
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            label: Text('Number of players per team'),
-                            hintText: 'How many players per team',
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
-                          initialValue: settingsData.proportion.toString(),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            settingsData.proportion =
-                                int.tryParse(value) ?? settingsData.proportion;
-                            _saveSettings();
-                          },
-                        )
-                    ]),
-              ),
-              ListTile(
-                title: const Text('Pure Randomizer'),
-                leading: Radio<GEN_OPTION>(
-                  value: GEN_OPTION.random,
-                  groupValue: settingsData.o,
-                  onChanged: (GEN_OPTION? value) {
-                    setState(() {
-                      settingsData.o = value ?? settingsData.o;
-                    });
-                  },
-                ),
-                subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                          'Randomly assigns players to teams with zero sorting. Complete luck of the draw.'),
-                      if (settingsData.o == GEN_OPTION.random)
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            label: Text("Number of teams"),
-                            hintText:
-                                'How many teams do you want to split the players to?',
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
-                          initialValue: settingsData.teamCount.toString(),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            settingsData.teamCount =
-                                int.tryParse(value) ?? settingsData.teamCount;
-                          },
-                        )
-                    ]),
-              ),
-              ListTile(
-                title: const Text('Fair Teams (Prioritize Gender)'),
-                leading: Radio<GEN_OPTION>(
-                  value: GEN_OPTION.even_gender,
-                  groupValue: settingsData.o,
-                  onChanged: (GEN_OPTION? value) {
-                    setState(() {
-                      settingsData.o = value ?? settingsData.o;
-                    });
-                  },
-                ),
-                subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                          'Prioritizes creating an equal mix of men and women evenly across all teams, followed by balancing overall skill level. Best for mixed casual games.'),
-                      if (settingsData.o == GEN_OPTION.even_gender)
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            label: Text("Number of teams"),
-                            hintText:
-                                'How many teams do you want to split the players to?',
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
-                          initialValue: settingsData.teamCount.toString(),
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            settingsData.teamCount =
-                                int.tryParse(value) ?? settingsData.teamCount;
-                          },
-                        )
-                    ]),
-              ),
-            ],
-          ),
-          Expanded(
-            child: Container(
-                child: PlutoGrid(
-              columns: columns,
-              rows: rows,
-              configuration: const PlutoGridConfiguration(
-                style: PlutoGridStyleConfig.dark(
-                  enableColumnBorderHorizontal: false,
-                  enableColumnBorderVertical: false,
-                ),
-              ),
-              createHeader: (stateManager) {
-                var style = stateManager.configuration.style;
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Container(
-                    height: style.rowHeight,
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            TextButton.icon(
-                              onPressed: () {
-                                stateManager.insertRows(
-                                  stateManager.rows.length,
-                                  [stateManager.getNewRow()],
-                                );
-                                _triggerSavePlayers();
-                              },
-                              icon: Icon(Icons.person_add,
-                                  color: style.iconColor),
-                              label: Text('Add Row',
-                                  style: TextStyle(
-                                      color: style.cellTextStyle.color)),
-                            ),
-                            const SizedBox(width: 8),
-                            TextButton.icon(
-                              onPressed: () {
-                                setState(() {
-                                  _isEditable = !_isEditable;
-                                  for (var col in stateManager.columns) {
-                                    col.enableEditingMode = _isEditable;
-                                  }
-                                  stateManager.notifyListeners();
-                                });
-                              },
-                              icon: Icon(
-                                  _isEditable ? Icons.edit_off : Icons.edit,
-                                  color: style.iconColor),
-                              label: Text(
-                                  _isEditable ? 'Disable Edit' : 'Edit Mode',
-                                  style: TextStyle(
-                                      color: style.cellTextStyle.color)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 16),
-                        TextButton.icon(
-                          onPressed: () {
-                            stateManager.removeRows(stateManager.checkedRows);
-                            _triggerSavePlayers();
-                          },
-                          icon: Icon(Icons.delete_outline,
-                              color: Colors.red.shade300),
-                          label: Text('Remove Checked',
-                              style: TextStyle(color: Colors.red.shade300)),
-                        ),
-                      ],
-                    ),
+          Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 12.0),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: ExpansionTile(
+              leading: const CircleAvatar(
+                  backgroundColor: Colors.indigo,
+                  child: Icon(Icons.psychology, color: Colors.white)),
+              title: const Text('Generation Strategy',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(
+                  'Current: ${settingsData.o.toString().split('.').last.replaceAll('_', ' ').toUpperCase()}'),
+              children: <Widget>[
+                ListTile(
+                  title: const Text('Fair Teams (Prioritize Skill)'),
+                  leading: Radio<GEN_OPTION>(
+                    value: GEN_OPTION.distribute,
+                    groupValue: settingsData.o,
+                    onChanged: (GEN_OPTION? value) {
+                      setState(() {
+                        settingsData.o = value ?? settingsData.o;
+                      });
+                    },
                   ),
-                );
-              },
-              onLoaded: (PlutoGridOnLoadedEvent event) {
-                stateManager = event.stateManager;
-                stateManager!.addListener(_triggerSavePlayers);
-                _loadPlayers();
-              },
-              onChanged: (PlutoGridOnChangedEvent event) {
-                _triggerSavePlayers();
-              },
-            )),
+                  subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                            'Aggressively balances teams by distributing the best and worst players evenly, ensuring all teams have roughly the same average skill rating. Best for competitive play.'),
+                        if (settingsData.o == GEN_OPTION.distribute)
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("Number of teams"),
+                              hintText:
+                                  'How many teams do you want to split the players to?',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.teamCount.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.teamCount =
+                                  int.tryParse(value) ?? settingsData.teamCount;
+                            },
+                          ),
+                      ]),
+                ),
+                ListTile(
+                  title: const Text('Ranked Divisions'),
+                  leading: Radio<GEN_OPTION>(
+                    value: GEN_OPTION.division,
+                    groupValue: settingsData.o,
+                    onChanged: (GEN_OPTION? value) {
+                      setState(() {
+                        settingsData.o = value ?? settingsData.o;
+                      });
+                    },
+                  ),
+                  subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                            'Separates players into tiered divisions so highly skilled players only play against each other, and beginners play against beginners.'),
+                        if (settingsData.o == GEN_OPTION.division)
+                          Column(
+                            children: [
+                              TextFormField(
+                                decoration: const InputDecoration(
+                                  label: Text('Number of divisions'),
+                                  hintText:
+                                      'Division number means top teams will have better players',
+                                ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                initialValue: settingsData.division.toString(),
+                                keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  settingsData.division = int.tryParse(value) ??
+                                      settingsData.division;
+                                  _saveSettings();
+                                },
+                              ),
+                              TextFormField(
+                                decoration: const InputDecoration(
+                                  label: Text("Number of teams"),
+                                  hintText:
+                                      'How many teams do you want to split the players to?',
+                                ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                initialValue: settingsData.teamCount.toString(),
+                                keyboardType: TextInputType.number,
+                                onChanged: (value) {
+                                  settingsData.teamCount =
+                                      int.tryParse(value) ??
+                                          settingsData.teamCount;
+                                  _saveSettings();
+                                },
+                              ),
+                            ],
+                          )
+                      ]),
+                ),
+                ListTile(
+                  title: const Text('Fixed Roster Size (Pickup Mode)'),
+                  leading: Radio<GEN_OPTION>(
+                    value: GEN_OPTION.proportion,
+                    groupValue: settingsData.o,
+                    onChanged: (GEN_OPTION? value) {
+                      setState(() {
+                        settingsData.o = value ?? settingsData.o;
+                      });
+                    },
+                  ),
+                  subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                            'Creates teams with a specific number of players on each roster, balanced by skill and gender. Perfect for setting up 5v5s or 6v6s pickup games.'),
+                        if (settingsData.o == GEN_OPTION.proportion)
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text('Number of players per team'),
+                              hintText: 'How many players per team',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.proportion.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.proportion = int.tryParse(value) ??
+                                  settingsData.proportion;
+                              _saveSettings();
+                            },
+                          )
+                      ]),
+                ),
+                ListTile(
+                  title: const Text('Pure Randomizer'),
+                  leading: Radio<GEN_OPTION>(
+                    value: GEN_OPTION.random,
+                    groupValue: settingsData.o,
+                    onChanged: (GEN_OPTION? value) {
+                      setState(() {
+                        settingsData.o = value ?? settingsData.o;
+                      });
+                    },
+                  ),
+                  subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                            'Randomly assigns players to teams with zero sorting. Complete luck of the draw.'),
+                        if (settingsData.o == GEN_OPTION.random)
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("Number of teams"),
+                              hintText:
+                                  'How many teams do you want to split the players to?',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.teamCount.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.teamCount =
+                                  int.tryParse(value) ?? settingsData.teamCount;
+                            },
+                          )
+                      ]),
+                ),
+                ListTile(
+                  title: const Text('Fair Teams (Prioritize Gender)'),
+                  leading: Radio<GEN_OPTION>(
+                    value: GEN_OPTION.even_gender,
+                    groupValue: settingsData.o,
+                    onChanged: (GEN_OPTION? value) {
+                      setState(() {
+                        settingsData.o = value ?? settingsData.o;
+                      });
+                    },
+                  ),
+                  subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                            'Prioritizes creating an equal mix of men and women evenly across all teams, followed by balancing overall skill level. Best for mixed casual games.'),
+                        if (settingsData.o == GEN_OPTION.even_gender)
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("Number of teams"),
+                              hintText:
+                                  'How many teams do you want to split the players to?',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.teamCount.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              settingsData.teamCount =
+                                  int.tryParse(value) ?? settingsData.teamCount;
+                            },
+                          )
+                      ]),
+                ),
+              ],
+            ),
+          ), // closes Card
+          Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 12.0),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: ExpansionTile(
+              leading: const CircleAvatar(
+                  backgroundColor: Colors.teal,
+                  child: Icon(Icons.people, color: Colors.white)),
+              title: const Text('Players Roster',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle:
+                  Text('${stateManager?.rows.length ?? 0} active players'),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final List<PlayerModel>? players = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AddPlayersScreen()));
+                      if (players != null) {
+                        addPlayers(players);
+                      }
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('ADD Players'),
+                  ),
+                ),
+                SizedBox(
+                  height: 400,
+                  child: PlutoGrid(
+                    columns: columns,
+                    rows: rows,
+                    configuration: const PlutoGridConfiguration(
+                      style: PlutoGridStyleConfig.dark(
+                        enableColumnBorderHorizontal: false,
+                        enableColumnBorderVertical: false,
+                      ),
+                    ),
+                    createHeader: (stateManager) {
+                      var style = stateManager.configuration.style;
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Container(
+                          height: style.rowHeight,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      stateManager.insertRows(
+                                        0,
+                                        [stateManager.getNewRow()],
+                                      );
+                                      _triggerSavePlayers();
+                                    },
+                                    icon: Icon(Icons.person_add,
+                                        color: style.iconColor),
+                                    label: Text('Add Row',
+                                        style: TextStyle(
+                                            color: style.cellTextStyle.color)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: () async {
+                                      final List<PlayerModel>? players =
+                                          await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      AddPlayersScreen()));
+                                      if (players != null) {
+                                        addPlayers(players);
+                                      }
+                                    },
+                                    icon: Icon(Icons.group_add,
+                                        color: style.iconColor),
+                                    label: Text('Add Players',
+                                        style: TextStyle(
+                                            color: style.cellTextStyle.color)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        _isEditable = !_isEditable;
+                                        for (var col in stateManager.columns) {
+                                          col.enableEditingMode = _isEditable;
+                                        }
+                                        stateManager.notifyListeners();
+                                      });
+                                    },
+                                    icon: Icon(
+                                        _isEditable
+                                            ? Icons.edit_off
+                                            : Icons.edit,
+                                        color: style.iconColor),
+                                    label: Text(
+                                        _isEditable
+                                            ? 'Disable Edit'
+                                            : 'Edit Mode',
+                                        style: TextStyle(
+                                            color: style.cellTextStyle.color)),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 16),
+                              TextButton.icon(
+                                onPressed: () {
+                                  stateManager
+                                      .removeRows(stateManager.checkedRows);
+                                  _triggerSavePlayers();
+                                },
+                                icon: Icon(Icons.delete_outline,
+                                    color: Colors.red.shade300),
+                                label: Text('Remove Checked',
+                                    style:
+                                        TextStyle(color: Colors.red.shade300)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    onLoaded: (PlutoGridOnLoadedEvent event) {
+                      stateManager = event.stateManager;
+                      stateManager!.addListener(_triggerSavePlayers);
+                      _loadPlayers();
+                    },
+                    onChanged: (PlutoGridOnChangedEvent event) {
+                      _triggerSavePlayers();
+                      setState(() {});
+                    },
+                  ), // closes PlutoGrid
+                ), // closes SizedBox
+              ],
+            ), // closes Players ExpansionTile
+          ), // closes Card
+
+          if (stateManager != null &&
+              stateManager!.rows.any((element) =>
+                  _normalizeTeamName(
+                      element.cells['team_field']?.value.toString()) !=
+                  "No team"))
+            Card(
+              elevation: 2,
+              margin: const EdgeInsets.only(bottom: 12.0),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              child: ExpansionTile(
+                initiallyExpanded: true,
+                leading: const CircleAvatar(
+                    backgroundColor: Colors.orange,
+                    child: Icon(Icons.groups, color: Colors.white)),
+                title: const Text('Generated Teams',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('View teams & match info'),
+                children: _buildTeams(),
+              ),
+            ),
+
+          if (stateManager != null &&
+              stateManager!.rows.any((element) =>
+                  _normalizeTeamName(
+                      element.cells['team_field']?.value.toString()) !=
+                  "No team"))
+            Card(
+              elevation: 2,
+              margin: const EdgeInsets.only(bottom: 12.0),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              child: ExpansionTile(
+                leading: const CircleAvatar(
+                    backgroundColor: Colors.deepPurple,
+                    child: Icon(Icons.map, color: Colors.white)),
+                title: const Text('Who Goes Where',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Alphabetical player directory'),
+                children: _buildWhoGoesWhere(),
+              ),
+            ),
+
+          Card(
+            elevation: 2,
+            margin: const EdgeInsets.only(bottom: 12.0),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: ExpansionTile(
+              leading: const CircleAvatar(
+                  backgroundColor: Colors.blueGrey,
+                  child: Icon(Icons.person_off, color: Colors.white)),
+              title: const Text('Unassigned Players',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Players without a team'),
+              children: _buildUnassignedPlayers(),
+            ),
           ),
+
+          const SizedBox(height: 80), // spacing for floating action button
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: generateTeams,
-        icon: const FaIcon(FontAwesomeIcons.dice),
-        label: const Text('Generate',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        elevation: 4,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Tooltip(
-                    message: 'Add Players',
-                    child: IconButton(
-                      iconSize: 28,
-                      onPressed: () async {
-                        final List<PlayerModel> players = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => AddPlayersScreen()));
-                        addPlayers(players);
-                      },
-                      icon: const FaIcon(FontAwesomeIcons.userPlus),
-                    ),
-                  ),
-                ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: TextButton.icon(
+                onPressed: () async {
+                  final List<PlayerModel> players = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AddPlayersScreen()));
+                  addPlayers(players);
+                },
+                icon: const FaIcon(FontAwesomeIcons.userPlus, size: 20),
+                label: const Text('Players'),
               ),
-              Row(
-                children: [
-                  Tooltip(
-                    message: 'View Teams',
-                    child: IconButton(
-                      iconSize: 28,
-                      onPressed: _navigateToTeam,
-                      icon: const FaIcon(FontAwesomeIcons.usersViewfinder),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Tooltip(
-                    message: 'Create Match',
-                    child: IconButton(
-                      iconSize: 28,
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    MatchScreen(settingsData)));
-                      },
-                      icon: const FaIcon(FontAwesomeIcons.trophy),
-                    ),
-                  ),
-                ],
+            ),
+            Expanded(
+              child: TextButton.icon(
+                onPressed: _navigateToTeam,
+                icon: const FaIcon(FontAwesomeIcons.usersViewfinder, size: 20),
+                label: const Text('Teams'),
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MatchScreen(settingsData)));
+                },
+                icon: const FaIcon(FontAwesomeIcons.trophy, size: 20),
+                label: const Text('Match'),
+              ),
+            ),
+          ],
         ),
       ),
     );

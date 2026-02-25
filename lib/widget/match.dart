@@ -158,7 +158,7 @@ class _MatchWidgetState extends State<MatchWidget> {
             ],
           ),
         ),
-        Divider(color: Colors.grey.withOpacity(0.5))
+        Divider(color: Colors.grey.withValues(alpha: 0.5))
       ],
     );
   }

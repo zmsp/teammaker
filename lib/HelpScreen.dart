@@ -11,17 +11,10 @@ class HelpExample extends StatefulWidget {
 enum Status { none, running, stopped, paused }
 
 class _HelpExampleState extends State<HelpExample> {
-  Future<void>? _launched;
-  String _phone = '';
-
   Future<void> _launchInBrowser(String url) async {
-    if (await canLaunch(url)) {
-      await launch(
-        url,
-        forceSafariVC: false,
-        forceWebView: false,
-        headers: <String, String>{'my_header_key': 'my_header_value'},
-      );
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       throw 'Could not launch $url';
     }
@@ -34,67 +27,65 @@ class _HelpExampleState extends State<HelpExample> {
         title: Text("HELP PAGE"),
       ),
       body: ListView(
-        children:  <Widget>[
+        children: <Widget>[
           Card(
             child: ListTile(
-              leading: Icon(FontAwesomeIcons.search),
+              leading: Icon(FontAwesomeIcons.magnifyingGlass),
               title: Text('How to create teams?'),
-              subtitle:Text('Click here to watch help video'),
+              subtitle: Text('Click here to watch help video'),
               onTap: () {
                 Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => VideoApp('asset/video/meetup.mp4', "Meetup entry", "how to add from meetup")));
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => VideoApp('asset/video/meetup.mp4',
+                            "Meetup entry", "how to add from meetup")));
               },
             ),
           ),
-
           Card(
             child: ListTile(
               leading: Icon(FontAwesomeIcons.meetup),
               title: Text('How to add data from meetup?'),
-              subtitle:Text('Click here to watch help video'),
+              subtitle: Text('Click here to watch help video'),
               onTap: () {
                 Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => VideoApp('asset/video/meetup.mp4', "Meetup entry", "how to add from meetup")));
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => VideoApp('asset/video/meetup.mp4',
+                            "Meetup entry", "how to add from meetup")));
               },
             ),
           ),
           Card(
             child: ListTile(
                 leading: Icon(FontAwesomeIcons.question),
-                subtitle:Text('Read the user manual'),
+                subtitle: Text('Read the user manual'),
                 title: Text('Need help on using?'),
-                onTap:() => setState(() {
-                  _launched = _launchInBrowser(
+                onTap: () {
+                  _launchInBrowser(
                       "https://github.com/zmsp/teammaker/wiki/user-manual");
-                })
-            ),
+                }),
           ),
           Card(
             child: ListTile(
                 leading: Icon(FontAwesomeIcons.download),
-              subtitle:Text('How do you install this app to your phone?'),
-              title: Text('Install this app'),
-              onTap:() => setState(() {
-                _launched = _launchInBrowser(
-                    "https://github.com/zmsp/teammaker/wiki/installation");
-              })
-            ),
+                subtitle: Text('How do you install this app to your phone?'),
+                title: Text('Install this app'),
+                onTap: () {
+                  _launchInBrowser(
+                      "https://github.com/zmsp/teammaker/wiki/installation");
+                }),
           ),
-
           Card(
             child: ListTile(
-                leading: Icon(FontAwesomeIcons.handsHelping),
-                subtitle:Text('Add issues to github issue tracker'),
+                leading: Icon(FontAwesomeIcons.handshakeAngle),
+                subtitle: Text('Add issues to github issue tracker'),
                 title: Text('Having issues or need new features?'),
-                onTap:() => setState(() {
-                  _launched = _launchInBrowser(
-                      'https://github.com/zmsp/teammaker/issues');
-                })
-            ),
+                onTap: () {
+                  _launchInBrowser('https://github.com/zmsp/teammaker/issues');
+                }),
           ),
-
-            ],
-
+        ],
       ),
     );
   }

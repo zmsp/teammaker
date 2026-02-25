@@ -119,7 +119,7 @@ class HeadingItem implements ListItem {
                   color: Theme.of(context)
                       .colorScheme
                       .onPrimaryContainer
-                      .withOpacity(0.8)),
+                      .withValues(alpha: 0.8)),
             ),
           ],
         ));
@@ -142,8 +142,8 @@ class MessageItem implements ListItem {
       elevation: 0,
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
       shape: RoundedRectangleBorder(
-        side:
-            BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+        side: BorderSide(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: ListTile(

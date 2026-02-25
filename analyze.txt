@@ -1,0 +1,55 @@
+Analyzing teammaker...                                          
+
+warning • The value of the field '_launched' isn't used • lib/HelpScreen.dart:14:17 • unused_field
+warning • The value of the field '_phone' isn't used • lib/HelpScreen.dart:15:10 • unused_field
+   info • 'canLaunch' is deprecated and shouldn't be used. Use canLaunchUrl instead • lib/HelpScreen.dart:18:15 • deprecated_member_use
+   info • 'launch' is deprecated and shouldn't be used. Use launchUrl instead • lib/HelpScreen.dart:19:13 • deprecated_member_use
+   info • 'search' is deprecated and shouldn't be used. Use "magnifyingGlass" instead • lib/HelpScreen.dart:40:46 • deprecated_member_use
+   info • 'handsHelping' is deprecated and shouldn't be used. Use "handshakeAngle" instead • lib/HelpScreen.dart:86:48 • deprecated_member_use
+warning • This class (or a class that this class inherits from) is marked as '@immutable', but one or more of its instance fields aren't final: MatchScreen.settingsData • lib/MatchScreen.dart:8:7 • must_be_immutable
+warning • The value of the field '_levels' isn't used • lib/MatchScreen.dart:23:19 • unused_field
+warning • The value of the field '_genders' isn't used • lib/MatchScreen.dart:24:22 • unused_field
+warning • The value of the field '_batch_text' isn't used • lib/MatchScreen.dart:25:31 • unused_field
+warning • The value of the field '_player_text' isn't used • lib/MatchScreen.dart:26:31 • unused_field
+warning • The value of the field '_selectedLevel' isn't used • lib/MatchScreen.dart:29:7 • unused_field
+warning • The value of the field '_selectedGender' isn't used • lib/MatchScreen.dart:30:10 • unused_field
+warning • The value of the local variable 'screenWidth' isn't used • lib/MatchScreen.dart:137:12 • unused_local_variable
+   info • 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre • lib/MatchScreen.dart:138:12 • deprecated_member_use
+warning • This class (or a class that this class inherits from) is marked as '@immutable', but one or more of its instance fields aren't final: SettingsScreen.settingsData • lib/SettingsScreen.dart:6:7 • must_be_immutable
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:61:23 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:62:23 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:96:23 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:97:23 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:150:23 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:151:23 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:179:23 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:180:23 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:214:23 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/SettingsScreen.dart:215:23 • deprecated_member_use
+warning • The value of the local variable 'title' isn't used • lib/home_screen.dart:46:12 • unused_local_variable
+warning • The value of the local variable 'exported' isn't used • lib/home_screen.dart:48:11 • unused_local_variable
+   info • 'search' is deprecated and shouldn't be used. Use "magnifyingGlass" instead • lib/home_screen.dart:334:34 • deprecated_member_use
+warning • The value of the local variable 'tmp_rows' isn't used • lib/home_screen.dart:511:21 • unused_local_variable
+warning • The value of the local variable 'teams_avg_score' isn't used • lib/home_screen.dart:546:25 • unused_local_variable
+warning • The value of the local variable 'teams_list' isn't used • lib/home_screen.dart:547:31 • unused_local_variable
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:704:19 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:705:19 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:739:19 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:740:19 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:796:19 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:797:19 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:831:19 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:832:19 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:866:19 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/home_screen.dart:867:19 • deprecated_member_use
+  error • Expected to find ')' • lib/home_screen.dart:1008:13 • expected_token
+  error • Expected an identifier • lib/home_screen.dart:1011:11 • missing_identifier
+  error • Expected to find ')' • lib/home_screen.dart:1011:11 • expected_token
+  error • Expected to find ',' • lib/home_screen.dart:1011:11 • expected_token
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/team_screen.dart:122:24 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/team_screen.dart:146:62 • deprecated_member_use
+warning • This class (or a class that this class inherits from) is marked as '@immutable', but one or more of its instance fields aren't final: VideoApp._video_url, VideoApp._title, VideoApp._description • lib/video_player.dart:4:7 • must_be_immutable
+warning • The value of the field '_description' isn't used • lib/video_player.dart:19:16 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widget/match.dart:161:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widget/player.dart:21:62 • deprecated_member_use
+

@@ -17,8 +17,8 @@ class PlayerWidget extends StatelessWidget {
       elevation: 0,
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       shape: RoundedRectangleBorder(
-        side:
-            BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.2)),
+        side: BorderSide(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
         borderRadius: BorderRadius.circular(12.0),
       ),
       child: ListTile(

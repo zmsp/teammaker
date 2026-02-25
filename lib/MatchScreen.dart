@@ -1,3 +1,4 @@
+// ignore_for_file: must_be_immutable, unused_field, unused_local_variable, deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
