@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -13,6 +13,7 @@ import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/team_screen.dart';
 import 'package:teammaker/algorithm/team_generator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
@@ -39,7 +40,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   PlutoGridStateManager? stateManager;
   SettingsData settingsData = new SettingsData();
   bool _isEditable = false;
-  // final storage = new LocalStorage('my_data.json');
+  Timer? _saveTimer;
 
   void exportToCsv() async {
     String title = "pluto_grid_export";
@@ -56,25 +57,56 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     // use file_saver from pub.dev
   }
 
-  // void saveData() {
-  //   final Iterable<Map<String, dynamic>>? rowsToUpdate =
-  //       stateManager?.rows.map((e) {
-  //     return {
-  //       'name_field': e?.cells['name_field']?.value,
-  //       'skill_level_field': e?.cells['skill_level_field']?.value,
-  //       'gender_field': e?.cells['gender_field']?.value,
-  //       'team_field': e?.cells['team_field']?.value,
-  //     };
-  //   });
-  //   // update rowsToUpdate
-  //
-  //   print(jsonEncode(rowsToUpdate));
-  //
-  //   storage.setItem('todos', jsonEncode(rowsToUpdate));
-  // }
+  void _triggerSavePlayers() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(seconds: 2), _savePlayers);
+  }
 
-  void loadData() {
-    // print(storage.getItem('todos'));
+  void _savePlayers() async {
+    if (stateManager == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final List<Map<String, dynamic>> rowsToUpdate = stateManager!.rows.map((e) {
+      return {
+        'name_field': e.cells['name_field']?.value,
+        'skill_level_field': e.cells['skill_level_field']?.value,
+        'gender_field': e.cells['gender_field']?.value,
+        'team_field': e.cells['team_field']?.value,
+        'checked': e.checked,
+      };
+    }).toList();
+    prefs.setString('saved_players', jsonEncode(rowsToUpdate));
+  }
+
+  Future<void> _loadPlayers() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? saved = prefs.getString('saved_players');
+    if (saved != null) {
+      List<dynamic> jsonMap = jsonDecode(saved);
+      List<PlutoRow> loadedRows = jsonMap.map<PlutoRow>((e) {
+        var row = PlutoRow(
+          cells: {
+            'name_field': PlutoCell(value: e['name_field'] ?? 'Unknown'),
+            'skill_level_field': PlutoCell(value: e['skill_level_field'] ?? 3),
+            'team_field': PlutoCell(value: e['team_field'] ?? "None"),
+            'gender_field': PlutoCell(value: e['gender_field'] ?? "MALE"),
+          },
+        );
+        if (e['checked'] != null) {
+          row.setChecked(e['checked']);
+        }
+        return row;
+      }).toList();
+
+      if (loadedRows.isNotEmpty) {
+        setState(() {
+          rows = loadedRows;
+          if (stateManager != null) {
+            stateManager!.removeAllRows();
+            stateManager!.appendRows(loadedRows);
+          }
+        });
+      }
+    }
   }
 
   List<PlutoColumn> columns = [
@@ -187,7 +219,35 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   @override
   void initState() {
     super.initState();
+    _loadSettings();
     rebuild_options();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      settingsData.teamCount = prefs.getInt('teamCount') ?? 1;
+      settingsData.division = prefs.getInt('division') ?? 2;
+      settingsData.proportion = prefs.getInt('proportion') ?? 6;
+      settingsData.gameVenues = prefs.getInt('gameVenues') ?? 2;
+      settingsData.gameRounds = prefs.getInt('gameRounds') ?? 2;
+
+      String savedOption =
+          prefs.getString('genOption') ?? GEN_OPTION.proportion.toString();
+      settingsData.o = GEN_OPTION.values.firstWhere(
+          (e) => e.toString() == savedOption,
+          orElse: () => GEN_OPTION.proportion);
+    });
+  }
+
+  void _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt('teamCount', settingsData.teamCount);
+    prefs.setInt('division', settingsData.division);
+    prefs.setInt('proportion', settingsData.proportion);
+    prefs.setInt('gameVenues', settingsData.gameVenues);
+    prefs.setInt('gameRounds', settingsData.gameRounds);
+    prefs.setString('genOption', settingsData.o.toString());
   }
 
   showTextDialog(BuildContext context, String title, String message) {
@@ -683,6 +743,7 @@ Jane,4,F""";
                               onChanged: (value) {
                                 settingsData.division = int.tryParse(value) ??
                                     settingsData.division;
+                                _saveSettings();
                               },
                             ),
                             TextFormField(
@@ -699,6 +760,7 @@ Jane,4,F""";
                               onChanged: (value) {
                                 settingsData.teamCount = int.tryParse(value) ??
                                     settingsData.teamCount;
+                                _saveSettings();
                               },
                             ),
                           ],
@@ -735,6 +797,7 @@ Jane,4,F""";
                           onChanged: (value) {
                             settingsData.proportion =
                                 int.tryParse(value) ?? settingsData.proportion;
+                            _saveSettings();
                           },
                         )
                     ]),
@@ -840,6 +903,7 @@ Jane,4,F""";
                                   stateManager.rows.length,
                                   [stateManager.getNewRow()],
                                 );
+                                _triggerSavePlayers();
                               },
                               icon: Icon(Icons.person_add,
                                   color: style.iconColor),
@@ -872,6 +936,7 @@ Jane,4,F""";
                         TextButton.icon(
                           onPressed: () {
                             stateManager.removeRows(stateManager.checkedRows);
+                            _triggerSavePlayers();
                           },
                           icon: Icon(Icons.delete_outline,
                               color: Colors.red.shade300),
@@ -885,6 +950,11 @@ Jane,4,F""";
               },
               onLoaded: (PlutoGridOnLoadedEvent event) {
                 stateManager = event.stateManager;
+                stateManager!.addListener(_triggerSavePlayers);
+                _loadPlayers();
+              },
+              onChanged: (PlutoGridOnChangedEvent event) {
+                _triggerSavePlayers();
               },
             )),
           ),

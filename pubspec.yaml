@@ -34,7 +34,7 @@ dependencies:
   url_launcher_web: ^2.0.1
   video_player: ^2.2.5
   font_awesome_flutter:
-  shared_preferences: ^2.0.15
+  shared_preferences: ^2.5.4
   pluto_grid_export: any
 
 
