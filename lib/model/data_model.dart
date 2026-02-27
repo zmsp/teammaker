@@ -7,7 +7,7 @@ class SettingsData {
 
   bool preferExtraTeam = false; // Add more teams for extra players
 
-  GEN_OPTION o = GEN_OPTION.even_gender; // Best balance settings
+  GenOption o = GenOption.evenGender; // Best balance settings
 
   @override
   String toString() {
@@ -20,7 +20,7 @@ class SettingsData {
     gameVenues = 1;
     gameRounds = 1;
     proportion = 6;
-    o = GEN_OPTION.even_gender;
+    o = GenOption.evenGender;
     preferExtraTeam = false;
   }
 }
@@ -51,4 +51,19 @@ class Round {
   }
 }
 
-enum GEN_OPTION { distribute, division, random, even_gender }
+enum GenOption { distribute, division, random, evenGender }
+
+extension GenOptionExtension on GenOption {
+  String get displayName {
+    switch (this) {
+      case GenOption.distribute:
+        return 'SKILL BALANCE';
+      case GenOption.division:
+        return 'RANKED GROUPS';
+      case GenOption.random:
+        return 'RANDOM';
+      case GenOption.evenGender:
+        return 'FAIR MIX';
+    }
+  }
+}

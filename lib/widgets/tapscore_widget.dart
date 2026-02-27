@@ -177,7 +177,7 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(color: Colors.white24),
                   ),
@@ -230,10 +230,11 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          if (team == 'A')
+          if (team == 'A') {
             _teamAScore++;
-          else
+          } else {
             _teamBScore++;
+          }
           _saveState();
         });
       },
@@ -248,7 +249,7 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
         });
       },
       child: Container(
-        color: color.withOpacity(0.8),
+        color: color.withValues(alpha: 0.8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -300,10 +301,11 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
                   icon: Icons.add,
                   onPressed: () {
                     setState(() {
-                      if (team == 'A')
+                      if (team == 'A') {
                         _teamAScore++;
-                      else
+                      } else {
                         _teamBScore++;
+                      }
                       _saveState();
                     });
                   },

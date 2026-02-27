@@ -21,7 +21,7 @@ class TeamGenerator {
     var keys = teams_list.keys.toList();
     int size = teams_list.length;
 
-    if (settingsData.o == GEN_OPTION.division) {
+    if (settingsData.o == GenOption.division) {
       // Division algorithm
       int totalTeams = settingsData.teamCount;
       int numDivisions = settingsData.division;
@@ -71,7 +71,7 @@ class TeamGenerator {
           }
         }
       }
-    } else if (settingsData.o == GEN_OPTION.distribute) {
+    } else if (settingsData.o == GenOption.distribute) {
       // Distribute algorithm
       tmp_rows.sort((a, b) {
         int cmp = (a.cells["skill_level_field"]?.value as num)
@@ -94,7 +94,7 @@ class TeamGenerator {
         });
         start = i + size;
       }
-    } else if (settingsData.o == GEN_OPTION.even_gender) {
+    } else if (settingsData.o == GenOption.evenGender) {
       // Improved Even Gender algorithm with Snake Distribution and Population Balancing
       tmp_rows.shuffle(); // Initial randomization for variety
 
@@ -170,7 +170,7 @@ class TeamGenerator {
           teams_list[targetTeam]?.add(players[i]);
         }
       }
-    } else if (settingsData.o == GEN_OPTION.random) {
+    } else if (settingsData.o == GenOption.random) {
       // Random algorithm
       tmp_rows.shuffle();
       for (var i = 0; i < tmp_rows.length; i = i + size) {

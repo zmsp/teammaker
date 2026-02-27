@@ -27,20 +27,21 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
-  pluto_grid: ^7.0.2
-  localstorage: ^6.0.0
-  url_launcher: ^6.0.9
-  url_launcher_web: ^2.0.1
-  video_player: ^2.2.5
-  font_awesome_flutter:
-  shared_preferences: ^2.5.4
-  pluto_grid_export: any
+  cupertino_icons: any
+  pluto_grid: any
+  localstorage: any
+  url_launcher: any
+  url_launcher_web: any
+  video_player: any
+  font_awesome_flutter: any
+  shared_preferences: any
+
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -84,5 +85,4 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
 
-dependency_overrides:
-  pluto_grid: ^8.1.0
+

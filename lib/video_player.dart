@@ -3,38 +3,35 @@ import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 
 class VideoApp extends StatefulWidget {
-  String _video_url;
-  String _title;
-  String _description;
-  @override
-  _VideoAppState createState() =>
-      _VideoAppState(this._video_url, this._title, this._description);
+  final String videoUrl;
+  final String title;
+  final String description;
 
-  VideoApp(this._video_url, this._title, this._description);
+  const VideoApp({
+    super.key,
+    required this.videoUrl,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  State<VideoApp> createState() => _VideoAppState();
 }
 
 class _VideoAppState extends State<VideoApp> {
-  final String _video_url;
-  final String _title;
-  final String _description;
-
-  _VideoAppState(this._video_url, this._title, this._description);
-
   late VideoPlayerController _controller;
-  //  start() async{
-  //   _controller = VideoPlayerController.network(_video_url)
-  //     ..initialize();
-  //
-  //
-  //
-  // }
 
+  @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset(_video_url);
+    _controller = VideoPlayerController.asset(widget.videoUrl);
 
     _controller.setLooping(true);
-    _controller.initialize().then((_) => setState(() {}));
+    _controller.initialize().then((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
     _controller.play();
   }
 
@@ -42,7 +39,7 @@ class _VideoAppState extends State<VideoApp> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_title),
+        title: Text(widget.title),
       ),
       body: Center(
         child: _controller.value.isInitialized
@@ -50,7 +47,7 @@ class _VideoAppState extends State<VideoApp> {
                 aspectRatio: _controller.value.aspectRatio,
                 child: VideoPlayer(_controller),
               )
-            : Container(),
+            : const Center(child: CircularProgressIndicator()),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -69,7 +66,7 @@ class _VideoAppState extends State<VideoApp> {
 
   @override
   void dispose() {
-    super.dispose();
     _controller.dispose();
+    super.dispose();
   }
 }

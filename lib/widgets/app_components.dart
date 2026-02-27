@@ -19,14 +19,14 @@ class SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4.0, bottom: 2.0, top: 4.0),
       child: Row(
         children: [
-          FaIcon(icon, size: 14, color: color.withOpacity(0.7)),
+          FaIcon(icon, size: 14, color: color.withValues(alpha: 0.7)),
           const SizedBox(width: 8),
           Text(
             title,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w800,
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
               letterSpacing: 1.5,
             ),
           ),
@@ -59,7 +59,7 @@ class GridHeaderButton extends StatelessWidget {
           style: TextStyle(color: color, fontWeight: FontWeight.bold)),
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        backgroundColor: color.withOpacity(0.1),
+        backgroundColor: color.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       ),
     );
@@ -127,9 +127,10 @@ class QuickToolCard extends StatelessWidget {
           width: 105,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withOpacity(0.15), width: 1.5),
+            border:
+                Border.all(color: color.withValues(alpha: 0.15), width: 1.5),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use, unused_local_variable
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -6,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:pluto_grid/pluto_grid.dart';
-import 'package:pluto_grid_export/pluto_grid_export.dart' as pluto_grid_export;
 import 'package:teammaker/HelpScreen.dart';
 import 'package:teammaker/MatchScreen.dart';
 import 'package:teammaker/add_players.dart';
@@ -51,18 +49,22 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   Timer? _saveTimer;
 
   void exportToCsv() async {
-    String title = "pluto_grid_export";
-    if (stateManager != null) {
-      var exported = const Utf8Encoder()
-          .convert(pluto_grid_export.PlutoGridExport.exportCSV(stateManager!));
+    if (stateManager == null) return;
 
-      var test = pluto_grid_export.PlutoGridExport.exportCSV(stateManager!,
-          fieldDelimiter: ",", textDelimiter: "", textEndDelimiter: "");
-      Clipboard.setData(new ClipboardData(text: test));
-      print(test);
+    StringBuffer csvBuffer = StringBuffer();
+    // Headers
+    csvBuffer.writeln("Name,Level,Gender,Team");
+
+    for (var row in stateManager!.rows) {
+      String name = row.cells['name_field']?.value?.toString() ?? "";
+      String level = row.cells['skill_level_field']?.value?.toString() ?? "";
+      String gender = row.cells['gender_field']?.value?.toString() ?? "";
+      String team = row.cells['team_field']?.value?.toString() ?? "";
+
+      csvBuffer.writeln("$name,$level,$gender,$team");
     }
 
-    // use file_saver from pub.dev
+    await Clipboard.setData(ClipboardData(text: csvBuffer.toString()));
   }
 
   void _triggerSavePlayers() {
@@ -160,10 +162,10 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
             prefs.getBool('preferExtraTeam') ?? false;
 
         String savedOption =
-            prefs.getString('genOption') ?? GEN_OPTION.even_gender.toString();
-        settingsData.o = GEN_OPTION.values.firstWhere(
+            prefs.getString('genOption') ?? GenOption.evenGender.toString();
+        settingsData.o = GenOption.values.firstWhere(
             (e) => e.toString() == savedOption,
-            orElse: () => GEN_OPTION.even_gender);
+            orElse: () => GenOption.evenGender);
       });
     });
   }
@@ -298,7 +300,7 @@ Jane,4,F""";
             const Text('Press check button to see what will be added'),
             ElevatedButton.icon(
               icon: Icon(
-                FontAwesomeIcons.search,
+                FontAwesomeIcons.magnifyingGlass,
                 size: 25.0,
               ),
               style: ButtonStyle(
@@ -475,7 +477,6 @@ Jane,4,F""";
 
     //find checked items
 
-    List<PlutoRow?> tmp_rows = [];
     for (var i = 0; i < dat.length; i++) {
       if (dat[i]?.checked ?? false) {
         // teams_name_list.update(dat[i]?.cells?["team_field"]?.value?? "None", (value) => null)
@@ -510,8 +511,7 @@ Jane,4,F""";
         //TODO unassign team
       }
     }
-    Map<String, double> teams_avg_score = Map();
-    Map<String, List<String>> teams_list = Map();
+
     // for (var i = 1; i <= teams; i++) {
     //   teams_list[i.toString()] = [];
     // }
@@ -556,7 +556,7 @@ Jane,4,F""";
       }
     });
 
-    if (settingsData.o == GEN_OPTION.even_gender) {
+    if (settingsData.o == GenOption.evenGender) {
       int player_num = dat.length;
       if (settingsData.preferExtraTeam) {
         settingsData.teamCount = (player_num / settingsData.proportion).ceil();
@@ -724,7 +724,8 @@ Jane,4,F""";
                     rowColorCallback: (rowContext) {
                       if (rowContext.row.cells['name_field']?.value ==
                           'player level gender and team') {
-                        return colorScheme.errorContainer.withOpacity(0.1);
+                        return colorScheme.errorContainer
+                            .withValues(alpha: 0.1);
                       }
                       return Colors.transparent;
                     },
@@ -747,7 +748,8 @@ Jane,4,F""";
                         padding: const EdgeInsets.symmetric(
                             horizontal: 4.0, vertical: 4.0),
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceVariant.withOpacity(0.3),
+                          color: colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.3),
                           border: Border(
                               bottom: BorderSide(
                                   color: colorScheme.outlineVariant)),
@@ -878,149 +880,134 @@ Jane,4,F""";
                     fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
               children: [
-                StrategyOption(
-                  option: GEN_OPTION.even_gender,
+                RadioGroup<GenOption>(
                   groupValue: settingsData.o,
-                  title: 'Fair Mix (Best)',
-                  subtitle:
-                      'Mix players by gender and skill correctly. Grows teams naturally (${settingsData.proportion}/team).',
-                  icon: Icons.wc,
-                  isSelected: settingsData.o == GEN_OPTION.even_gender,
-                  onChanged: (GEN_OPTION? value) {
+                  onChanged: (GenOption? value) {
                     setState(() {
                       settingsData.o = value ?? settingsData.o;
                       _saveSettings();
                     });
                   },
-                  configWidget: Column(
+                  child: Column(
                     children: [
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Players per team',
-                          prefixIcon: Icon(Icons.numbers),
-                          border: OutlineInputBorder(),
+                      StrategyOption(
+                        option: GenOption.evenGender,
+                        title: 'Fair Mix (Best)',
+                        subtitle:
+                            'Mix players by gender and skill correctly. Grows teams naturally (${settingsData.proportion}/team).',
+                        icon: Icons.wc,
+                        isSelected: settingsData.o == GenOption.evenGender,
+                        configWidget: Column(
+                          children: [
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Players per team',
+                                prefixIcon: Icon(Icons.numbers),
+                                border: OutlineInputBorder(),
+                              ),
+                              initialValue: settingsData.proportion.toString(),
+                              keyboardType: TextInputType.number,
+                              onChanged: (v) => setState(() {
+                                settingsData.proportion = int.tryParse(v) ?? 6;
+                                _saveSettings();
+                              }),
+                            ),
+                            const SizedBox(height: 8),
+                            SwitchListTile(
+                              title: const Text('Add extra team for leftovers',
+                                  style: TextStyle(fontSize: 13)),
+                              subtitle: Text(
+                                  settingsData.preferExtraTeam
+                                      ? 'Ex: 13 players -> 3 smaller teams'
+                                      : 'Ex: 13 players -> 2 larger teams',
+                                  style: const TextStyle(fontSize: 11)),
+                              value: settingsData.preferExtraTeam,
+                              onChanged: (bool value) {
+                                setState(() {
+                                  settingsData.preferExtraTeam = value;
+                                  _saveSettings();
+                                });
+                              },
+                            ),
+                          ],
                         ),
-                        initialValue: settingsData.proportion.toString(),
-                        keyboardType: TextInputType.number,
-                        onChanged: (v) => setState(() {
-                          settingsData.proportion = int.tryParse(v) ?? 6;
-                          _saveSettings();
-                        }),
                       ),
-                      const SizedBox(height: 8),
-                      SwitchListTile(
-                        title: const Text('Add extra team for leftovers',
-                            style: TextStyle(fontSize: 13)),
-                        subtitle: Text(
-                            settingsData.preferExtraTeam
-                                ? 'Ex: 13 players -> 3 smaller teams'
-                                : 'Ex: 13 players -> 2 larger teams',
-                            style: const TextStyle(fontSize: 11)),
-                        value: settingsData.preferExtraTeam,
-                        onChanged: (bool value) {
-                          setState(() {
-                            settingsData.preferExtraTeam = value;
+                      StrategyOption(
+                        option: GenOption.distribute,
+                        title: 'Skill Balance',
+                        subtitle: 'Spread top players across teams fairly.',
+                        icon: Icons.balance,
+                        isSelected: settingsData.o == GenOption.distribute,
+                        configWidget: TextFormField(
+                          decoration: const InputDecoration(
+                            labelText: 'Total Teams',
+                            prefixIcon: Icon(Icons.grid_view),
+                            border: OutlineInputBorder(),
+                          ),
+                          initialValue: settingsData.teamCount.toString(),
+                          keyboardType: TextInputType.number,
+                          onChanged: (v) => setState(() {
+                            settingsData.teamCount = int.tryParse(v) ?? 2;
                             _saveSettings();
-                          });
-                        },
+                          }),
+                        ),
+                      ),
+                      StrategyOption(
+                        option: GenOption.division,
+                        title: 'Ranked Groups',
+                        subtitle:
+                            'Put strong players together and new players together.',
+                        icon: Icons.military_tech,
+                        isSelected: settingsData.o == GenOption.division,
+                        configWidget: Column(
+                          children: [
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Number of Groups',
+                                border: OutlineInputBorder(),
+                              ),
+                              initialValue: settingsData.division.toString(),
+                              onChanged: (v) => setState(() {
+                                settingsData.division = int.tryParse(v) ?? 2;
+                                _saveSettings();
+                              }),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Total Teams',
+                                border: OutlineInputBorder(),
+                              ),
+                              initialValue: settingsData.teamCount.toString(),
+                              onChanged: (v) => setState(() {
+                                settingsData.teamCount = int.tryParse(v) ?? 2;
+                                _saveSettings();
+                              }),
+                            ),
+                          ],
+                        ),
+                      ),
+                      StrategyOption(
+                        option: GenOption.random,
+                        title: 'Random',
+                        subtitle: 'Mix players with no rules.',
+                        icon: Icons.shuffle,
+                        isSelected: settingsData.o == GenOption.random,
+                        configWidget: TextFormField(
+                          decoration: const InputDecoration(
+                            labelText: 'Total Teams',
+                            prefixIcon: Icon(Icons.grid_view),
+                            border: OutlineInputBorder(),
+                          ),
+                          initialValue: settingsData.teamCount.toString(),
+                          keyboardType: TextInputType.number,
+                          onChanged: (v) => setState(() {
+                            settingsData.teamCount = int.tryParse(v) ?? 2;
+                            _saveSettings();
+                          }),
+                        ),
                       ),
                     ],
-                  ),
-                ),
-                StrategyOption(
-                  option: GEN_OPTION.distribute,
-                  groupValue: settingsData.o,
-                  title: 'Skill Balance',
-                  subtitle: 'Spread top players across teams fairly.',
-                  icon: Icons.balance,
-                  isSelected: settingsData.o == GEN_OPTION.distribute,
-                  onChanged: (GEN_OPTION? value) {
-                    setState(() {
-                      settingsData.o = value ?? settingsData.o;
-                      _saveSettings();
-                    });
-                  },
-                  configWidget: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Total Teams',
-                      prefixIcon: Icon(Icons.grid_view),
-                      border: OutlineInputBorder(),
-                    ),
-                    initialValue: settingsData.teamCount.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (v) => setState(() {
-                      settingsData.teamCount = int.tryParse(v) ?? 2;
-                      _saveSettings();
-                    }),
-                  ),
-                ),
-                StrategyOption(
-                  option: GEN_OPTION.division,
-                  groupValue: settingsData.o,
-                  title: 'Ranked Groups',
-                  subtitle:
-                      'Put strong players together and new players together.',
-                  icon: Icons.military_tech,
-                  isSelected: settingsData.o == GEN_OPTION.division,
-                  onChanged: (GEN_OPTION? value) {
-                    setState(() {
-                      settingsData.o = value ?? settingsData.o;
-                      _saveSettings();
-                    });
-                  },
-                  configWidget: Column(
-                    children: [
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Number of Groups',
-                          border: OutlineInputBorder(),
-                        ),
-                        initialValue: settingsData.division.toString(),
-                        onChanged: (v) => setState(() {
-                          settingsData.division = int.tryParse(v) ?? 2;
-                          _saveSettings();
-                        }),
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Total Teams',
-                          border: OutlineInputBorder(),
-                        ),
-                        initialValue: settingsData.teamCount.toString(),
-                        onChanged: (v) => setState(() {
-                          settingsData.teamCount = int.tryParse(v) ?? 2;
-                          _saveSettings();
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-                StrategyOption(
-                  option: GEN_OPTION.random,
-                  groupValue: settingsData.o,
-                  title: 'Random',
-                  subtitle: 'Mix players with no rules.',
-                  icon: Icons.shuffle,
-                  isSelected: settingsData.o == GEN_OPTION.random,
-                  onChanged: (GEN_OPTION? value) {
-                    setState(() {
-                      settingsData.o = value ?? settingsData.o;
-                      _saveSettings();
-                    });
-                  },
-                  configWidget: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Total Teams',
-                      prefixIcon: Icon(Icons.grid_view),
-                      border: OutlineInputBorder(),
-                    ),
-                    initialValue: settingsData.teamCount.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (v) => setState(() {
-                      settingsData.teamCount = int.tryParse(v) ?? 2;
-                      _saveSettings();
-                    }),
                   ),
                 ),
                 Padding(
@@ -1060,10 +1047,11 @@ Jane,4,F""";
                 color: colorScheme.tertiary),
             Card(
               elevation: 4,
-              shadowColor: colorScheme.tertiary.withOpacity(0.2),
+              shadowColor: colorScheme.tertiary.withValues(alpha: 0.2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: colorScheme.tertiary.withOpacity(0.3)),
+                side: BorderSide(
+                    color: colorScheme.tertiary.withValues(alpha: 0.3)),
               ),
               margin: const EdgeInsets.only(bottom: 8.0),
               child: ExpansionTile(
@@ -1096,7 +1084,7 @@ Jane,4,F""";
                     const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
                 initiallyExpanded: true,
                 leading: CircleAvatar(
-                    backgroundColor: colorScheme.surfaceVariant,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
                     child:
                         Icon(Icons.map, color: colorScheme.onSurfaceVariant)),
                 title: const Text('Player/Team Directory',
@@ -1121,7 +1109,7 @@ Jane,4,F""";
               initiallyExpanded: true,
               leading: CircleAvatar(
                   backgroundColor:
-                      colorScheme.secondaryContainer.withOpacity(0.5),
+                      colorScheme.secondaryContainer.withValues(alpha: 0.5),
                   child: Icon(Icons.person_off, color: colorScheme.secondary)),
               title: const Text('Unassigned List',
                   style: TextStyle(fontWeight: FontWeight.bold)),

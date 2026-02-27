@@ -102,7 +102,7 @@ class _HelpExampleState extends State<HelpExample> {
             child: Text(
               "Team Buddy v2.0 • Premium Edition",
               style: TextStyle(
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   fontSize: 11,
                   fontWeight: FontWeight.bold),
             ),
@@ -137,7 +137,7 @@ class _HelpExampleState extends State<HelpExample> {
       ),
       child: ExpansionTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.1),
+          backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(icon, color: color, size: 20),
         ),
         title: Text(title,
@@ -191,7 +191,7 @@ class _HelpExampleState extends State<HelpExample> {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.1),
+          backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(Icons.play_circle_filled, color: color, size: 24),
         ),
         title: Text(title,
@@ -203,7 +203,8 @@ class _HelpExampleState extends State<HelpExample> {
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => VideoApp(url, title, subtitle)));
+                  builder: (context) => VideoApp(
+                      videoUrl: url, title: title, description: subtitle)));
         },
       ),
     );

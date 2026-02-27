@@ -57,16 +57,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: Column(children: <Widget>[
                   ListTile(
                     title: const Text('Fair Mix (Recommended)'),
-                    leading: Radio<GEN_OPTION>(
-                      value: GEN_OPTION.even_gender,
+                    leading: Radio<GenOption>(
+                      value: GenOption.evenGender,
                       groupValue: settingsData.o,
-                      onChanged: (GEN_OPTION? value) {
+                      onChanged: (GenOption? value) {
                         setState(() {
                           settingsData.o = value ?? settingsData.o;
                         });
                       },
                     ),
-                    subtitle: settingsData.o == GEN_OPTION.even_gender
+                    subtitle: settingsData.o == GenOption.evenGender
                         ? TextFormField(
                             decoration: const InputDecoration(
                               label: Text('Players per team'),
@@ -87,16 +87,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   ListTile(
                     title: const Text('Skill Balance'),
-                    leading: Radio<GEN_OPTION>(
-                      value: GEN_OPTION.distribute,
+                    leading: Radio<GenOption>(
+                      value: GenOption.distribute,
                       groupValue: settingsData.o,
-                      onChanged: (GEN_OPTION? value) {
+                      onChanged: (GenOption? value) {
                         setState(() {
                           settingsData.o = value ?? settingsData.o;
                         });
                       },
                     ),
-                    subtitle: settingsData.o == GEN_OPTION.distribute
+                    subtitle: settingsData.o == GenOption.distribute
                         ? TextFormField(
                             decoration: const InputDecoration(
                               label: Text("Number of teams"),
@@ -116,16 +116,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   ListTile(
                     title: const Text('Ranked Groups'),
-                    leading: Radio<GEN_OPTION>(
-                      value: GEN_OPTION.division,
+                    leading: Radio<GenOption>(
+                      value: GenOption.division,
                       groupValue: settingsData.o,
-                      onChanged: (GEN_OPTION? value) {
+                      onChanged: (GenOption? value) {
                         setState(() {
                           settingsData.o = value ?? settingsData.o;
                         });
                       },
                     ),
-                    subtitle: settingsData.o == GEN_OPTION.division
+                    subtitle: settingsData.o == GenOption.division
                         ? Column(
                             children: [
                               TextFormField(
@@ -168,16 +168,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   ListTile(
                     title: const Text('Random Mix'),
-                    leading: Radio<GEN_OPTION>(
-                      value: GEN_OPTION.random,
+                    leading: Radio<GenOption>(
+                      value: GenOption.random,
                       groupValue: settingsData.o,
-                      onChanged: (GEN_OPTION? value) {
+                      onChanged: (GenOption? value) {
                         setState(() {
                           settingsData.o = value ?? settingsData.o;
                         });
                       },
                     ),
-                    subtitle: settingsData.o == GEN_OPTION.random
+                    subtitle: settingsData.o == GenOption.random
                         ? TextFormField(
                             decoration: const InputDecoration(
                               label: Text("Number of teams"),

@@ -105,7 +105,7 @@ class _RandomTeamScreenState extends State<RandomTeamScreen>
                       transform: Matrix4.identity()
                         ..setEntry(3, 2, 0.001)
                         ..rotateY(_anim.value)
-                        ..scale(s),
+                        ..scaleByDouble(s, s, 1.0, 1.0),
                       child:
                           _Card(res: _res, flip: _flip, has: _pool.isNotEmpty));
                 })),
@@ -174,7 +174,8 @@ class _Card extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.white, width: 4),
           boxShadow: [
-            BoxShadow(color: Colors.white.withOpacity(0.1), blurRadius: 30)
+            BoxShadow(
+                color: Colors.white.withValues(alpha: 0.1), blurRadius: 30)
           ]),
       child: Center(
           child: front
