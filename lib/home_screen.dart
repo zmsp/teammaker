@@ -1136,8 +1136,14 @@ Jane,4,F""";
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.black,
-          boxShadow: const [],
+          color: colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            )
+          ],
         ),
         child: SafeArea(
           child: Padding(

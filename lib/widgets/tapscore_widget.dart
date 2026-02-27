@@ -153,68 +153,65 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
             ],
           ),
 
-          // Top Header with Back button
+          // Top Header with Back button — very dim
           Positioned(
             top: 55,
             left: 15,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: Colors.white70, size: 20),
+              icon: Icon(Icons.arrow_back_ios_new,
+                  color: Colors.white.withValues(alpha: 0.18), size: 18),
               onPressed: _backWithResult,
             ),
           ),
 
-          // Center Timer Overlay
+          // Center Timer — clearly visible, no border box
           Positioned(
-            top: 60,
+            top: 56,
             left: 0,
             right: 0,
             child: Center(
               child: GestureDetector(
                 onTap: _toggleTimer,
                 onLongPress: _resetTimer,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: Text(
-                    _formatTime(),
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: _isRunning ? Colors.white : Colors.white38,
-                      fontFamily: 'monospace',
-                    ),
+                child: Text(
+                  _formatTime(),
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    color: _isRunning
+                        ? Colors.white.withValues(alpha: 0.72)
+                        : Colors.white.withValues(alpha: 0.30),
+                    fontFamily: 'monospace',
+                    letterSpacing: 3,
                   ),
                 ),
               ),
             ),
           ),
 
-          // Control Bar
+          // Control Bar — dim
           Positioned(
             bottom: 40,
             left: 0,
             right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _ControlCircle(
-                  icon: FontAwesomeIcons.rotate,
-                  onPressed: _resetScores,
-                  label: "Reset",
-                ),
-                const SizedBox(width: 40),
-                _ControlCircle(
-                  icon: FontAwesomeIcons.rightLeft,
-                  onPressed: _swapTeams,
-                  label: "Swap",
-                ),
-              ],
+            child: Opacity(
+              opacity: 0.25,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _ControlCircle(
+                    icon: FontAwesomeIcons.rotate,
+                    onPressed: _resetScores,
+                    label: "Reset",
+                  ),
+                  const SizedBox(width: 40),
+                  _ControlCircle(
+                    icon: FontAwesomeIcons.rightLeft,
+                    onPressed: _swapTeams,
+                    label: "Swap",
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -250,67 +247,97 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
       },
       child: Container(
         color: color.withValues(alpha: 0.8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            TextField(
-              controller: controller,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-              ),
-              decoration: const InputDecoration(border: InputBorder.none),
-              onChanged: (_) => _saveState(),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              "$score",
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 140,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const Text(
-              "TAP TO SCORE",
-              style: TextStyle(
-                  color: Colors.white24, fontSize: 10, letterSpacing: 1),
-            ),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _ScoreSmallButton(
-                  icon: Icons.remove,
-                  onPressed: () {
-                    setState(() {
-                      if (team == 'A') {
-                        if (_teamAScore > 0) _teamAScore--;
-                      } else {
-                        if (_teamBScore > 0) _teamBScore--;
-                      }
-                      _saveState();
-                    });
-                  },
+            // ── Team name pinned to top, read-only, no background ──────
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 52),
+                  child: Text(
+                    controller.text,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.22),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 5,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 25),
-                _ScoreSmallButton(
-                  icon: Icons.add,
-                  onPressed: () {
-                    setState(() {
-                      if (team == 'A') {
-                        _teamAScore++;
-                      } else {
-                        _teamBScore++;
-                      }
-                      _saveState();
-                    });
-                  },
-                ),
-              ],
+              ),
+            ),
+
+            // ── Score + hint + buttons centred ─────────────────────────
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Score scales to fill the half-screen width
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        "$score",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 220,
+                          fontWeight: FontWeight.w900,
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    "TAP TO SCORE",
+                    style: TextStyle(
+                        color: Colors.white30, fontSize: 12, letterSpacing: 3),
+                  ),
+                  const SizedBox(height: 28),
+                  // +/- buttons dimmed
+                  Opacity(
+                    opacity: 0.28,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _ScoreSmallButton(
+                          icon: Icons.remove,
+                          onPressed: () {
+                            setState(() {
+                              if (team == 'A') {
+                                if (_teamAScore > 0) _teamAScore--;
+                              } else {
+                                if (_teamBScore > 0) _teamBScore--;
+                              }
+                              _saveState();
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 25),
+                        _ScoreSmallButton(
+                          icon: Icons.add,
+                          onPressed: () {
+                            setState(() {
+                              if (team == 'A') {
+                                _teamAScore++;
+                              } else {
+                                _teamBScore++;
+                              }
+                              _saveState();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
