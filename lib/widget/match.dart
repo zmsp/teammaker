@@ -6,7 +6,7 @@ import 'package:teammaker/widgets/tapscore_widget.dart';
 class MatchWidget extends StatefulWidget {
   final Round round;
 
-  const MatchWidget({Key? key, required this.round}) : super(key: key);
+  const MatchWidget({super.key, required this.round});
 
   @override
   _MatchWidgetState createState() => _MatchWidgetState();
@@ -257,7 +257,7 @@ class _MatchWidgetState extends State<MatchWidget> {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),

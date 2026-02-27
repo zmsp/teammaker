@@ -1,41 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:teammaker/cell_renderer.dart';
+import 'package:teammaker/theme/app_theme.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const TeamMakerApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class TeamMakerApp extends StatefulWidget {
+  const TeamMakerApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<TeamMakerApp> createState() => _TeamMakerAppState();
+}
+
+class _TeamMakerAppState extends State<TeamMakerApp> {
+  late final ThemeController _themeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeController = ThemeController();
+    _themeController.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _themeController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Team Maker Buddy',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1A237E), // Professional Indigo
-          brightness: Brightness.light,
-        ),
-        fontFamily: 'Roboto',
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1A237E),
-          brightness: Brightness.dark,
-          surface: Colors.black,
-          surfaceContainer:
-              const Color(0xFF121212), // Slightly lighter for cards
-        ),
-        scaffoldBackgroundColor: Colors.black,
-        fontFamily: 'Roboto',
-      ),
-      themeMode: ThemeMode.dark,
-      home: CellRendererScreen(),
+      theme: _themeController.lightTheme,
+      darkTheme: _themeController.darkTheme,
+      themeMode: _themeController.mode,
+      home: CellRendererScreen(themeController: _themeController),
     );
   }
 }

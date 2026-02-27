@@ -7,8 +7,7 @@ class TeamList extends StatelessWidget {
   final List<ListItem> items;
   final SettingsData settingsData;
   //
-  TeamList({Key? key, required this.items, required this.settingsData})
-      : super(key: key);
+  const TeamList({super.key, required this.items, required this.settingsData});
 
   List<String> findAllPermutations(String source) {
     List allPermutations = [];
@@ -21,7 +20,7 @@ class TeamList extends StatelessWidget {
       }
 
       for (int i = cursor; i < list.length; i++) {
-        List permutation = new List.from(list);
+        List permutation = List.from(list);
         permutation[cursor] = list[i];
         permutation[i] = list[cursor];
         permutate(permutation, cursor + 1);

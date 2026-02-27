@@ -1,137 +1,217 @@
-// ignore_for_file: deprecated_member_use, must_be_immutable
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/model/data_model.dart';
+import 'package:teammaker/theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
-  SettingsData settingsData;
+  final SettingsData settingsData;
+  final ThemeController? themeController;
 
-  SettingsScreen(this.settingsData);
+  const SettingsScreen(
+    this.settingsData, {
+    super.key,
+    this.themeController,
+  });
 
   @override
-  _SettingsScreenState createState() => _SettingsScreenState(settingsData);
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-// enum SingingCharacter { lafayette, jefferson }
-
 class _SettingsScreenState extends State<SettingsScreen> {
-  SettingsData settingsData;
+  late SettingsData settingsData;
 
-  _SettingsScreenState(this.settingsData);
+  @override
+  void initState() {
+    super.initState();
+    settingsData = widget.settingsData;
+    // Rebuild when theme controller changes
+    widget.themeController?.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.themeController?.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final tc = widget.themeController;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Options"),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        tooltip: "Add listed players",
-        onPressed: () {
-          Navigator.pop(context);
-          // print(rows.length);
-          // showDialog<void>(
-          //   context: context,
-          //   builder: HelpDialog,
-          // );
-        },
-        child: const FaIcon(
-          FontAwesomeIcons.check,
+        title: const Text('Settings'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.pop(context, settingsData),
         ),
       ),
       body: ListView(
-        children: <Widget>[
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              ListTile(
-                leading: Icon(
-                  Icons.question_answer_outlined,
-                  size: 40.0,
+        padding: const EdgeInsets.all(16),
+        children: [
+          // ── Appearance Section ─────────────────────────────────────────
+          if (tc != null) ...[
+            _sectionHeader(context, 'APPEARANCE', FontAwesomeIcons.paintbrush),
+            const SizedBox(height: 12),
+
+            // Dark / Light mode toggle
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      tc.mode == ThemeMode.dark
+                          ? Icons.dark_mode
+                          : Icons.light_mode,
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        tc.mode == ThemeMode.dark ? 'Dark Mode' : 'Light Mode',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    Switch(
+                      value: tc.mode == ThemeMode.dark,
+                      onChanged: (isDark) {
+                        tc.setMode(isDark ? ThemeMode.dark : ThemeMode.light);
+                      },
+                    ),
+                  ],
                 ),
-                title: Text('How do you want your teams?'),
               ),
-              ListTile(
-                subtitle: Column(children: <Widget>[
-                  ListTile(
-                    title: const Text('Fair Mix (Recommended)'),
-                    leading: Radio<GenOption>(
-                      value: GenOption.evenGender,
-                      groupValue: settingsData.o,
-                      onChanged: (GenOption? value) {
-                        setState(() {
-                          settingsData.o = value ?? settingsData.o;
-                        });
-                      },
+            ),
+
+            // Color palette grid
+            Card(
+              margin: const EdgeInsets.only(bottom: 24),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'COLOUR THEME',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                    subtitle: settingsData.o == GenOption.evenGender
-                        ? TextFormField(
-                            decoration: const InputDecoration(
-                              label: Text('Players per team'),
-                              hintText:
-                                  'Mixes players by gender and skill fairly',
+                    const SizedBox(height: 4),
+                    Text(
+                      'Choose a palette that matches your sport',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...SportPalette.values.map((palette) {
+                      final isSelected = tc.palette == palette;
+                      return _PaletteTile(
+                        palette: palette,
+                        isSelected: isSelected,
+                        onTap: () => tc.setPalette(palette),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          // ── Team Strategy Section ──────────────────────────────────────
+          _sectionHeader(context, 'TEAM STRATEGY', FontAwesomeIcons.gears),
+          const SizedBox(height: 12),
+
+          Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                children: [
+                  _strategyTile(
+                    title: 'Fair Mix (Recommended)',
+                    subtitle: 'Mixes players by gender and skill fairly',
+                    icon: Icons.wc,
+                    value: GenOption.evenGender,
+                    extraConfig: settingsData.o == GenOption.evenGender
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Players per team',
+                                prefixIcon: Icon(Icons.group),
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              initialValue: settingsData.proportion.toString(),
+                              keyboardType: TextInputType.number,
+                              onChanged: (v) {
+                                settingsData.proportion =
+                                    int.tryParse(v) ?? settingsData.proportion;
+                              },
                             ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            initialValue: settingsData.proportion.toString(),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              settingsData.proportion = int.tryParse(value) ??
-                                  settingsData.proportion;
-                            },
-                            textAlign: TextAlign.left)
-                        : const Text(""),
+                          )
+                        : null,
                   ),
-                  ListTile(
-                    title: const Text('Skill Balance'),
-                    leading: Radio<GenOption>(
-                      value: GenOption.distribute,
-                      groupValue: settingsData.o,
-                      onChanged: (GenOption? value) {
-                        setState(() {
-                          settingsData.o = value ?? settingsData.o;
-                        });
-                      },
-                    ),
-                    subtitle: settingsData.o == GenOption.distribute
-                        ? TextFormField(
-                            decoration: const InputDecoration(
-                              label: Text("Number of teams"),
-                              hintText: 'Splits players by skill level only',
+                  const Divider(height: 1),
+                  _strategyTile(
+                    title: 'Skill Balance',
+                    subtitle: 'Splits players by skill level only',
+                    icon: Icons.balance,
+                    value: GenOption.distribute,
+                    extraConfig: settingsData.o == GenOption.distribute
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Number of teams',
+                                prefixIcon: Icon(Icons.grid_view),
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              initialValue: settingsData.teamCount.toString(),
+                              keyboardType: TextInputType.number,
+                              onChanged: (v) {
+                                settingsData.teamCount =
+                                    int.tryParse(v) ?? settingsData.teamCount;
+                              },
                             ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            initialValue: settingsData.teamCount.toString(),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              settingsData.teamCount =
-                                  int.tryParse(value) ?? settingsData.teamCount;
-                            },
-                            textAlign: TextAlign.left)
-                        : const Text(""),
+                          )
+                        : null,
                   ),
-                  ListTile(
-                    title: const Text('Ranked Groups'),
-                    leading: Radio<GenOption>(
-                      value: GenOption.division,
-                      groupValue: settingsData.o,
-                      onChanged: (GenOption? value) {
-                        setState(() {
-                          settingsData.o = value ?? settingsData.o;
-                        });
-                      },
-                    ),
-                    subtitle: settingsData.o == GenOption.division
-                        ? Column(
-                            children: [
-                              TextFormField(
+                  const Divider(height: 1),
+                  _strategyTile(
+                    title: 'Ranked Groups',
+                    subtitle: 'Keeps strong players together',
+                    icon: Icons.military_tech,
+                    value: GenOption.division,
+                    extraConfig: settingsData.o == GenOption.division
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: Column(
+                              children: [
+                                TextFormField(
                                   decoration: const InputDecoration(
-                                    label: Text('Number of groups'),
-                                    hintText: 'Keeps strong players together',
+                                    labelText: 'Number of groups',
                                   ),
                                   inputFormatters: [
                                     FilteringTextInputFormatter.digitsOnly
@@ -139,16 +219,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   initialValue:
                                       settingsData.division.toString(),
                                   keyboardType: TextInputType.number,
-                                  onChanged: (value) {
-                                    settingsData.division =
-                                        int.tryParse(value) ??
-                                            settingsData.division;
+                                  onChanged: (v) {
+                                    settingsData.division = int.tryParse(v) ??
+                                        settingsData.division;
                                   },
-                                  textAlign: TextAlign.left),
-                              TextFormField(
+                                ),
+                                const SizedBox(height: 8),
+                                TextFormField(
                                   decoration: const InputDecoration(
-                                    label: Text("Number of teams"),
-                                    hintText: 'Total teams to create',
+                                    labelText: 'Number of teams',
                                   ),
                                   inputFormatters: [
                                     FilteringTextInputFormatter.digitsOnly
@@ -156,61 +235,237 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   initialValue:
                                       settingsData.teamCount.toString(),
                                   keyboardType: TextInputType.number,
-                                  onChanged: (value) {
-                                    settingsData.teamCount =
-                                        int.tryParse(value) ??
-                                            settingsData.teamCount;
+                                  onChanged: (v) {
+                                    settingsData.teamCount = int.tryParse(v) ??
+                                        settingsData.teamCount;
                                   },
-                                  textAlign: TextAlign.left),
-                            ],
-                          )
-                        : const Text(""),
-                  ),
-                  ListTile(
-                    title: const Text('Random Mix'),
-                    leading: Radio<GenOption>(
-                      value: GenOption.random,
-                      groupValue: settingsData.o,
-                      onChanged: (GenOption? value) {
-                        setState(() {
-                          settingsData.o = value ?? settingsData.o;
-                        });
-                      },
-                    ),
-                    subtitle: settingsData.o == GenOption.random
-                        ? TextFormField(
-                            decoration: const InputDecoration(
-                              label: Text("Number of teams"),
-                              hintText: 'Pure random splitting',
+                                ),
+                              ],
                             ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            initialValue: settingsData.teamCount.toString(),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              settingsData.teamCount =
-                                  int.tryParse(value) ?? settingsData.teamCount;
-                            },
-                            textAlign: TextAlign.left)
-                        : const Text(""),
+                          )
+                        : null,
                   ),
-                ]),
+                  const Divider(height: 1),
+                  _strategyTile(
+                    title: 'Random Mix',
+                    subtitle: 'Pure random team splitting',
+                    icon: Icons.shuffle,
+                    value: GenOption.random,
+                    extraConfig: settingsData.o == GenOption.random
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Number of teams',
+                                prefixIcon: Icon(Icons.grid_view),
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              initialValue: settingsData.teamCount.toString(),
+                              keyboardType: TextInputType.number,
+                              onChanged: (v) {
+                                settingsData.teamCount =
+                                    int.tryParse(v) ?? settingsData.teamCount;
+                              },
+                            ),
+                          )
+                        : null,
+                  ),
+                ],
               ),
-              Divider(
-                height: 5.0,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Save button ────────────────────────────────────────────────
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const FaIcon(FontAwesomeIcons.check, size: 16),
+              label: const Text('Save Settings'),
+              onPressed: () => Navigator.pop(context, settingsData),
+            ),
+          ),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _strategyTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required GenOption value,
+    Widget? extraConfig,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isSelected = settingsData.o == value;
+
+    return Column(
+      children: [
+        ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          leading: CircleAvatar(
+            backgroundColor: isSelected
+                ? colorScheme.primaryContainer
+                : colorScheme.surfaceContainerHighest,
+            child: Icon(icon,
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+                size: 20),
+          ),
+          title: Text(title,
+              style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 14)),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+          trailing: RadioGroup<GenOption>(
+            groupValue: settingsData.o,
+            onChanged: (v) {
+              setState(() {
+                settingsData.o = v ?? settingsData.o;
+              });
+            },
+            child: Radio<GenOption>(
+              value: value,
+            ),
+          ),
+          onTap: () {
+            setState(() {
+              settingsData.o = value;
+            });
+          },
+        ),
+        if (extraConfig != null) extraConfig,
+      ],
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String title, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        FaIcon(icon, size: 13, color: colorScheme.primary),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.5,
+            color: colorScheme.primary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Palette Tile Widget ───────────────────────────────────────────────────
+class _PaletteTile extends StatelessWidget {
+  final SportPalette palette;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _PaletteTile({
+    required this.palette,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: isSelected
+              ? palette.seedColor.withValues(alpha: 0.12)
+              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          border: Border.all(
+            color: isSelected ? palette.seedColor : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Color swatches
+            Row(
+              children: [
+                _Swatch(color: palette.seedColor),
+                const SizedBox(width: 4),
+                _Swatch(color: palette.accentColor),
+              ],
+            ),
+            const SizedBox(width: 14),
+            // Sport icon
+            Icon(palette.icon,
+                size: 22,
+                color: isSelected
+                    ? palette.seedColor
+                    : colorScheme.onSurfaceVariant),
+            const SizedBox(width: 14),
+            // Labels
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(palette.label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: isSelected
+                            ? palette.seedColor
+                            : colorScheme.onSurface,
+                      )),
+                  const SizedBox(height: 2),
+                  Text(palette.description,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      )),
+                ],
               ),
-              ListTile(
-                title: ElevatedButton(
-                  onPressed: () {
-                    // Close the screen and return "Yep!" as the result.
-                    print(settingsData);
-                    Navigator.pop(context, settingsData);
-                  },
-                  child: const Text('Update Settings'),
-                ),
-              ),
-            ],
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle_rounded,
+                  color: palette.seedColor, size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Swatch extends StatelessWidget {
+  final Color color;
+  const _Swatch({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),

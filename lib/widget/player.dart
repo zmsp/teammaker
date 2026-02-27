@@ -5,15 +5,16 @@ import 'package:teammaker/model/player_model.dart';
 class PlayerWidget extends StatelessWidget {
   final PlayerModel player;
 
-  const PlayerWidget({Key? key, required this.player}) : super(key: key);
+  const PlayerWidget({super.key, required this.player});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     // Hide the placeholder empty player
-    if (player.name == "None" && player.level == 0)
+    if (player.name == "None" && player.level == 0) {
       return const SizedBox.shrink();
+    }
 
     return Card(
       elevation: 0,

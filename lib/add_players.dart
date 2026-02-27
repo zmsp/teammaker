@@ -5,6 +5,8 @@ import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/widget/player.dart';
 
 class AddPlayersScreen extends StatefulWidget {
+  const AddPlayersScreen({super.key});
+
   @override
   AddPlayersScreenState createState() => AddPlayersScreenState();
 }

@@ -4,22 +4,22 @@ import 'package:pluto_grid/pluto_grid.dart';
 class TeamGenerator {
   static Map<String, List<PlutoRow>> generateTeams(
       List<PlutoRow> dat, SettingsData settingsData) {
-    List<PlutoRow> tmp_rows = [];
+    List<PlutoRow> tmpRows = [];
     for (var i = 0; i < dat.length; i++) {
       if (dat[i].checked ?? false) {
-        tmp_rows.add(dat[i]);
+        tmpRows.add(dat[i]);
       } else {
         //TODO unassign team
       }
     }
 
-    Map<String, List<PlutoRow>> teams_list = Map();
+    Map<String, List<PlutoRow>> teamsList = {};
     for (var i = 1; i <= settingsData.teamCount; i++) {
-      teams_list[i.toString()] = [];
+      teamsList[i.toString()] = [];
     }
 
-    var keys = teams_list.keys.toList();
-    int size = teams_list.length;
+    var keys = teamsList.keys.toList();
+    int size = teamsList.length;
 
     if (settingsData.o == GenOption.division) {
       // Division algorithm
@@ -28,7 +28,7 @@ class TeamGenerator {
       if (numDivisions <= 0) numDivisions = 1;
       if (numDivisions > totalTeams) numDivisions = totalTeams;
 
-      tmp_rows.sort((a, b) {
+      tmpRows.sort((a, b) {
         int cmp = (b.cells["skill_level_field"]?.value as num)
             .compareTo(a.cells["skill_level_field"]?.value as num);
         if (cmp != 0) return cmp;
@@ -48,16 +48,16 @@ class TeamGenerator {
       for (int i = 0; i < divisionTeams.length; i++) {
         List<String> currentDivTeams = divisionTeams[i];
         int numPlayersInThisDiv =
-            ((currentDivTeams.length / totalTeams) * tmp_rows.length).round();
+            ((currentDivTeams.length / totalTeams) * tmpRows.length).round();
 
         if (i == divisionTeams.length - 1) {
-          numPlayersInThisDiv = tmp_rows.length - playerIndex;
+          numPlayersInThisDiv = tmpRows.length - playerIndex;
         }
 
         if (numPlayersInThisDiv <= 0) continue;
 
         List<PlutoRow> divPlayers =
-            tmp_rows.sublist(playerIndex, playerIndex + numPlayersInThisDiv);
+            tmpRows.sublist(playerIndex, playerIndex + numPlayersInThisDiv);
         playerIndex += numPlayersInThisDiv;
 
         int teamsInDiv = currentDivTeams.length;
@@ -67,13 +67,13 @@ class TeamGenerator {
           List<PlutoRow> slice = divPlayers.sublist(j, end);
           currentDivTeams.shuffle();
           for (int k = 0; k < slice.length; k++) {
-            teams_list[currentDivTeams[k]]?.add(slice[k]);
+            teamsList[currentDivTeams[k]]?.add(slice[k]);
           }
         }
       }
     } else if (settingsData.o == GenOption.distribute) {
       // Distribute algorithm
-      tmp_rows.sort((a, b) {
+      tmpRows.sort((a, b) {
         int cmp = (a.cells["skill_level_field"]?.value as num)
             .compareTo(b.cells["skill_level_field"]?.value as num);
         if (cmp != 0) return cmp;
@@ -82,25 +82,25 @@ class TeamGenerator {
       });
 
       var start = 0;
-      for (var i = 0; i < tmp_rows.length; i = i + size) {
-        int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
-        List<PlutoRow> sublist = tmp_rows.sublist(start, end);
+      for (var i = 0; i < tmpRows.length; i = i + size) {
+        int end = i + size <= tmpRows.length ? i + size : tmpRows.length;
+        List<PlutoRow> sublist = tmpRows.sublist(start, end);
         keys.shuffle();
-        int key_i = 0;
+        int keyI = 0;
 
-        sublist.forEach((value) {
-          teams_list[keys[key_i]]?.add(value);
-          key_i++;
-        });
+        for (var value in sublist) {
+          teamsList[keys[keyI]]?.add(value);
+          keyI++;
+        }
         start = i + size;
       }
     } else if (settingsData.o == GenOption.evenGender) {
       // Improved Even Gender algorithm with Snake Distribution and Population Balancing
-      tmp_rows.shuffle(); // Initial randomization for variety
+      tmpRows.shuffle(); // Initial randomization for variety
 
       // Group by gender
       Map<String, List<PlutoRow>> genderGroups = {};
-      for (var row in tmp_rows) {
+      for (var row in tmpRows) {
         String gender = row.cells["gender_field"]?.value.toString() ?? "X";
         genderGroups.putIfAbsent(gender, () => []).add(row);
       }
@@ -113,7 +113,7 @@ class TeamGenerator {
         });
       });
 
-      List<String> teamKeys = teams_list.keys.toList();
+      List<String> teamKeys = teamsList.keys.toList();
 
       // Sort gender groups by size descending to distribute larger groups first
       var sortedGenders = genderGroups.keys.toList()
@@ -151,7 +151,7 @@ class TeamGenerator {
         // Shuffle first for random tie-breaking
         List<String> sortedTeams = List.from(teamKeys)..shuffle();
         sortedTeams.sort(
-            (a, b) => teams_list[a]!.length.compareTo(teams_list[b]!.length));
+            (a, b) => teamsList[a]!.length.compareTo(teamsList[b]!.length));
 
         // Get relative indices sorted by their player count (descending)
         List<int> sortedRelIndices = List.generate(n, (i) => i);
@@ -167,27 +167,27 @@ class TeamGenerator {
         // 4. Assign players to the mapped teams
         for (int i = 0; i < players.length; i++) {
           String targetTeam = indexToTeam[snakeIndices[i]]!;
-          teams_list[targetTeam]?.add(players[i]);
+          teamsList[targetTeam]?.add(players[i]);
         }
       }
     } else if (settingsData.o == GenOption.random) {
       // Random algorithm
-      tmp_rows.shuffle();
-      for (var i = 0; i < tmp_rows.length; i = i + size) {
-        int end = i + size <= tmp_rows.length ? i + size : tmp_rows.length;
-        List<PlutoRow> sublist = tmp_rows.sublist(i, end);
+      tmpRows.shuffle();
+      for (var i = 0; i < tmpRows.length; i = i + size) {
+        int end = i + size <= tmpRows.length ? i + size : tmpRows.length;
+        List<PlutoRow> sublist = tmpRows.sublist(i, end);
         keys.shuffle(); // Shuffle for each batch to distribute leftovers fairly
-        int key_i = 0;
+        int keyI = 0;
 
-        sublist.forEach((value) {
-          if (key_i < keys.length) {
-            teams_list[keys[key_i]]?.add(value);
-            key_i++;
+        for (var value in sublist) {
+          if (keyI < keys.length) {
+            teamsList[keys[keyI]]?.add(value);
+            keyI++;
           }
-        });
+        }
       }
     }
 
-    return teams_list;
+    return teamsList;
   }
 }

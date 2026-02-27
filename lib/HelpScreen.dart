@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:teammaker/video_player.dart';
 
 class HelpExample extends StatefulWidget {
+  const HelpExample({super.key});
+
   @override
   _HelpExampleState createState() => _HelpExampleState();
 }

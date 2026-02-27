@@ -1,29 +1,20 @@
 import 'package:flutter/material.dart';
-
+import 'package:teammaker/theme/app_theme.dart';
 import './home_screen.dart';
 
-class CellRendererScreen extends StatefulWidget {
+class CellRendererScreen extends StatelessWidget {
   static const routeName = 'feature/cell-renderer';
 
-  @override
-  _CellRendererScreenState createState() => _CellRendererScreenState();
-}
+  final ThemeController themeController;
 
-class _CellRendererScreenState extends State<CellRendererScreen> {
-  @override
-  void initState() {
-    super.initState();
-  }
+  const CellRendererScreen({super.key, required this.themeController});
 
   @override
   Widget build(BuildContext context) {
     return PlutoExampleScreen(
       title: 'Team Maker Buddy',
       topTitle: 'Squad Management',
-      topContents: [
-        const Text('Organize your team and balance players fairly.'),
-      ],
-      topButtons: [ElevatedButton(onPressed: null, child: Text("HI"))],
+      themeController: themeController,
     );
   }
 }
