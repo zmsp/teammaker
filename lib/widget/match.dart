@@ -10,7 +10,7 @@ class MatchWidget extends StatefulWidget {
   const MatchWidget({super.key, required this.round});
 
   @override
-  _MatchWidgetState createState() => _MatchWidgetState();
+  State<MatchWidget> createState() => _MatchWidgetState();
 }
 
 class _MatchWidgetState extends State<MatchWidget> {

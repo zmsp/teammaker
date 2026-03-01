@@ -9,7 +9,7 @@ class AddPlayersScreen extends StatefulWidget {
   const AddPlayersScreen({super.key});
 
   @override
-  AddPlayersScreenState createState() => AddPlayersScreenState();
+  State<AddPlayersScreen> createState() => AddPlayersScreenState();
 }
 
 class AddPlayersScreenState extends State<AddPlayersScreen> {
@@ -231,7 +231,7 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
               Text("Sport", style: theme.textTheme.labelLarge),
               const SizedBox(height: 8),
               DropdownButtonFormField<SportPalette>(
-                value: editSport,
+                initialValue: editSport,
                 decoration: InputDecoration(
                   prefixIcon: Icon(editSport.icon),
                   border: OutlineInputBorder(
@@ -508,7 +508,7 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
             Text("Sport", style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             DropdownButtonFormField<SportPalette>(
-              value: _selectedSport,
+              initialValue: _selectedSport,
               decoration: InputDecoration(
                 prefixIcon: Icon(_selectedSport.icon),
                 border: OutlineInputBorder(

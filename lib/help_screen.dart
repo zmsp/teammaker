@@ -7,7 +7,7 @@ class HelpExample extends StatefulWidget {
   const HelpExample({super.key});
 
   @override
-  _HelpExampleState createState() => _HelpExampleState();
+  State<HelpExample> createState() => _HelpExampleState();
 }
 
 class _HelpExampleState extends State<HelpExample> {

@@ -73,14 +73,14 @@ class BottomNavButton extends StatefulWidget {
   final VoidCallback onPressed;
   final IconData icon;
   final String label;
-  final Color color;
+  final bool isActive;
 
   const BottomNavButton({
     super.key,
     required this.onPressed,
     required this.icon,
     required this.label,
-    required this.color,
+    this.isActive = false,
   });
 
   @override
@@ -117,6 +117,12 @@ class _BottomNavButtonState extends State<BottomNavButton>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final color = widget.isActive
+        ? colorScheme.primary
+        : colorScheme.onSurface.withValues(alpha: 0.5);
+
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
@@ -128,13 +134,11 @@ class _BottomNavButtonState extends State<BottomNavButton>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              FaIcon(widget.icon, size: 20, color: widget.color),
+              FaIcon(widget.icon, size: 20, color: color),
               const SizedBox(height: 4),
               Text(widget.label,
                   style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: widget.color)),
+                      fontSize: 12, fontWeight: FontWeight.bold, color: color)),
             ],
           ),
         ),
@@ -147,14 +151,12 @@ class _BottomNavButtonState extends State<BottomNavButton>
 class QuickToolCard extends StatefulWidget {
   final String title;
   final IconData icon;
-  final Color color;
   final VoidCallback onTap;
 
   const QuickToolCard({
     super.key,
     required this.title,
     required this.icon,
-    required this.color,
     required this.onTap,
   });
 
@@ -195,6 +197,11 @@ class _QuickToolCardState extends State<QuickToolCard>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final color = colorScheme.primary;
+    final bgColor = colorScheme.surfaceContainer;
+
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
@@ -207,14 +214,13 @@ class _QuickToolCardState extends State<QuickToolCard>
             width: 105,
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
             decoration: BoxDecoration(
-              color: widget.color.withValues(alpha: 0.08),
+              color: bgColor,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: widget.color.withValues(alpha: _glow.value),
-                  width: 1.5),
+                  color: color.withValues(alpha: _glow.value), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: widget.color.withValues(alpha: _glow.value * 0.4),
+                  color: color.withValues(alpha: _glow.value * 0.4),
                   blurRadius: 14 * _ctrl.value,
                   spreadRadius: 2 * _ctrl.value,
                 ),
@@ -226,13 +232,13 @@ class _QuickToolCardState extends State<QuickToolCard>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FaIcon(widget.icon, color: widget.color, size: 22),
+            FaIcon(widget.icon, color: color, size: 22),
             const SizedBox(height: 10),
             Text(
               widget.title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: widget.color,
+                color: color,
                 fontWeight: FontWeight.w900,
                 fontSize: 10,
                 letterSpacing: 0.5,

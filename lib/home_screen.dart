@@ -7,9 +7,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:teammaker/theme/app_theme.dart';
 
-import 'package:teammaker/HelpScreen.dart';
-import 'package:teammaker/MatchScreen.dart';
-import 'package:teammaker/SettingsScreen.dart';
+import 'package:teammaker/help_screen.dart';
+import 'package:teammaker/match_screen.dart';
+import 'package:teammaker/settings_screen.dart';
 import 'package:teammaker/add_players.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/model/player_entry.dart';
@@ -46,7 +46,7 @@ class PlutoExampleScreen extends StatefulWidget {
   });
 
   @override
-  _PlutoExampleScreenState createState() => _PlutoExampleScreenState();
+  State<PlutoExampleScreen> createState() => _PlutoExampleScreenState();
 }
 
 enum Status { none, running, stopped, paused }
@@ -369,7 +369,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                             style: theme.textTheme.labelLarge),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<SportPalette>(
-                          value: editSport,
+                          initialValue: editSport,
                           isDense: true,
                           decoration: InputDecoration(
                             prefixIcon: Icon(editSport.icon, size: 18),
@@ -614,7 +614,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
               child: SectionHeader(
                   title: 'QUICK TOOLS',
                   icon: FontAwesomeIcons.bolt,
-                  color: Colors.orangeAccent),
+                  color: colorScheme.primary),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -628,7 +628,6 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                               .extension<SportIconExtension>()
                               ?.icon ??
                           Icons.sports,
-                      color: colorScheme.primary,
                       onTap: () {
                         Navigator.push(
                             context,
@@ -640,7 +639,6 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                     QuickToolCard(
                       title: 'MATCH MAKER',
                       icon: FontAwesomeIcons.trophy,
-                      color: Colors.amber,
                       onTap: () {
                         Navigator.push(
                             context,
@@ -653,7 +651,6 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                     QuickToolCard(
                       title: 'PLAYER QUEUE',
                       icon: FontAwesomeIcons.dice,
-                      color: Colors.purpleAccent,
                       onTap: () {
                         Navigator.push(
                             context,
@@ -699,7 +696,8 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                         Icon(Icons.people_outline, color: colorScheme.primary)),
                 title: const Text('Manage Players',
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('${_players.length} Players listed'),
+                subtitle: Text('${_players.length} Players listed',
+                    style: const TextStyle(color: Color(0xFF8A99A8))),
                 children: [
                   // ── Toolbar ──────────────────────────────────────────────
                   Container(
@@ -800,7 +798,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
               child: SectionHeader(
                   title: '2. BALANCE STRATEGY',
                   icon: FontAwesomeIcons.gears,
-                  color: colorScheme.secondary),
+                  color: colorScheme.primary),
             ),
             Card(
               elevation: 0,
@@ -895,7 +893,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 child: SectionHeader(
                     title: '3. RESULTS',
                     icon: FontAwesomeIcons.trophy,
-                    color: colorScheme.tertiary),
+                    color: colorScheme.primary),
               ),
               Card(
                 elevation: 4,
@@ -1017,13 +1015,11 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   },
                   icon: FontAwesomeIcons.userPlus,
                   label: 'Add',
-                  color: colorScheme.primary,
                 ),
                 BottomNavButton(
                   onPressed: _navigateToTeam,
                   icon: FontAwesomeIcons.usersViewfinder,
                   label: 'Teams',
-                  color: colorScheme.secondary,
                 ),
                 BottomNavButton(
                   onPressed: () {
@@ -1050,7 +1046,6 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   },
                   icon: FontAwesomeIcons.trophy,
                   label: 'Match',
-                  color: colorScheme.tertiary,
                 ),
                 BottomNavButton(
                   onPressed: () {
@@ -1061,7 +1056,6 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   },
                   icon: FontAwesomeIcons.stopwatch20,
                   label: 'Score',
-                  color: colorScheme.outline,
                 ),
               ],
             ),
@@ -1294,9 +1288,9 @@ class _PlayerDataTable extends StatelessWidget {
         if (!isChecked) {
           return colorScheme.surfaceContainerHighest.withValues(alpha: 0.3);
         }
-        return index.isEven
-            ? colorScheme.surface
-            : colorScheme.surfaceContainer.withValues(alpha: 0.5);
+        return index % 2 == 0
+            ? Colors.transparent
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04);
       }),
       cells: [
         // ── Name ──────────────────────────────────────────────────────────
@@ -1358,7 +1352,8 @@ class _PlayerDataTable extends StatelessWidget {
                   },
                 )
               : Text(p.role,
-                  style: const TextStyle(fontSize: 12),
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF8A99A8)),
                   overflow: TextOverflow.ellipsis),
         ),
         // ── Team ──────────────────────────────────────────────────────────

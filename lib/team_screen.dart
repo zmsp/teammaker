@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:teammaker/MatchScreen.dart';
+import 'package:teammaker/match_screen.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/model/player_entry.dart';
 import 'package:teammaker/theme/app_theme.dart';

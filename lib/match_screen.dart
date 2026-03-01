@@ -11,7 +11,7 @@ class MatchScreen extends StatefulWidget {
   const MatchScreen(this.settingsData, {super.key});
 
   @override
-  _MatchScreenState createState() => _MatchScreenState();
+  State<MatchScreen> createState() => _MatchScreenState();
 }
 
 class _MatchScreenState extends State<MatchScreen> {
@@ -211,7 +211,8 @@ class _MatchScreenState extends State<MatchScreen> {
         floatingActionButton: FloatingActionButton(
           tooltip: "Finish and Return",
           onPressed: () async {
-            if (await _onWillPop()) {
+            final shouldPop = await _onWillPop();
+            if (shouldPop && context.mounted) {
               Navigator.of(context).popUntil((route) => route.isFirst);
             }
           },

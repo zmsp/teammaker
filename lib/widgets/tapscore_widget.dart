@@ -91,8 +91,8 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
   int _roundCount = 1;
   List<String> _history = [];
 
-  String _nameA = 'TEAM A';
-  String _nameB = 'TEAM B';
+  String _nameA = 'HOME';
+  String _nameB = 'AWAY';
 
   Color _colorA = const Color(0xFF1A237E);
   Color _colorB = const Color(0xFFB71C1C);
@@ -158,8 +158,8 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
         _isRunning = true;
       }
 
-      _nameA = widget.initialNameA ?? (prefs.getString('name_a') ?? 'TEAM A');
-      _nameB = widget.initialNameB ?? (prefs.getString('name_b') ?? 'TEAM B');
+      _nameA = widget.initialNameA ?? (prefs.getString('name_a') ?? 'HOME');
+      _nameB = widget.initialNameB ?? (prefs.getString('name_b') ?? 'AWAY');
 
       final colorAVal = prefs.getInt('color_a');
       if (colorAVal != null) _colorA = Color(colorAVal);
@@ -331,34 +331,35 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title:
-            const Text('Round Complete', style: TextStyle(color: Colors.white)),
-        content: Text(
-          '🏆 $winnerName reached the max score!\n\n$winnerName: $winnerScore\n$loserName: $loserScore',
-          style:
-              const TextStyle(color: Colors.white70, fontSize: 16, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('KEEP PLAYING',
-                style: TextStyle(color: Colors.white38)),
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+        return AlertDialog(
+          title: const Text('Round Complete'),
+          content: Text(
+            '🏆 $winnerName reached the max score!\n\n$winnerName: $winnerScore\n$loserName: $loserScore',
+            style: TextStyle(
+                color: cs.onSurfaceVariant, fontSize: 16, height: 1.5),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _resetScores();
-            },
-            child: const Text(
-              'NEW ROUND',
-              style: TextStyle(
-                  color: Colors.indigoAccent, fontWeight: FontWeight.bold),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('KEEP PLAYING',
+                  style: TextStyle(color: cs.onSurface.withValues(alpha: 0.4))),
             ),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _resetScores();
+              },
+              child: Text(
+                'NEW ROUND',
+                style:
+                    TextStyle(color: cs.primary, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -370,34 +371,34 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Start New Round?',
-            style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'This will record current scores to history and reset the game state.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child:
-                const Text('CANCEL', style: TextStyle(color: Colors.white38)),
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+        return AlertDialog(
+          title: const Text('Start New Round?'),
+          content: Text(
+            'This will record current scores to history and reset the game state.',
+            style: TextStyle(color: cs.onSurfaceVariant),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _recordHistoryEntry(_teamAScore >= _teamBScore ? 'A' : 'B');
-              _resetScores();
-            },
-            child: const Text(
-              'START NEW',
-              style: TextStyle(
-                  color: Colors.redAccent, fontWeight: FontWeight.bold),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('CANCEL',
+                  style: TextStyle(color: cs.onSurface.withValues(alpha: 0.4))),
             ),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _recordHistoryEntry(_teamAScore >= _teamBScore ? 'A' : 'B');
+                _resetScores();
+              },
+              child: Text(
+                'START NEW',
+                style: TextStyle(color: cs.error, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -411,47 +412,50 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Match History',
-            style: TextStyle(color: Colors.white70)),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: reversed.isEmpty
-              ? const Center(
-                  child: Text('No history yet.',
-                      style: TextStyle(color: Colors.white54)))
-              : ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: reversed.length,
-                  separatorBuilder: (_, __) =>
-                      const Divider(color: Colors.white12, height: 24),
-                  itemBuilder: (_, i) => Text(
-                    reversed[i],
-                    style: const TextStyle(color: Colors.white70, height: 1.4),
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+        return AlertDialog(
+          title: Text('Match History',
+              style: TextStyle(color: cs.onSurfaceVariant)),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: reversed.isEmpty
+                ? Center(
+                    child: Text('No history yet.',
+                        style: TextStyle(
+                            color: cs.onSurface.withValues(alpha: 0.5))))
+                : ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: reversed.length,
+                    separatorBuilder: (_, __) =>
+                        Divider(color: cs.outlineVariant, height: 24),
+                    itemBuilder: (_, i) => Text(
+                      reversed[i],
+                      style: TextStyle(color: cs.onSurface, height: 1.4),
+                    ),
                   ),
-                ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _history.clear();
-                _roundCount = 1;
-              });
-              _saveState();
-              Navigator.pop(context);
-            },
-            child:
-                const Text('CLEAR', style: TextStyle(color: Colors.redAccent)),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CLOSE', style: TextStyle(color: Colors.white38)),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _history.clear();
+                  _roundCount = 1;
+                });
+                _saveState();
+                Navigator.pop(context);
+              },
+              child: Text('CLEAR', style: TextStyle(color: cs.error)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('CLOSE',
+                  style: TextStyle(color: cs.onSurface.withValues(alpha: 0.4))),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -461,185 +465,176 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) => AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: const Text('Game Settings',
-              style: TextStyle(color: Colors.white70)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Max Score ───────────────────────────────────────────
-                const _SectionLabel('MAX SCORE'),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: maxScoreCtrl,
-                  keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Custom End Score',
-                    labelStyle: TextStyle(color: Colors.white54, fontSize: 13),
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white24)),
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.indigoAccent)),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        builder: (context, setStateDialog) {
+          final cs = Theme.of(context).colorScheme;
+          return AlertDialog(
+            title: const Text('Game Settings'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Max Score ───────────────────────────────────────────
+                  const _SectionLabel('MAX SCORE'),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: maxScoreCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Custom End Score',
+                      labelStyle: const TextStyle(fontSize: 13),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                    ),
+                    onChanged: (val) {
+                      final parsed = int.tryParse(val);
+                      if (parsed != null && parsed > 0) {
+                        setStateDialog(() => _maxScore = parsed);
+                        setState(() {});
+                        _saveState();
+                      }
+                    },
                   ),
-                  onChanged: (val) {
-                    final parsed = int.tryParse(val);
-                    if (parsed != null && parsed > 0) {
-                      setStateDialog(() => _maxScore = parsed);
-                      setState(() {});
-                      _saveState();
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 4,
-                  children: _kMaxScorePresets.map((score) {
-                    final isSelected = _maxScore == score;
-                    return ChoiceChip(
-                      label: Text(
-                        '$score',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isSelected ? Colors.white : Colors.white70,
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    children: _kMaxScorePresets.map((score) {
+                      final isSelected = _maxScore == score;
+                      return ChoiceChip(
+                        label: Text('$score'),
+                        selected: isSelected,
+                        onSelected: (val) {
+                          if (val) {
+                            setStateDialog(() {
+                              _maxScore = score;
+                              maxScoreCtrl.text = '$score';
+                            });
+                            setState(() {});
+                            _saveState();
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+
+                  const Divider(height: 32),
+
+                  // ── Country Themes ──────────────────────────────────────
+                  const _SectionLabel('COUNTRY THEMES'),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    initialValue: _kCountryThemes.keys.first,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    items: _kCountryThemes.keys
+                        .map((name) => DropdownMenuItem(
+                              value: name,
+                              child: Text(name,
+                                  style: const TextStyle(fontSize: 14)),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null && _kCountryThemes[val] != null) {
+                        setStateDialog(() {
+                          _colorA = _kCountryThemes[val]![0];
+                          _colorB = _kCountryThemes[val]![1];
+                        });
+                        setState(() {});
+                        _saveState();
+                      }
+                    },
+                  ),
+
+                  const Divider(height: 32),
+
+                  // ── Team Names ──────────────────────────────────────────
+                  const _SectionLabel('TEAM NAMES'),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _NameField(
+                          initialValue: _nameA,
+                          label: 'HOME',
+                          onChanged: (v) {
+                            setStateDialog(() => _nameA = v);
+                            setState(() {});
+                            _debouncedSave();
+                          },
                         ),
                       ),
-                      selected: isSelected,
-                      backgroundColor: Colors.white10,
-                      selectedColor: Colors.indigoAccent.withValues(alpha: 0.4),
-                      onSelected: (val) {
-                        if (val) {
-                          setStateDialog(() {
-                            _maxScore = score;
-                            maxScoreCtrl.text = '$score';
-                          });
-                          setState(() {});
-                          _saveState();
-                        }
-                      },
-                    );
-                  }).toList(),
-                ),
-
-                const Divider(color: Colors.white12, height: 32),
-
-                // ── Country Themes ──────────────────────────────────────
-                const _SectionLabel('COUNTRY THEMES'),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  dropdownColor: Colors.grey[900],
-                  initialValue: _kCountryThemes.keys.first,
-                  decoration: const InputDecoration(
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white24)),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _NameField(
+                          initialValue: _nameB,
+                          label: 'AWAY',
+                          onChanged: (v) {
+                            setStateDialog(() => _nameB = v);
+                            setState(() {});
+                            _debouncedSave();
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  items: _kCountryThemes.keys
-                      .map((name) => DropdownMenuItem(
-                            value: name,
-                            child: Text(name,
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 14)),
-                          ))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null && _kCountryThemes[val] != null) {
-                      setStateDialog(() {
-                        _colorA = _kCountryThemes[val]![0];
-                        _colorB = _kCountryThemes[val]![1];
-                      });
-                      setState(() {});
-                      _saveState();
-                    }
-                  },
-                ),
 
-                const Divider(color: Colors.white12, height: 32),
+                  const SizedBox(height: 24),
 
-                // ── Team Names ──────────────────────────────────────────
-                const _SectionLabel('TEAM NAMES'),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _NameField(
-                        initialValue: _nameA,
-                        label: 'TEAM A',
-                        onChanged: (v) {
-                          setStateDialog(() => _nameA = v);
-                          setState(() {});
-                          _debouncedSave();
-                        },
+                  // ── Manual Colors ───────────────────────────────────────
+                  const _SectionLabel('MANUAL COLORS'),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ColorPicker(
+                          label: _nameA,
+                          selected: _colorA,
+                          colors: _kPickableColors,
+                          onPick: (c) {
+                            setStateDialog(() => _colorA = c);
+                            setState(() {});
+                            _saveState();
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _NameField(
-                        initialValue: _nameB,
-                        label: 'TEAM B',
-                        onChanged: (v) {
-                          setStateDialog(() => _nameB = v);
-                          setState(() {});
-                          _debouncedSave();
-                        },
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _ColorPicker(
+                          label: _nameB,
+                          selected: _colorB,
+                          colors: _kPickableColors,
+                          onPick: (c) {
+                            setStateDialog(() => _colorB = c);
+                            setState(() {});
+                            _saveState();
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // ── Manual Colors ───────────────────────────────────────
-                const _SectionLabel('MANUAL COLORS'),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ColorPicker(
-                        label: _nameA,
-                        selected: _colorA,
-                        colors: _kPickableColors,
-                        onPick: (c) {
-                          setStateDialog(() => _colorA = c);
-                          setState(() {});
-                          _saveState();
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _ColorPicker(
-                        label: _nameB,
-                        selected: _colorB,
-                        colors: _kPickableColors,
-                        onPick: (c) {
-                          setStateDialog(() => _colorB = c);
-                          setState(() {});
-                          _saveState();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'DONE',
-                style: TextStyle(
-                    color: Colors.indigoAccent, fontWeight: FontWeight.bold),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'DONE',
+                  style:
+                      TextStyle(color: cs.primary, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -684,8 +679,9 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: cs.surface,
       body: Stack(
         children: [
           // ── Team halves — each in a RepaintBoundary ───────────────────
@@ -725,7 +721,7 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
             child: IconButton(
               icon: Icon(
                 Icons.arrow_back_ios_new,
-                color: Colors.white.withValues(alpha: 0.18),
+                color: cs.onSurface.withValues(alpha: 0.4),
                 size: 18,
               ),
               onPressed: _backWithResult,
@@ -833,7 +829,7 @@ class _TeamHalf extends StatelessWidget {
                       name,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.22),
+                        color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 5,
@@ -868,7 +864,7 @@ class _TeamHalf extends StatelessWidget {
                   const Text(
                     'TAP TO SCORE',
                     style: TextStyle(
-                        color: Colors.white30, fontSize: 12, letterSpacing: 3),
+                        color: Colors.white54, fontSize: 12, letterSpacing: 3),
                   ),
                   const SizedBox(height: 28),
                   Opacity(
@@ -923,7 +919,8 @@ class _TimerDisplay extends StatelessWidget {
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w600,
-            color: Colors.white.withValues(alpha: 0.3),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             letterSpacing: 2,
           ),
         ),
@@ -935,7 +932,10 @@ class _TimerDisplay extends StatelessWidget {
             style: TextStyle(
               fontSize: 40,
               fontWeight: FontWeight.w700,
-              color: Colors.white.withValues(alpha: isRunning ? 0.72 : 0.30),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: isRunning ? 0.9 : 0.5),
               fontFamily: 'monospace',
               letterSpacing: 3,
             ),
@@ -965,15 +965,15 @@ class _NameField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       initialValue: initialValue,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
+      style: const TextStyle(fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white54, fontSize: 12),
-        enabledBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.white24)),
-        focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.indigoAccent)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        labelStyle: const TextStyle(fontSize: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
       onChanged: onChanged,
     );
@@ -999,11 +999,11 @@ class _ColorPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(color: Colors.white54, fontSize: 10)),
+        Text(label, style: TextStyle(color: cs.onSurfaceVariant, fontSize: 10)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 6,
@@ -1043,8 +1043,8 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        color: Colors.indigoAccent,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.primary,
         fontSize: 11,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.2,
@@ -1111,7 +1111,12 @@ class _ControlCircle extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(label,
-            style: const TextStyle(color: Colors.white38, fontSize: 10)),
+            style: TextStyle(
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.4),
+                fontSize: 10)),
       ],
     );
   }

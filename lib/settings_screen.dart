@@ -219,7 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       labelText: 'Select Sport Context',
                                       prefixIcon: Icon(Icons.sports_basketball),
                                     ),
-                                    value: tc.palette,
+                                    initialValue: tc.palette,
                                     items: SportPalette.values.map((s) {
                                       return DropdownMenuItem(
                                         value: s,

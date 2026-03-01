@@ -446,12 +446,18 @@ class AppTheme {
       seedColor: primary,
       brightness: Brightness.light,
       secondary: secondary,
-    ).copyWith(
-      secondary: secondary,
-      secondaryContainer: secondary.withValues(alpha: 0.15),
-      onSecondaryContainer: secondary,
     );
-    return _buildLight(cs, palette);
+
+    // Darken secondary if too bright for light mode text/buttons
+    final effectiveSecondary =
+        _isBright(secondary) ? _darken(secondary, 0.4) : secondary;
+
+    final finalCs = cs.copyWith(
+      secondary: effectiveSecondary,
+      secondaryContainer: secondary.withValues(alpha: 0.15),
+      onSecondaryContainer: effectiveSecondary,
+    );
+    return _buildLight(finalCs, palette);
   }
 
   static ThemeData dark(SportPalette palette) {
@@ -514,7 +520,7 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: cs.secondary,
-          foregroundColor: Colors.white,
+          foregroundColor: cs.onSecondary,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -705,5 +711,18 @@ class AppTheme {
     return hsl
         .withLightness((hsl.lightness + amount).clamp(0.0, 1.0))
         .toColor();
+  }
+
+  /// Darkens a color by mixing it toward black by [amount] (0–1).
+  static Color _darken(Color color, double amount) {
+    final hsl = HSLColor.fromColor(color);
+    return hsl
+        .withLightness((hsl.lightness - amount).clamp(0.0, 1.0))
+        .toColor();
+  }
+
+  /// Checks if a color is 'bright' based on lightness.
+  static bool _isBright(Color color) {
+    return HSLColor.fromColor(color).lightness > 0.7;
   }
 }
