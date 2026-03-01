@@ -43,16 +43,21 @@ class PlutoExampleScreen extends StatefulWidget {
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _PlutoExampleScreenState createState() => _PlutoExampleScreenState();
 }
 
 enum Status { none, running, stopped, paused }
 
+// ignore: library_private_types_in_public_api
 class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   PlutoGridStateManager? stateManager;
   SettingsData settingsData = SettingsData();
   bool _isEditable = false;
   Timer? _saveTimer;
+
+  /// Cached SharedPreferences — obtained once, reused in every save call.
+  SharedPreferences? _prefs;
 
   void exportToCsv() async {
     if (stateManager == null) return;
@@ -79,25 +84,24 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     _saveTimer = Timer(const Duration(seconds: 2), _savePlayers);
   }
 
-  void _savePlayers() async {
-    if (stateManager == null) return;
-    final prefs = await SharedPreferences.getInstance();
-    final List<Map<String, dynamic>> rowsToUpdate = stateManager!.rows.map((e) {
-      return {
-        'name_field': e.cells['name_field']?.value,
-        'skill_level_field': e.cells['skill_level_field']?.value,
-        'gender_field': e.cells['gender_field']?.value,
-        'team_field': e.cells['team_field']?.value,
-        'role_field': e.cells['role_field']?.value,
-        'checked': e.checked,
-      };
-    }).toList();
-    prefs.setString('saved_players', jsonEncode(rowsToUpdate));
+  void _savePlayers() {
+    if (stateManager == null || _prefs == null) return;
+    final rowsToUpdate = stateManager!.rows
+        .map((e) => {
+              'name_field': e.cells['name_field']?.value,
+              'skill_level_field': e.cells['skill_level_field']?.value,
+              'gender_field': e.cells['gender_field']?.value,
+              'team_field': e.cells['team_field']?.value,
+              'role_field': e.cells['role_field']?.value,
+              'checked': e.checked,
+            })
+        .toList();
+    _prefs!.setString('saved_players', jsonEncode(rowsToUpdate));
   }
 
   Future<void> _loadPlayers() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? saved = prefs.getString('saved_players');
+    _prefs ??= await SharedPreferences.getInstance();
+    String? saved = _prefs!.getString('saved_players');
     if (saved != null) {
       List<dynamic> jsonMap = jsonDecode(saved);
       List<PlutoRow> loadedRows = jsonMap.map<PlutoRow>((e) {
@@ -136,61 +140,50 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
   List<PlutoRow> rows = [];
 
-  void rebuild_options() {
-    // var team_list = new List<int>.generate(level, (i) => i + 1);
-    // var level_list = new List<int>.generate(teams, (i) => i + 1);
-    // columns[1] = PlutoColumn(
-    //   title: 'level',
-    //   field: 'skill_level_field',
-    //   type: PlutoColumnType.number(),
-    // );
-
-    setState(() {});
-  }
-
   @override
   void initState() {
     super.initState();
+    // Build columns once — allRoles de-duplicated at startup only
     final allRoles =
         SportPalette.values.expand((e) => e.roles).toSet().toList();
     columns = GridColumns.getColumns(allRoles);
-    _loadSettings();
-    rebuild_options();
+    _initPrefs();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    await _loadSettings();
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+    // _prefs was already obtained in _initPrefs — no extra getInstance call
+    final prefs = _prefs!;
     if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {
-        settingsData.teamCount = prefs.getInt('teamCount') ?? 2;
-        settingsData.division = prefs.getInt('division') ?? 2;
-        settingsData.proportion = prefs.getInt('proportion') ?? 6;
-        settingsData.gameVenues = prefs.getInt('gameVenues') ?? 1;
-        settingsData.gameRounds = prefs.getInt('gameRounds') ?? 2;
-
-        settingsData.preferExtraTeam =
-            prefs.getBool('preferExtraTeam') ?? false;
-
-        String savedOption =
-            prefs.getString('genOption') ?? GenOption.evenGender.toString();
-        settingsData.o = GenOption.values.firstWhere(
-            (e) => e.toString() == savedOption,
-            orElse: () => GenOption.evenGender);
-      });
+    setState(() {
+      settingsData.teamCount = prefs.getInt('teamCount') ?? 2;
+      settingsData.division = prefs.getInt('division') ?? 2;
+      settingsData.proportion = prefs.getInt('proportion') ?? 6;
+      settingsData.gameVenues = prefs.getInt('gameVenues') ?? 1;
+      settingsData.gameRounds = prefs.getInt('gameRounds') ?? 2;
+      settingsData.preferExtraTeam = prefs.getBool('preferExtraTeam') ?? false;
+      final savedOption =
+          prefs.getString('genOption') ?? GenOption.evenGender.toString();
+      settingsData.o = GenOption.values.firstWhere(
+          (e) => e.toString() == savedOption,
+          orElse: () => GenOption.evenGender);
     });
   }
 
-  void _saveSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setInt('teamCount', settingsData.teamCount);
-    prefs.setInt('division', settingsData.division);
-    prefs.setInt('proportion', settingsData.proportion);
-    prefs.setInt('gameVenues', settingsData.gameVenues);
-    prefs.setInt('gameRounds', settingsData.gameRounds);
-    prefs.setBool('preferExtraTeam', settingsData.preferExtraTeam);
-    prefs.setString('genOption', settingsData.o.toString());
+  void _saveSettings() {
+    if (_prefs == null) return;
+    _prefs!.setInt('teamCount', settingsData.teamCount);
+    _prefs!.setInt('division', settingsData.division);
+    _prefs!.setInt('proportion', settingsData.proportion);
+    _prefs!.setInt('gameVenues', settingsData.gameVenues);
+    _prefs!.setInt('gameRounds', settingsData.gameRounds);
+    _prefs!.setBool('preferExtraTeam', settingsData.preferExtraTeam);
+    _prefs!.setString('genOption', settingsData.o.toString());
   }
 
   showTextDialog(BuildContext context, String title, String message) {
@@ -516,7 +509,10 @@ Jane,4,F""";
       if (dat[i]?.checked ?? false) {
         // teams_name_list.update(dat[i]?.cells?["team_field"]?.value?? "None", (value) => null)
         var t = dat[i]!.cells["skill_level_field"]?.value;
-        print(t.runtimeType);
+        assert(() {
+          debugPrint('skill_level type: ${t.runtimeType}');
+          return true;
+        }());
         teamsTotalScore.update(
           dat[i]!.cells["team_field"]?.value ?? "None",
           // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
@@ -594,7 +590,10 @@ Jane,4,F""";
         settingsData.teamCount = (playerNum / settingsData.proportion).floor();
       }
       if (settingsData.teamCount == 0) settingsData.teamCount = 1;
-      print("TEAMS CALCULATED: ${settingsData.teamCount}");
+      assert(() {
+        debugPrint('TEAMS CALCULATED: ${settingsData.teamCount}');
+        return true;
+      }());
     }
 
     Map<String, List<PlutoRow>> teamsList = TeamGenerator.generateTeams(
@@ -603,12 +602,13 @@ Jane,4,F""";
       sport: widget.themeController?.palette,
     );
 
-    teamsList.forEach((key, value) {
-      for (var element in value) {
-        setState(() {
-          element.cells["team_field"]?.value = key;
-        });
-      }
+    // Single setState after all assignments — avoids N rebuilds during team generation
+    setState(() {
+      teamsList.forEach((key, value) {
+        for (final element in value) {
+          element.cells['team_field']?.value = key;
+        }
+      });
     });
 
     _navigateToTeam();
