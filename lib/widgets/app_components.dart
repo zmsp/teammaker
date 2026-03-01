@@ -107,8 +107,8 @@ class _BottomNavButtonState extends State<BottomNavButton>
     super.dispose();
   }
 
-  void _onTapDown(_) => _ctrl.forward();
-  void _onTapUp(_) {
+  void _onTapDown(TapDownDetails _) => _ctrl.forward();
+  void _onTapUp(TapUpDetails _) {
     _ctrl.reverse();
     widget.onPressed();
   }
@@ -187,8 +187,8 @@ class _QuickToolCardState extends State<QuickToolCard>
     super.dispose();
   }
 
-  void _onTapDown(_) => _ctrl.forward();
-  void _onTapUp(_) {
+  void _onTapDown(TapDownDetails _) => _ctrl.forward();
+  void _onTapUp(TapUpDetails _) {
     _ctrl.reverse();
     widget.onTap();
   }
