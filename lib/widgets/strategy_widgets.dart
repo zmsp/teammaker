@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:teammaker/model/data_model.dart';
 
+// ─── StrategyOption — radio tile + optional config section ─────────────────────
+// Uses Flutter 3.32+ RadioGroup ancestor for groupValue management.
 class StrategyOption extends StatelessWidget {
   final GenOption option;
   final String title;
@@ -34,6 +36,7 @@ class StrategyOption extends StatelessWidget {
         children: [
           RadioListTile<GenOption>(
             value: option,
+            // groupValue and onChanged are provided by the RadioGroup ancestor
             activeColor: colorScheme.secondary,
             secondary:
                 Icon(icon, color: isSelected ? colorScheme.secondary : null),

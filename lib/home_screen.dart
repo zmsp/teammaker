@@ -1,17 +1,18 @@
 import 'dart:convert';
 import 'dart:async';
+import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:teammaker/theme/app_theme.dart';
-import 'package:pluto_grid/pluto_grid.dart';
 
 import 'package:teammaker/HelpScreen.dart';
 import 'package:teammaker/MatchScreen.dart';
 import 'package:teammaker/SettingsScreen.dart';
 import 'package:teammaker/add_players.dart';
 import 'package:teammaker/model/data_model.dart';
+import 'package:teammaker/model/player_entry.dart';
 import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/team_screen.dart';
 import 'package:teammaker/algorithm/team_generator.dart';
@@ -20,9 +21,11 @@ import 'package:teammaker/widgets/app_components.dart';
 import 'package:teammaker/widgets/strategy_widgets.dart';
 import 'package:teammaker/utils/team_utils.dart';
 import 'package:teammaker/widgets/team_results_view.dart';
-import 'package:teammaker/configs/grid_columns.dart';
 import 'package:teammaker/widgets/tapscore_widget.dart';
 import 'package:teammaker/widgets/random_team_widget.dart';
+
+// ─── Available roles (built once) ─────────────────────────────────────────────
+final _allRoles = SportPalette.values.expand((e) => e.roles).toSet().toList();
 
 class PlutoExampleScreen extends StatefulWidget {
   final String? title;
@@ -43,15 +46,12 @@ class PlutoExampleScreen extends StatefulWidget {
   });
 
   @override
-  // ignore: library_private_types_in_public_api
   _PlutoExampleScreenState createState() => _PlutoExampleScreenState();
 }
 
 enum Status { none, running, stopped, paused }
 
-// ignore: library_private_types_in_public_api
 class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
-  PlutoGridStateManager? stateManager;
   SettingsData settingsData = SettingsData();
   bool _isEditable = false;
   Timer? _saveTimer;
@@ -59,105 +59,39 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   /// Cached SharedPreferences — obtained once, reused in every save call.
   SharedPreferences? _prefs;
 
-  void exportToCsv() async {
-    if (stateManager == null) return;
+  /// The single source of truth for all player data.
+  final List<PlayerEntry> _players = [];
 
-    StringBuffer csvBuffer = StringBuffer();
-    // Headers
-    csvBuffer.writeln("Name,Level,Gender,Team,Position");
-
-    for (var row in stateManager!.rows) {
-      String name = row.cells['name_field']?.value?.toString() ?? "";
-      String level = row.cells['skill_level_field']?.value?.toString() ?? "";
-      String gender = row.cells['gender_field']?.value?.toString() ?? "";
-      String team = row.cells['team_field']?.value?.toString() ?? "";
-      String role = row.cells['role_field']?.value?.toString() ?? "Any";
-
-      csvBuffer.writeln("$name,$level,$gender,$team,$role");
+  // ─── Clipboard export ──────────────────────────────────────────────────────
+  void exportToCsv() {
+    final csv = StringBuffer('Name,Level,Gender,Team,Position\n');
+    for (final p in _players) {
+      csv.writeln('${p.name},${p.level},${p.gender},${p.team},${p.role}');
     }
-
-    await Clipboard.setData(ClipboardData(text: csvBuffer.toString()));
+    Clipboard.setData(ClipboardData(text: csv.toString()));
   }
 
+  // ─── Debounced save ────────────────────────────────────────────────────────
   void _triggerSavePlayers() {
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(seconds: 2), _savePlayers);
   }
 
   void _savePlayers() {
-    if (stateManager == null || _prefs == null) return;
-    final rowsToUpdate = stateManager!.rows
-        .map((e) => {
-              'name_field': e.cells['name_field']?.value,
-              'skill_level_field': e.cells['skill_level_field']?.value,
-              'gender_field': e.cells['gender_field']?.value,
-              'team_field': e.cells['team_field']?.value,
-              'role_field': e.cells['role_field']?.value,
-              'checked': e.checked,
-            })
-        .toList();
-    _prefs!.setString('saved_players', jsonEncode(rowsToUpdate));
+    if (_prefs == null) return;
+    _prefs!.setString(
+        'saved_players', jsonEncode(_players.map((p) => p.toJson()).toList()));
   }
 
-  Future<void> _loadPlayers() async {
-    _prefs ??= await SharedPreferences.getInstance();
-    String? saved = _prefs!.getString('saved_players');
-    if (saved != null) {
-      List<dynamic> jsonMap = jsonDecode(saved);
-      List<PlutoRow> loadedRows = jsonMap.map<PlutoRow>((e) {
-        var row = PlutoRow(
-          cells: {
-            'name_field': PlutoCell(value: e['name_field'] ?? 'Unknown'),
-            'skill_level_field': PlutoCell(value: e['skill_level_field'] ?? 3),
-            'team_field': PlutoCell(value: e['team_field'] ?? "None"),
-            'gender_field': PlutoCell(value: e['gender_field'] ?? "MALE"),
-            'role_field': PlutoCell(value: e['role_field'] ?? "Any"),
-          },
-        );
-        if (e['checked'] != null) {
-          row.setChecked(e['checked']);
-        }
-        return row;
-      }).toList();
-
-      if (loadedRows.isNotEmpty) {
-        if (!mounted) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          setState(() {
-            rows = loadedRows;
-            if (stateManager != null) {
-              stateManager!.removeAllRows();
-              stateManager!.appendRows(loadedRows);
-            }
-          });
-        });
-      }
-    }
-  }
-
-  late List<PlutoColumn> columns;
-
-  List<PlutoRow> rows = [];
-
-  @override
-  void initState() {
-    super.initState();
-    // Build columns once — allRoles de-duplicated at startup only
-    final allRoles =
-        SportPalette.values.expand((e) => e.roles).toSet().toList();
-    columns = GridColumns.getColumns(allRoles);
-    _initPrefs();
-  }
-
+  // ─── Load / save settings ──────────────────────────────────────────────────
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     await _loadSettings();
+    await _loadPlayers();
   }
 
   Future<void> _loadSettings() async {
-    // _prefs was already obtained in _initPrefs — no extra getInstance call
     final prefs = _prefs!;
     if (!mounted) return;
     setState(() {
@@ -175,6 +109,22 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     });
   }
 
+  Future<void> _loadPlayers() async {
+    final prefs = _prefs!;
+    final saved = prefs.getString('saved_players');
+    if (saved == null) return;
+    final jsonList = jsonDecode(saved) as List<dynamic>;
+    final loaded = jsonList
+        .map((e) => PlayerEntry.fromJson(e as Map<String, dynamic>))
+        .toList();
+    if (loaded.isEmpty) return;
+    if (!mounted) return;
+    setState(() {
+      _players.clear();
+      _players.addAll(loaded);
+    });
+  }
+
   void _saveSettings() {
     if (_prefs == null) return;
     _prefs!.setInt('teamCount', settingsData.teamCount);
@@ -186,375 +136,65 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     _prefs!.setString('genOption', settingsData.o.toString());
   }
 
-  showTextDialog(BuildContext context, String title, String message) {
-    // set up the button
-    Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        Navigator.pop(context);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text(title),
-      content: SingleChildScrollView(
-        child: Text(message),
-      ),
-      actions: [
-        okButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    _initPrefs();
   }
 
-  String data = """
-John,3,M
-Jane,4,F""";
-
-  AlertDialog reportingDialog(BuildContext context) {
-    TextEditingController playerText = TextEditingController(text: data);
-
-    return AlertDialog(
-      title: const Text('Add Players'),
-      content: SingleChildScrollView(
-        child: Column(
-          children: [
-            const Text('Add  player name and info'),
-            const Text(
-                'One line per player. Format should be <NAME>,<LeveL>,<GENDER>'),
-            TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'zobair,4\nmike,1,MALE\njohn,1,MALE,TEAM#1',
-              ),
-              controller: playerText,
-              keyboardType: TextInputType.multiline,
-              maxLines: null,
-            ),
-            const Text(
-                'if you are pasting the information from meetup, press format text from meetup'),
-            ElevatedButton.icon(
-              icon: Icon(
-                FontAwesomeIcons.meetup,
-                size: 25.0,
-              ),
-              style: ButtonStyle(
-                padding: WidgetStateProperty.all<EdgeInsetsGeometry?>(
-                    EdgeInsets.fromLTRB(20, 15, 10, 20)),
-                backgroundColor:
-                    WidgetStateProperty.all<Color>(Colors.redAccent),
-              ),
-              label: const Text('Format Text from meetup'),
-              onPressed: () {
-                String text = playerText.text;
-                var lines = text.split("\n");
-                var playerLine = [];
-                var dateFieldRegex =
-                    RegExp(r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
-                var recordFlag = true;
-                for (var i = 0; i < lines.length; i++) {
-                  String line = lines[i].trim();
-                  if (line.isEmpty) continue;
-
-                  if (recordFlag && !dateFieldRegex.hasMatch(line)) {
-                    String name = line;
-                    String position = "Any";
-                    if (line.contains("(") && line.contains(")")) {
-                      final start = line.lastIndexOf("(");
-                      final end = line.lastIndexOf(")");
-                      if (end > start) {
-                        position = line.substring(start + 1, end).trim();
-                        name = line.substring(0, start).trim();
-                      }
-                    }
-                    playerLine.add("$name,3,M,,$position");
-                    recordFlag = false;
-                    continue;
-                  }
-
-                  if (dateFieldRegex.hasMatch(line)) {
-                    recordFlag = true;
-                  }
-                }
-                playerText.text = playerLine.join("\n");
-              },
-            ),
-            const Text(
-                'if you want to add default level(3) and gender info(male), press the next button'),
-            ElevatedButton.icon(
-              icon: Icon(
-                FontAwesomeIcons.addressCard,
-                size: 25.0,
-              ),
-              style: ButtonStyle(
-                padding: WidgetStateProperty.all<EdgeInsetsGeometry?>(
-                    EdgeInsets.fromLTRB(20, 15, 10, 20)),
-                backgroundColor:
-                    WidgetStateProperty.all<Color>(Colors.redAccent),
-              ),
-              label: const Text('Add default level and gender'),
-              onPressed: () {
-                String text = playerText.text;
-                var lines = text.split("\n");
-                var data = [];
-                for (var i = 0; i <= lines.length - 1; i++) {
-                  data.add("${lines[i]},3,M");
-                }
-                playerText.text = data.join("\n");
-              },
-            ),
-            const Text('Press check button to see what will be added'),
-            ElevatedButton.icon(
-              icon: Icon(
-                FontAwesomeIcons.magnifyingGlass,
-                size: 25.0,
-              ),
-              style: ButtonStyle(
-                padding: WidgetStateProperty.all<EdgeInsetsGeometry?>(
-                    EdgeInsets.fromLTRB(20, 15, 10, 20)),
-                backgroundColor:
-                    WidgetStateProperty.all<Color>(Colors.redAccent),
-              ),
-              label: const Text("Check/Validate"),
-              onPressed: () {
-                var lines = playerText.text.split("\n");
-                var stringData = [];
-
-                for (var i = 0; i <= lines.length - 1; i++) {
-                  var mapData = {
-                    "name": "x",
-                    "level": 3,
-                    "gender": "MALE",
-                    "team": "None",
-                    "position": "Any"
-                  };
-
-                  var data = lines[i].split(",");
-                  for (var j = 0; j < data.length; j++) {
-                    switch (j) {
-                      case 0:
-                        {
-                          mapData["name"] = data[0];
-                        }
-                        break;
-                      case 1:
-                        {
-                          mapData["level"] = double.tryParse(data[1]) ?? 3;
-                        }
-                        break;
-                      case 2:
-                        {
-                          if (data[2].trim().toUpperCase().startsWith("M")) {
-                            mapData["gender"] = "MALE";
-                          } else if (data[2]
-                              .trim()
-                              .toUpperCase()
-                              .startsWith("F")) {
-                            mapData["gender"] = "FEMALE";
-                          } else {
-                            mapData["gender"] = "X";
-                          }
-                        }
-                        break;
-                      case 3:
-                        {
-                          mapData["team"] = data[3];
-                        }
-                        break;
-                      case 4:
-                        {
-                          mapData["position"] = data[4];
-                        }
-                        break;
-                      default:
-                        {
-                          break;
-                        }
-                    }
-                  }
-                  stringData.add("$mapData\n");
-                }
-                showTextDialog(context, "Following players will be added",
-                    stringData.join("\n"));
-              },
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: const Text(
-            'No',
-            style: TextStyle(
-              color: Colors.deepOrange,
-            ),
-          ),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        TextButton(
-          child: const Text('Add'),
-          onPressed: () {
-            var lines = playerText.text.split("\n");
-
-            for (var i = 0; i <= lines.length - 1; i++) {
-              var mapData = {
-                "name": "x",
-                "level": 3,
-                "gender": "MALE",
-                "team": "None",
-                "position": "Any"
-              };
-
-              var data = lines[i].split(",");
-              for (var j = 0; j < data.length; j++) {
-                switch (j) {
-                  case 0:
-                    {
-                      mapData["name"] = data[0];
-                    }
-                    break;
-                  case 1:
-                    {
-                      mapData["level"] = int.tryParse(data[1]) ?? 3;
-                    }
-                    break;
-                  case 2:
-                    {
-                      if (data[2].trim().toUpperCase().startsWith("M")) {
-                        mapData["gender"] = "MALE";
-                      } else if (data[2].trim().toUpperCase().startsWith("F")) {
-                        mapData["gender"] = "FEMALE";
-                      } else {
-                        mapData["gender"] = "X";
-                      }
-                    }
-                    break;
-                  case 3:
-                    {
-                      mapData["team"] = data[3];
-                    }
-                    break;
-                  case 4:
-                    {
-                      mapData["position"] = data[4];
-                    }
-                    break;
-                  default:
-                    {
-                      break;
-                    }
-                }
-              }
-
-              stateManager!.appendRows([
-                PlutoRow(
-                  checked: true,
-                  cells: {
-                    'name_field': PlutoCell(value: mapData["name"]),
-                    'skill_level_field': PlutoCell(value: mapData["level"]),
-                    'team_field': PlutoCell(value: mapData["team"]),
-                    'gender_field': PlutoCell(value: mapData["gender"]),
-                    'role_field': PlutoCell(value: mapData["position"]),
-                  },
-                )
-              ]);
-            }
-            Navigator.pop(context);
-          },
-        ),
-      ],
-    );
+  @override
+  void dispose() {
+    _saveTimer?.cancel();
+    super.dispose();
   }
 
+  // ─── Add players ───────────────────────────────────────────────────────────
   void addPlayers(List<PlayerModel> players) {
-    for (var player in players) {
-      stateManager!.appendRows([
-        PlutoRow(
+    setState(() {
+      for (final p in players) {
+        _players.add(PlayerEntry(
+          name: p.name,
+          level: p.level,
+          gender: p.gender,
+          team: p.team.isEmpty ? 'No team' : p.team,
+          role: p.role,
           checked: true,
-          cells: {
-            'name_field': PlutoCell(value: player.name),
-            'skill_level_field': PlutoCell(value: player.level),
-            'team_field': PlutoCell(value: player.team),
-            'gender_field': PlutoCell(value: player.gender),
-            'role_field': PlutoCell(value: player.role),
-          },
-        )
-      ]);
-    }
-    setState(() {});
-  }
-
-  void _navigateToTeam() {
-    //sort by team name
-
-    stateManager!.sortAscending(columns[3]);
-    List<PlutoRow?> dat = stateManager?.rows ?? [];
-
-    Map<String, List<PlutoRow>> teamsRows = {};
-    Map<String, double> teamsTotalScore = {};
-
-    //find checked items
-
-    for (var i = 0; i < dat.length; i++) {
-      if (dat[i]?.checked ?? false) {
-        // teams_name_list.update(dat[i]?.cells?["team_field"]?.value?? "None", (value) => null)
-        var t = dat[i]!.cells["skill_level_field"]?.value;
-        assert(() {
-          debugPrint('skill_level type: ${t.runtimeType}');
-          return true;
-        }());
-        teamsTotalScore.update(
-          dat[i]!.cells["team_field"]?.value ?? "None",
-          // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
-          (existingValue) =>
-              existingValue +
-              (dat[i]?.cells["skill_level_field"]?.value ?? 0).toDouble(),
-          ifAbsent: () =>
-              (dat[i]?.cells["skill_level_field"]?.value ?? 0).toDouble(),
-        );
-
-        teamsRows.update(
-          dat[i]?.cells["team_field"]?.value ?? "None",
-          (existingValue) {
-            existingValue.add(dat[i]!);
-            return existingValue;
-          },
-          ifAbsent: () => [dat[i]!],
-        );
-      } else {
-        //TODO unassign team
-      }
-    }
-
-    // for (var i = 1; i <= teams; i++) {
-    //   teams_list[i.toString()] = [];
-    // }
-    List<ListItem> teamsListData = [];
-    // print(teams_list.toString());
-    teamsRows.keys.toList().forEach((value) {
-      if (value == "None") return;
-      var players = teamsRows[value]!.length;
-      var totalScore = teamsTotalScore[value];
-      var avgScore = (teamsTotalScore[value]! / teamsRows[value]!.length)
-          .toStringAsFixed(2);
-
-      teamsListData.add(HeadingItem('TEAM#: $value',
-          '$players players with average level  $avgScore and combine level  $totalScore'));
-      for (var row in teamsRows[value]!) {
-        teamsListData.add(MessageItem(row));
+        ));
       }
     });
-    // print(teams_list_data);
+    _triggerSavePlayers();
+  }
+
+  // ─── Navigate to team view ─────────────────────────────────────────────────
+  void _navigateToTeam() {
+    final checkedPlayers = _players.where((p) => p.checked).toList();
+    checkedPlayers.sort((a, b) => a.team.compareTo(b.team));
+
+    final Map<String, List<PlayerEntry>> teamsRows = {};
+    final Map<String, double> teamsTotalScore = {};
+
+    for (final p in checkedPlayers) {
+      final team = p.team;
+      teamsTotalScore.update(
+        team,
+        (v) => v + p.level.toDouble(),
+        ifAbsent: () => p.level.toDouble(),
+      );
+      teamsRows.putIfAbsent(team, () => []).add(p);
+    }
+
+    final teamsListData = <ListItem>[];
+    for (final teamName in teamsRows.keys) {
+      if (teamName == 'No team') continue;
+      final count = teamsRows[teamName]!.length;
+      final total = teamsTotalScore[teamName]!;
+      final avg = (total / count).toStringAsFixed(2);
+      teamsListData.add(HeadingItem('TEAM#: $teamName',
+          '$count players · avg level $avg · combined $total'));
+      for (final row in teamsRows[teamName]!) {
+        teamsListData.add(MessageItem(row));
+      }
+    }
 
     Navigator.push(
         context,
@@ -566,58 +206,348 @@ Jane,4,F""";
                 )));
   }
 
+  // ─── Generate teams ────────────────────────────────────────────────────────
   void generateTeams() {
-    stateManager!.sortAscending(
-        stateManager!.columns.firstWhere((c) => c.field == 'name_field'));
-
-    // Clear team for ALL rows first to ensure unchecked or excluded players are unassigned
-    for (var row in stateManager!.rows) {
-      row.cells['team_field']?.value = 'No team';
+    // Reset all player team assignments first
+    for (final p in _players) {
+      p.team = 'No team';
     }
 
-    List<PlutoRow> dat = [];
-    stateManager?.rows.forEach((element) {
-      if (element.checked!) {
-        dat.add(element);
-      }
-    });
+    final checkedPlayers = _players.where((p) => p.checked).toList();
 
     if (settingsData.o == GenOption.evenGender) {
-      int playerNum = dat.length;
+      final playerNum = checkedPlayers.length;
       if (settingsData.preferExtraTeam) {
         settingsData.teamCount = (playerNum / settingsData.proportion).ceil();
       } else {
         settingsData.teamCount = (playerNum / settingsData.proportion).floor();
       }
       if (settingsData.teamCount == 0) settingsData.teamCount = 1;
-      assert(() {
-        debugPrint('TEAMS CALCULATED: ${settingsData.teamCount}');
-        return true;
-      }());
     }
 
-    Map<String, List<PlutoRow>> teamsList = TeamGenerator.generateTeams(
-      dat,
+    final teamsList = TeamGenerator.generateTeams(
+      checkedPlayers,
       settingsData,
       sport: widget.themeController?.palette,
     );
 
-    // Single setState after all assignments — avoids N rebuilds during team generation
+    // Apply team assignments back to the player list
     setState(() {
-      teamsList.forEach((key, value) {
-        for (final element in value) {
-          element.cells['team_field']?.value = key;
+      teamsList.forEach((teamName, teamPlayers) {
+        for (final p in teamPlayers) {
+          p.team = teamName;
         }
       });
     });
 
+    _triggerSavePlayers();
     _navigateToTeam();
   }
 
+  // ─── Premium Player Editing BottomSheet ───────────────────────────────────
+  void _editPlayer(BuildContext context, PlayerEntry player) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    String editName = player.name;
+    int editLevel = player.level;
+    String editGender = player.gender;
+    String editRole = player.role;
+    String editTeam = player.team;
+
+    // Determine sport for roles (try to match existing role to a sport palette)
+    SportPalette editSport =
+        widget.themeController?.palette ?? SportPalette.volleyball;
+    for (var s in SportPalette.values) {
+      if (s.roles.contains(player.role) && player.role != 'Any') {
+        editSport = s;
+        break;
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Text("Edit Player",
+                      style: theme.textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                autofocus: true,
+                controller: TextEditingController(text: editName),
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: "Player Name",
+                  prefixIcon: const Icon(Icons.person),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onChanged: (v) => editName = v.trim(),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Skill Level", style: theme.textTheme.labelLarge),
+                        const SizedBox(height: 8),
+                        SegmentedButton<int>(
+                          style: const ButtonStyle(
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          segments: List.generate(5, (i) => i + 1)
+                              .map((l) =>
+                                  ButtonSegment(value: l, label: Text("$l")))
+                              .toList(),
+                          selected: {editLevel},
+                          onSelectionChanged: (val) =>
+                              setLocal(() => editLevel = val.first),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text("Gender", style: theme.textTheme.labelLarge),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                      value: "MALE",
+                      label: Text("M"),
+                      icon: Icon(Icons.male, size: 16)),
+                  ButtonSegment(
+                      value: "FEMALE",
+                      label: Text("F"),
+                      icon: Icon(Icons.female, size: 16)),
+                  ButtonSegment(
+                      value: "X",
+                      label: Text("X"),
+                      icon: Icon(Icons.horizontal_rule, size: 16)),
+                ],
+                selected: {editGender},
+                onSelectionChanged: (val) =>
+                    setLocal(() => editGender = val.first),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Sport / Roles",
+                            style: theme.textTheme.labelLarge),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<SportPalette>(
+                          value: editSport,
+                          isDense: true,
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(editSport.icon, size: 18),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                          ),
+                          items: SportPalette.values.map((s) {
+                            return DropdownMenuItem(
+                                value: s,
+                                child: Text(s.label,
+                                    style: const TextStyle(fontSize: 13)));
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setLocal(() {
+                                editSport = val;
+                                editRole = "Any";
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Team Assignment",
+                            style: theme.textTheme.labelLarge),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: TextEditingController(
+                              text: editTeam == 'No team' ? '' : editTeam),
+                          decoration: InputDecoration(
+                            labelText: "Team (e.g. 1, 2)",
+                            prefixIcon: const Icon(Icons.group, size: 18),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                          ),
+                          onChanged: (v) => editTeam =
+                              v.trim().isEmpty ? 'No team' : v.trim(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 6,
+                runSpacing: 0,
+                children: editSport.roles.map((r) {
+                  final isSelected = editRole == r;
+                  return ChoiceChip(
+                    label: Text(r, style: const TextStyle(fontSize: 12)),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) setLocal(() => editRole = r);
+                    },
+                    visualDensity: VisualDensity.compact,
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 28),
+              FilledButton.icon(
+                icon: const Icon(Icons.check),
+                label: const Text("Save Player Details"),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  setState(() {
+                    player.name = editName;
+                    player.level = editLevel;
+                    player.gender = editGender;
+                    player.role = editRole;
+                    player.team = editTeam;
+                  });
+                  _triggerSavePlayers();
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Add row dialog (quick-add via text) ───────────────────────────────────
+  void _showBulkAddDialog(BuildContext context) {
+    final ctrl = TextEditingController(text: 'John,3,M\nJane,4,F');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Bulk Add Players'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('One per line: Name,Level,Gender  (e.g. Alice,4,F)'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: ctrl,
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
+                minLines: 5,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Alice,4,F\nBob,3,M',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              final lines = ctrl.text.split('\n');
+              setState(() {
+                for (final line in lines) {
+                  final parts = line.trim().split(',');
+                  if (parts.isEmpty || parts[0].trim().isEmpty) continue;
+                  final name = parts[0].trim();
+                  final level = parts.length > 1
+                      ? (int.tryParse(parts[1].trim()) ?? 3)
+                      : 3;
+                  String gender = 'MALE';
+                  if (parts.length > 2) {
+                    final g = parts[2].trim().toUpperCase();
+                    if (g.startsWith('F')) {
+                      gender = 'FEMALE';
+                    } else if (g == 'X') {
+                      gender = 'X';
+                    }
+                  }
+                  final team = parts.length > 3 ? parts[3].trim() : 'No team';
+                  final role = parts.length > 4 ? parts[4].trim() : 'Any';
+                  _players.add(PlayerEntry(
+                    name: name,
+                    level: level,
+                    gender: gender,
+                    team: team.isEmpty ? 'No team' : team,
+                    role: role.isEmpty ? 'Any' : role,
+                    checked: true,
+                  ));
+                }
+              });
+              _triggerSavePlayers();
+              Navigator.pop(ctx);
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final checkedCount = _players.where((p) => p.checked).length;
+    final hasResults =
+        _players.any((p) => TeamUtils.normalizeTeamName(p.team) != 'No team');
 
     return Scaffold(
       appBar: AppBar(
@@ -634,9 +564,7 @@ Jane,4,F""";
                   context,
                   PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) =>
-                          RandomTeamScreen(
-                            initialTotal: 6,
-                          )));
+                          RandomTeamScreen(initialTotal: 6)));
             },
           ),
           IconButton(
@@ -645,7 +573,7 @@ Jane,4,F""";
             onPressed: () {
               exportToCsv();
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text("Data Copied to Clipboard!"),
+                content: Text('Data Copied to Clipboard!'),
                 behavior: SnackBarBehavior.floating,
               ));
             },
@@ -676,459 +604,362 @@ Jane,4,F""";
           const SizedBox(width: 8),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        children: [
-          FadeSlideIn(
-            delay: const Duration(milliseconds: 0),
-            child: SectionHeader(
-                title: 'QUICK TOOLS',
-                icon: FontAwesomeIcons.bolt,
-                color: Colors.orangeAccent),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  QuickToolCard(
-                    title: 'TAP SCORE',
-                    icon: Theme.of(context)
-                            .extension<SportIconExtension>()
-                            ?.icon ??
-                        Icons.sports,
-                    color: colorScheme.primary,
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const TapScoreScreen()));
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  QuickToolCard(
-                    title: 'MATCH MAKER',
-                    icon: FontAwesomeIcons.trophy,
-                    color: Colors.amber,
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => MatchScreen(settingsData)));
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  QuickToolCard(
-                    title: 'PLAYER QUEUE',
-                    icon: FontAwesomeIcons.dice,
-                    color: Colors.purpleAccent,
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                              pageBuilder: (context, anim, sec) =>
-                                  const RandomTeamScreen(initialTotal: 6)));
-                    },
-                  ),
-                ],
-              ),
+      body: RepaintBoundary(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          children: [
+            // ── Quick Tools ────────────────────────────────────────────────
+            FadeSlideIn(
+              delay: Duration.zero,
+              child: SectionHeader(
+                  title: 'QUICK TOOLS',
+                  icon: FontAwesomeIcons.bolt,
+                  color: Colors.orangeAccent),
             ),
-          ),
-          const SizedBox(height: 8),
-          FadeSlideIn(
-            delay: const Duration(milliseconds: 80),
-            child: SectionHeader(
-                title: '1. PLAYER ROSTER',
-                icon: FontAwesomeIcons.users,
-                color: colorScheme.primary),
-          ),
-          Card(
-            elevation: 0,
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: colorScheme.outlineVariant),
-            ),
-            margin: const EdgeInsets.only(bottom: 8.0),
-            child: ExpansionTile(
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              childrenPadding: EdgeInsets.zero,
-              tilePadding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-              initiallyExpanded: true,
-              backgroundColor: colorScheme.surface,
-              collapsedBackgroundColor: colorScheme.surface,
-              leading: CircleAvatar(
-                  backgroundColor: colorScheme.primaryContainer,
-                  child:
-                      Icon(Icons.people_outline, color: colorScheme.primary)),
-              title: const Text('Manage Players',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle:
-                  Text('${stateManager?.rows.length ?? 0} Players listed'),
-              children: [
-                SizedBox(
-                  height: 400,
-                  child: PlutoGrid(
-                    columns: columns,
-                    rows: rows,
-                    rowColorCallback: (rowContext) {
-                      if (rowContext.row.cells['name_field']?.value ==
-                          'player level gender and team') {
-                        return colorScheme.errorContainer
-                            .withValues(alpha: 0.1);
-                      }
-                      return Colors.transparent;
-                    },
-                    configuration: PlutoGridConfiguration(
-                      style: PlutoGridStyleConfig(
-                        gridBackgroundColor: colorScheme.surface,
-                        columnTextStyle: TextStyle(
-                            color: colorScheme.onSurface,
-                            fontWeight: FontWeight.bold),
-                        cellTextStyle: TextStyle(color: colorScheme.onSurface),
-                        enableColumnBorderVertical: false,
-                        enableColumnBorderHorizontal: false,
-                        gridBorderColor: Colors.transparent,
-                        activatedColor: colorScheme.primaryContainer,
-                        borderColor: colorScheme.outlineVariant,
-                      ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    QuickToolCard(
+                      title: 'TAP SCORE',
+                      icon: Theme.of(context)
+                              .extension<SportIconExtension>()
+                              ?.icon ??
+                          Icons.sports,
+                      color: colorScheme.primary,
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const TapScoreScreen()));
+                      },
                     ),
-                    createHeader: (stateManager) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 4.0, vertical: 4.0),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.3),
-                          border: Border(
-                              bottom: BorderSide(
-                                  color: colorScheme.outlineVariant)),
-                        ),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              GridHeaderButton(
-                                onPressed: () async {
-                                  final List<PlayerModel>? players =
-                                      await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  AddPlayersScreen()));
-                                  if (players != null) {
-                                    addPlayers(players);
-                                  }
-                                },
-                                icon: Icons.group_add,
-                                label: 'Quick Add',
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: 6),
-                              GridHeaderButton(
-                                onPressed: () {
-                                  stateManager.insertRows(
-                                      0, [stateManager.getNewRow()]);
-                                  _triggerSavePlayers();
-                                },
-                                icon: Icons.person_add,
-                                label: 'Add Row',
-                                color: colorScheme.secondary,
-                              ),
-                              const SizedBox(width: 6),
-                              GridHeaderButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _isEditable = !_isEditable;
-                                    for (var col in stateManager.columns) {
-                                      col.enableEditingMode = _isEditable;
-                                    }
-                                    stateManager.notifyListeners();
-                                  });
-                                },
-                                icon: _isEditable ? Icons.edit_off : Icons.edit,
-                                label: _isEditable ? 'Lock' : 'Edit',
-                                color: _isEditable
-                                    ? colorScheme.tertiary
-                                    : colorScheme.onSurfaceVariant,
-                              ),
-                              const SizedBox(width: 6),
-                              GridHeaderButton(
-                                onPressed: () {
-                                  stateManager
-                                      .removeRows(stateManager.checkedRows);
-                                  _triggerSavePlayers();
-                                },
-                                icon: Icons.delete_sweep,
-                                label: 'Clear Selected',
-                                color: colorScheme.error,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    onLoaded: (PlutoGridOnLoadedEvent event) {
-                      stateManager = event.stateManager;
-                      stateManager!.addListener(_triggerSavePlayers);
-                      _loadPlayers();
-                    },
-                    onRowChecked: (PlutoGridOnRowCheckedEvent event) {
-                      setState(() {
-                        if (event.row != null && !event.row!.checked!) {
-                          event.row!.cells['team_field']?.value = 'No team';
-                        } else if (event.row == null) {
-                          // Handle 'check all' toggles
-                          for (var r in stateManager!.rows) {
-                            if (!r.checked!) {
-                              r.cells['team_field']?.value = 'No team';
-                            }
-                          }
-                        }
-                      });
-                      _triggerSavePlayers();
-                    },
-                    onChanged: (PlutoGridOnChangedEvent event) {
-                      _triggerSavePlayers();
-                      setState(() {});
-                    },
-                  ),
+                    const SizedBox(width: 12),
+                    QuickToolCard(
+                      title: 'MATCH MAKER',
+                      icon: FontAwesomeIcons.trophy,
+                      color: Colors.amber,
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    MatchScreen(settingsData)));
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    QuickToolCard(
+                      title: 'PLAYER QUEUE',
+                      icon: FontAwesomeIcons.dice,
+                      color: Colors.purpleAccent,
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                                pageBuilder: (context, anim, sec) =>
+                                    const RandomTeamScreen(initialTotal: 6)));
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          FadeSlideIn(
-            delay: const Duration(milliseconds: 160),
-            child: SectionHeader(
-                title: '2. BALANCE STRATEGY',
-                icon: FontAwesomeIcons.gears,
-                color: colorScheme.secondary),
-          ),
-          Card(
-            elevation: 0,
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: colorScheme.outlineVariant),
-            ),
-            margin: const EdgeInsets.only(bottom: 8.0),
-            child: ExpansionTile(
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              childrenPadding: EdgeInsets.zero,
-              tilePadding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-              initiallyExpanded: true,
-              backgroundColor: colorScheme.surface,
-              collapsedBackgroundColor: colorScheme.surface,
-              leading: CircleAvatar(
-                  backgroundColor: colorScheme.secondaryContainer,
-                  child:
-                      Icon(Icons.auto_awesome, color: colorScheme.secondary)),
-              title: const Text('Team Splitting Rules',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(
-                'Mode: ${settingsData.o.toString().split('.').last.replaceAll('_', ' ').toUpperCase()} • ${stateManager?.rows.where((r) => r.checked == true).length ?? 0} Players Selected',
-                style: TextStyle(
-                    fontSize: 12, color: colorScheme.onSurfaceVariant),
               ),
-              children: [
-                RadioGroup<GenOption>(
-                  groupValue: settingsData.o,
-                  onChanged: (GenOption? value) {
-                    setState(() {
-                      settingsData.o = value ?? settingsData.o;
-                      _saveSettings();
-                    });
-                  },
-                  child: Column(
-                    children: [
-                      StrategyOption(
-                        option: GenOption.evenGender,
-                        title: 'Fair Mix (Best)',
-                        subtitle:
-                            'Mix players by gender and skill correctly. Grows teams naturally (${settingsData.proportion}/team).',
-                        icon: Icons.wc,
-                        isSelected: settingsData.o == GenOption.evenGender,
-                        configWidget: Column(
-                          children: [
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Players per team',
-                                prefixIcon: Icon(Icons.numbers),
-                                border: OutlineInputBorder(),
-                              ),
-                              initialValue: settingsData.proportion.toString(),
-                              keyboardType: TextInputType.number,
-                              onChanged: (v) => setState(() {
-                                settingsData.proportion = int.tryParse(v) ?? 6;
-                                _saveSettings();
-                              }),
-                            ),
-                            const SizedBox(height: 8),
-                            SwitchListTile(
-                              title: const Text('Add extra team for leftovers',
-                                  style: TextStyle(fontSize: 13)),
-                              subtitle: Text(
-                                  settingsData.preferExtraTeam
-                                      ? 'Ex: 13 players -> 3 smaller teams'
-                                      : 'Ex: 13 players -> 2 larger teams',
-                                  style: const TextStyle(fontSize: 11)),
-                              value: settingsData.preferExtraTeam,
-                              onChanged: (bool value) {
-                                setState(() {
-                                  settingsData.preferExtraTeam = value;
-                                  _saveSettings();
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      StrategyOption(
-                        option: GenOption.distribute,
-                        title: 'Skill Balance',
-                        subtitle: 'Spread top players across teams fairly.',
-                        icon: Icons.balance,
-                        isSelected: settingsData.o == GenOption.distribute,
-                        configWidget: TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Total Teams',
-                            prefixIcon: Icon(Icons.grid_view),
-                            border: OutlineInputBorder(),
-                          ),
-                          initialValue: settingsData.teamCount.toString(),
-                          keyboardType: TextInputType.number,
-                          onChanged: (v) => setState(() {
-                            settingsData.teamCount = int.tryParse(v) ?? 2;
-                            _saveSettings();
-                          }),
-                        ),
-                      ),
-                      StrategyOption(
-                        option: GenOption.division,
-                        title: 'Ranked Groups',
-                        subtitle:
-                            'Put strong players together and new players together.',
-                        icon: Icons.military_tech,
-                        isSelected: settingsData.o == GenOption.division,
-                        configWidget: Column(
-                          children: [
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Number of Groups',
-                                border: OutlineInputBorder(),
-                              ),
-                              initialValue: settingsData.division.toString(),
-                              onChanged: (v) => setState(() {
-                                settingsData.division = int.tryParse(v) ?? 2;
-                                _saveSettings();
-                              }),
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Total Teams',
-                                border: OutlineInputBorder(),
-                              ),
-                              initialValue: settingsData.teamCount.toString(),
-                              onChanged: (v) => setState(() {
-                                settingsData.teamCount = int.tryParse(v) ?? 2;
-                                _saveSettings();
-                              }),
-                            ),
-                          ],
-                        ),
-                      ),
-                      StrategyOption(
-                        option: GenOption.random,
-                        title: 'Random',
-                        subtitle: 'Mix players with no rules.',
-                        icon: Icons.shuffle,
-                        isSelected: settingsData.o == GenOption.random,
-                        configWidget: TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Total Teams',
-                            prefixIcon: Icon(Icons.grid_view),
-                            border: OutlineInputBorder(),
-                          ),
-                          initialValue: settingsData.teamCount.toString(),
-                          keyboardType: TextInputType.number,
-                          onChanged: (v) => setState(() {
-                            settingsData.teamCount = int.tryParse(v) ?? 2;
-                            _saveSettings();
-                          }),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: generateTeams,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                        elevation: 4,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                      ),
+            ),
+            const SizedBox(height: 8),
+
+            // ── 1. Player Roster ───────────────────────────────────────────
+            FadeSlideIn(
+              delay: const Duration(milliseconds: 80),
+              child: SectionHeader(
+                  title: '1. PLAYER ROSTER',
+                  icon: FontAwesomeIcons.users,
+                  color: colorScheme.primary),
+            ),
+            Card(
+              elevation: 0,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: colorScheme.outlineVariant),
+              ),
+              margin: const EdgeInsets.only(bottom: 8.0),
+              child: ExpansionTile(
+                dense: true,
+                visualDensity: VisualDensity.compact,
+                childrenPadding: EdgeInsets.zero,
+                tilePadding:
+                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
+                initiallyExpanded: true,
+                backgroundColor: colorScheme.surface,
+                collapsedBackgroundColor: colorScheme.surface,
+                leading: CircleAvatar(
+                    backgroundColor: colorScheme.primaryContainer,
+                    child:
+                        Icon(Icons.people_outline, color: colorScheme.primary)),
+                title: const Text('Manage Players',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('${_players.length} Players listed'),
+                children: [
+                  // ── Toolbar ──────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4.0, vertical: 4.0),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.3),
+                      border: Border(
+                          bottom:
+                              BorderSide(color: colorScheme.outlineVariant)),
+                    ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Theme.of(context)
-                                    .extension<SportIconExtension>()
-                                    ?.icon ??
-                                Icons.sports,
-                            size: 20,
+                          GridHeaderButton(
+                            onPressed: () async {
+                              final List<PlayerModel>? players =
+                                  await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              AddPlayersScreen()));
+                              if (players != null) addPlayers(players);
+                            },
+                            icon: Icons.group_add,
+                            label: 'Quick Add',
+                            color: colorScheme.primary,
                           ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'GENERATE TEAMS',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.2,
-                            ),
+                          const SizedBox(width: 6),
+                          GridHeaderButton(
+                            onPressed: () => _showBulkAddDialog(context),
+                            icon: Icons.format_list_bulleted_add,
+                            label: 'Bulk Add',
+                            color: colorScheme.secondary,
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.flash_on, size: 16),
+                          const SizedBox(width: 6),
+                          GridHeaderButton(
+                            onPressed: () {
+                              setState(() {
+                                _players.add(PlayerEntry(checked: true));
+                              });
+                              _triggerSavePlayers();
+                            },
+                            icon: Icons.person_add,
+                            label: 'Add Row',
+                            color: colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 6),
+                          GridHeaderButton(
+                            onPressed: () {
+                              setState(() => _isEditable = !_isEditable);
+                            },
+                            icon: _isEditable ? Icons.edit_off : Icons.edit,
+                            label: _isEditable ? 'Lock' : 'Edit',
+                            color: _isEditable
+                                ? colorScheme.tertiary
+                                : colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 6),
+                          GridHeaderButton(
+                            onPressed: () {
+                              setState(() {
+                                _players.removeWhere((p) => p.checked);
+                              });
+                              _triggerSavePlayers();
+                            },
+                            icon: Icons.delete_sweep,
+                            label: 'Clear Selected',
+                            color: colorScheme.error,
+                          ),
                         ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                  // ── DataTable2 ────────────────────────────────────────────
+                  RepaintBoundary(
+                    child: _PlayerDataTable(
+                      players: _players,
+                      allRoles: _allRoles,
+                      isEditable: _isEditable,
+                      colorScheme: colorScheme,
+                      onEdit: (p) => _editPlayer(context, p),
+                      onChanged: () {
+                        setState(() {});
+                        _triggerSavePlayers();
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (stateManager != null &&
-              stateManager!.rows.any((element) =>
-                  TeamUtils.normalizeTeamName(
-                      element.cells['team_field']?.value.toString()) !=
-                  "No team")) ...[
+
+            // ── 2. Balance Strategy ────────────────────────────────────────
             FadeSlideIn(
-              delay: const Duration(milliseconds: 0),
+              delay: const Duration(milliseconds: 160),
               child: SectionHeader(
-                  title: '3. RESULTS',
-                  icon: FontAwesomeIcons.trophy,
-                  color: colorScheme.tertiary),
+                  title: '2. BALANCE STRATEGY',
+                  icon: FontAwesomeIcons.gears,
+                  color: colorScheme.secondary),
             ),
             Card(
-              elevation: 4,
-              shadowColor: colorScheme.tertiary.withValues(alpha: 0.2),
+              elevation: 0,
+              clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                    color: colorScheme.tertiary.withValues(alpha: 0.3)),
+                side: BorderSide(color: colorScheme.outlineVariant),
+              ),
+              margin: const EdgeInsets.only(bottom: 8.0),
+              child: ExpansionTile(
+                dense: true,
+                visualDensity: VisualDensity.compact,
+                childrenPadding: EdgeInsets.zero,
+                tilePadding:
+                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
+                initiallyExpanded: true,
+                backgroundColor: colorScheme.surface,
+                collapsedBackgroundColor: colorScheme.surface,
+                leading: CircleAvatar(
+                    backgroundColor: colorScheme.secondaryContainer,
+                    child:
+                        Icon(Icons.auto_awesome, color: colorScheme.secondary)),
+                title: const Text('Team Splitting Rules',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(
+                  'Mode: ${settingsData.o.toString().split('.').last.replaceAll('_', ' ').toUpperCase()} • $checkedCount Players Selected',
+                  style: TextStyle(
+                      fontSize: 12, color: colorScheme.onSurfaceVariant),
+                ),
+                children: [
+                  _StrategySection(
+                    settingsData: settingsData,
+                    onStrategyChanged: (v) {
+                      setState(() {
+                        settingsData.o = v ?? settingsData.o;
+                        _saveSettings();
+                      });
+                    },
+                    onSettingsChanged: () {
+                      setState(() => _saveSettings());
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: generateTeams,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          elevation: 4,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Theme.of(context)
+                                      .extension<SportIconExtension>()
+                                      ?.icon ??
+                                  Icons.sports,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'GENERATE TEAMS',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.flash_on, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── 3. Results (conditional) ───────────────────────────────────
+            if (hasResults) ...[
+              FadeSlideIn(
+                delay: Duration.zero,
+                child: SectionHeader(
+                    title: '3. RESULTS',
+                    icon: FontAwesomeIcons.trophy,
+                    color: colorScheme.tertiary),
+              ),
+              Card(
+                elevation: 4,
+                shadowColor: colorScheme.tertiary.withValues(alpha: 0.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                      color: colorScheme.tertiary.withValues(alpha: 0.3)),
+                ),
+                margin: const EdgeInsets.only(bottom: 8.0),
+                child: ExpansionTile(
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  childrenPadding: EdgeInsets.zero,
+                  tilePadding: const EdgeInsets.symmetric(
+                      horizontal: 12.0, vertical: 0.0),
+                  initiallyExpanded: true,
+                  leading: CircleAvatar(
+                      backgroundColor: colorScheme.tertiaryContainer,
+                      child: Icon(Icons.groups, color: colorScheme.tertiary)),
+                  title: const Text('Active Teams',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  children: [
+                    TeamResultsView(
+                      players: _players,
+                      onChanged: () {
+                        setState(() {});
+                        _triggerSavePlayers();
+                      },
+                    )
+                  ],
+                ),
+              ),
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: colorScheme.outlineVariant),
+                ),
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ExpansionTile(
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  childrenPadding: EdgeInsets.zero,
+                  tilePadding: const EdgeInsets.symmetric(
+                      horizontal: 12.0, vertical: 0.0),
+                  initiallyExpanded: true,
+                  leading: CircleAvatar(
+                      backgroundColor: colorScheme.surfaceContainerHighest,
+                      child:
+                          Icon(Icons.map, color: colorScheme.onSurfaceVariant)),
+                  title: const Text('Player/Team Directory',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  children: [PlayerTeamDirectoryView(players: _players)],
+                ),
+              ),
+            ],
+
+            // ── Unassigned list ────────────────────────────────────────────
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: colorScheme.outlineVariant),
               ),
               margin: const EdgeInsets.only(bottom: 8.0),
               child: ExpansionTile(
@@ -1139,61 +970,25 @@ Jane,4,F""";
                     const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
                 initiallyExpanded: true,
                 leading: CircleAvatar(
-                    backgroundColor: colorScheme.tertiaryContainer,
-                    child: Icon(Icons.groups, color: colorScheme.tertiary)),
-                title: const Text('Active Teams',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                children: [TeamResultsView(stateManager: stateManager)],
-              ),
-            ),
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: colorScheme.outlineVariant),
-              ),
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ExpansionTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                childrenPadding: EdgeInsets.zero,
-                tilePadding:
-                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-                initiallyExpanded: true,
-                leading: CircleAvatar(
-                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    backgroundColor:
+                        colorScheme.secondaryContainer.withValues(alpha: 0.5),
                     child:
-                        Icon(Icons.map, color: colorScheme.onSurfaceVariant)),
-                title: const Text('Player/Team Directory',
+                        Icon(Icons.person_off, color: colorScheme.secondary)),
+                title: const Text('Unassigned List',
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                children: [PlayerTeamDirectoryView(stateManager: stateManager)],
+                children: [
+                  UnassignedPlayersView(
+                    players: _players,
+                    onChanged: () {
+                      setState(() {});
+                      _triggerSavePlayers();
+                    },
+                  )
+                ],
               ),
             ),
           ],
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: colorScheme.outlineVariant),
-            ),
-            margin: const EdgeInsets.only(bottom: 8.0),
-            child: ExpansionTile(
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              childrenPadding: EdgeInsets.zero,
-              tilePadding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-              initiallyExpanded: true,
-              leading: CircleAvatar(
-                  backgroundColor:
-                      colorScheme.secondaryContainer.withValues(alpha: 0.5),
-                  child: Icon(Icons.person_off, color: colorScheme.secondary)),
-              title: const Text('Unassigned List',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              children: [UnassignedPlayersView(stateManager: stateManager)],
-            ),
-          ),
-        ],
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -1232,13 +1027,10 @@ Jane,4,F""";
                 ),
                 BottomNavButton(
                   onPressed: () {
-                    // Sync team count to actually generated teams to exclude empty ones
-                    // We calculate this based on the unique team assignments in the grid
-                    var activeTeams = stateManager!.rows
-                        .where((r) => r.checked == true)
-                        .map((r) => r.cells['team_field']?.value.toString())
-                        .where(
-                            (t) => t != null && t != "None" && t != "No team")
+                    final activeTeams = _players
+                        .where((p) => p.checked)
+                        .map((p) => p.team)
+                        .where((t) => t != 'No team' && t != 'None')
                         .toSet()
                         .length;
 
@@ -1246,7 +1038,6 @@ Jane,4,F""";
                       settingsData.teamCount = activeTeams;
                     }
 
-                    // Default to 1 venue and calculate rounds for a full round-robin
                     settingsData.gameVenues = 1;
                     settingsData.gameRounds = settingsData.teamCount.isOdd
                         ? settingsData.teamCount
@@ -1276,6 +1067,457 @@ Jane,4,F""";
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Strategy section — extracted to avoid rebuilding the whole tree when
+// the strategy radio changes.
+// ─────────────────────────────────────────────────────────────────────────────
+class _StrategySection extends StatelessWidget {
+  final SettingsData settingsData;
+  final ValueChanged<GenOption?> onStrategyChanged;
+  final VoidCallback onSettingsChanged;
+
+  const _StrategySection({
+    required this.settingsData,
+    required this.onStrategyChanged,
+    required this.onSettingsChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RadioGroup<GenOption>(
+      groupValue: settingsData.o,
+      onChanged: onStrategyChanged,
+      child: Column(
+        children: [
+          StrategyOption(
+            option: GenOption.evenGender,
+            title: 'Fair Mix (Best)',
+            subtitle:
+                'Mix players by gender and skill correctly. Grows teams naturally (${settingsData.proportion}/team).',
+            icon: Icons.wc,
+            isSelected: settingsData.o == GenOption.evenGender,
+            configWidget: Column(
+              children: [
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Players per team',
+                    prefixIcon: Icon(Icons.numbers),
+                    border: OutlineInputBorder(),
+                  ),
+                  initialValue: settingsData.proportion.toString(),
+                  keyboardType: TextInputType.number,
+                  onChanged: (v) {
+                    settingsData.proportion = int.tryParse(v) ?? 6;
+                    onSettingsChanged();
+                  },
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  title: const Text('Add extra team for leftovers',
+                      style: TextStyle(fontSize: 13)),
+                  subtitle: Text(
+                      settingsData.preferExtraTeam
+                          ? 'Ex: 13 players -> 3 smaller teams'
+                          : 'Ex: 13 players -> 2 larger teams',
+                      style: const TextStyle(fontSize: 11)),
+                  value: settingsData.preferExtraTeam,
+                  onChanged: (bool value) {
+                    settingsData.preferExtraTeam = value;
+                    onSettingsChanged();
+                  },
+                ),
+              ],
+            ),
+          ),
+          StrategyOption(
+            option: GenOption.distribute,
+            title: 'Skill Balance',
+            subtitle: 'Spread top players across teams fairly.',
+            icon: Icons.balance,
+            isSelected: settingsData.o == GenOption.distribute,
+            configWidget: TextFormField(
+              decoration: const InputDecoration(
+                labelText: 'Total Teams',
+                prefixIcon: Icon(Icons.grid_view),
+                border: OutlineInputBorder(),
+              ),
+              initialValue: settingsData.teamCount.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (v) {
+                settingsData.teamCount = int.tryParse(v) ?? 2;
+                onSettingsChanged();
+              },
+            ),
+          ),
+          StrategyOption(
+            option: GenOption.division,
+            title: 'Ranked Groups',
+            subtitle: 'Put strong players together and new players together.',
+            icon: Icons.military_tech,
+            isSelected: settingsData.o == GenOption.division,
+            configWidget: Column(
+              children: [
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Number of Groups',
+                    border: OutlineInputBorder(),
+                  ),
+                  initialValue: settingsData.division.toString(),
+                  onChanged: (v) {
+                    settingsData.division = int.tryParse(v) ?? 2;
+                    onSettingsChanged();
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Total Teams',
+                    border: OutlineInputBorder(),
+                  ),
+                  initialValue: settingsData.teamCount.toString(),
+                  onChanged: (v) {
+                    settingsData.teamCount = int.tryParse(v) ?? 2;
+                    onSettingsChanged();
+                  },
+                ),
+              ],
+            ),
+          ),
+          StrategyOption(
+            option: GenOption.random,
+            title: 'Random',
+            subtitle: 'Mix players with no rules.',
+            icon: Icons.shuffle,
+            isSelected: settingsData.o == GenOption.random,
+            configWidget: TextFormField(
+              decoration: const InputDecoration(
+                labelText: 'Total Teams',
+                prefixIcon: Icon(Icons.grid_view),
+                border: OutlineInputBorder(),
+              ),
+              initialValue: settingsData.teamCount.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (v) {
+                settingsData.teamCount = int.tryParse(v) ?? 2;
+                onSettingsChanged();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Player DataTable2 — lightweight replacement for PlutoGrid
+// ─────────────────────────────────────────────────────────────────────────────
+class _PlayerDataTable extends StatelessWidget {
+  final List<PlayerEntry> players;
+  final List<String> allRoles;
+  final bool isEditable;
+  final ColorScheme colorScheme;
+  final void Function(PlayerEntry) onEdit;
+  final VoidCallback onChanged;
+
+  const _PlayerDataTable({
+    required this.players,
+    required this.allRoles,
+    required this.isEditable,
+    required this.colorScheme,
+    required this.onEdit,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Use SizedBox with a sensible max-height so the list can scroll
+    return SizedBox(
+      height:
+          (players.isEmpty ? 120 : (players.length * 52.0 + 56).clamp(120, 420))
+              .toDouble(),
+      child: DataTable2(
+        columnSpacing: 8,
+        horizontalMargin: 10,
+        minWidth: 500,
+        headingRowHeight: 36,
+        dataRowHeight: 48,
+        showCheckboxColumn: true,
+        onSelectAll: (val) {
+          if (val != null) {
+            for (var p in players) {
+              p.checked = val;
+            }
+            onChanged();
+          }
+        },
+        headingRowColor: WidgetStateProperty.all(
+            colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)),
+        border: TableBorder(
+          horizontalInside:
+              BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+        ),
+        columns: const [
+          DataColumn2(label: Text('Name'), size: ColumnSize.L),
+          DataColumn2(label: Text('Lvl'), fixedWidth: 52),
+          DataColumn2(label: Text('Gender'), fixedWidth: 72),
+          DataColumn2(label: Text('Position'), size: ColumnSize.M),
+          DataColumn2(label: Text('Team'), fixedWidth: 70),
+          DataColumn2(label: Text(''), fixedWidth: 44),
+        ],
+        rows: [
+          for (int i = 0; i < players.length; i++)
+            _buildRow(context, players[i], i),
+        ],
+      ),
+    );
+  }
+
+  DataRow2 _buildRow(BuildContext context, PlayerEntry p, int index) {
+    final isFemale = p.gender.toUpperCase().startsWith('F');
+    final isChecked = p.checked;
+
+    return DataRow2(
+      selected: p.checked,
+      onSelectChanged: (val) {
+        if (val != null) {
+          p.checked = val;
+          onChanged();
+        }
+      },
+      color: WidgetStateProperty.resolveWith((states) {
+        if (!isChecked) {
+          return colorScheme.surfaceContainerHighest.withValues(alpha: 0.3);
+        }
+        return index.isEven
+            ? colorScheme.surface
+            : colorScheme.surfaceContainer.withValues(alpha: 0.5);
+      }),
+      cells: [
+        // ── Name ──────────────────────────────────────────────────────────
+        DataCell(
+          isEditable
+              ? _InlineTextField(
+                  value: p.name,
+                  hint: 'Player name',
+                  onChanged: (v) {
+                    p.name = v;
+                    onChanged();
+                  },
+                )
+              : Text(p.name,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 13),
+                  overflow: TextOverflow.ellipsis),
+          onTap: isEditable ? null : () => onEdit(p),
+        ),
+        // ── Level ─────────────────────────────────────────────────────────
+        DataCell(
+          isEditable
+              ? _LevelDropdown(
+                  value: p.level,
+                  onChanged: (v) {
+                    p.level = v ?? p.level;
+                    onChanged();
+                  },
+                )
+              : _LevelBadge(level: p.level, color: colorScheme.primary),
+        ),
+        // ── Gender ────────────────────────────────────────────────────────
+        DataCell(
+          isEditable
+              ? _GenderDropdown(
+                  value: p.gender,
+                  onChanged: (v) {
+                    p.gender = v ?? p.gender;
+                    onChanged();
+                  },
+                )
+              : Text(
+                  isFemale ? '♀' : '♂',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isFemale ? Colors.pink : Colors.blue,
+                  ),
+                ),
+        ),
+        // ── Position ──────────────────────────────────────────────────────
+        DataCell(
+          isEditable
+              ? _RoleDropdown(
+                  value: p.role,
+                  allRoles: allRoles,
+                  onChanged: (v) {
+                    p.role = v ?? p.role;
+                    onChanged();
+                  },
+                )
+              : Text(p.role,
+                  style: const TextStyle(fontSize: 12),
+                  overflow: TextOverflow.ellipsis),
+        ),
+        // ── Team ──────────────────────────────────────────────────────────
+        DataCell(
+          Text(
+            TeamUtils.normalizeTeamName(p.team) == 'No team' ? '-' : p.team,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: TeamUtils.normalizeTeamName(p.team) == 'No team'
+                  ? colorScheme.onSurfaceVariant
+                  : colorScheme.primary,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        // ── Edit button ───────────────────────────────────────────────────
+        DataCell(
+          IconButton(
+            icon: const Icon(Icons.edit_note, size: 18),
+            color: colorScheme.onSurfaceVariant,
+            onPressed: () => onEdit(p),
+            tooltip: 'Edit',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Inline widgets for edit mode ────────────────────────────────────────────
+
+class _InlineTextField extends StatefulWidget {
+  final String value;
+  final String hint;
+  final ValueChanged<String> onChanged;
+
+  const _InlineTextField(
+      {required this.value, required this.hint, required this.onChanged});
+
+  @override
+  State<_InlineTextField> createState() => _InlineTextFieldState();
+}
+
+class _InlineTextFieldState extends State<_InlineTextField> {
+  late TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _ctrl,
+      style: const TextStyle(fontSize: 13),
+      decoration: InputDecoration(
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        border: InputBorder.none,
+        hintText: widget.hint,
+      ),
+      onChanged: widget.onChanged,
+    );
+  }
+}
+
+class _LevelDropdown extends StatelessWidget {
+  final int value;
+  final ValueChanged<int?> onChanged;
+  const _LevelDropdown({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) => DropdownButton<int>(
+        value: value.clamp(1, 5),
+        isDense: true,
+        underline: const SizedBox(),
+        items: List.generate(5, (i) => i + 1)
+            .map((l) => DropdownMenuItem(value: l, child: Text('$l')))
+            .toList(),
+        onChanged: onChanged,
+      );
+}
+
+class _GenderDropdown extends StatelessWidget {
+  final String value;
+  final ValueChanged<String?> onChanged;
+  const _GenderDropdown({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) => DropdownButton<String>(
+        value: ['MALE', 'FEMALE', 'X'].contains(value) ? value : 'MALE',
+        isDense: true,
+        underline: const SizedBox(),
+        items: const [
+          DropdownMenuItem(value: 'MALE', child: Text('M')),
+          DropdownMenuItem(value: 'FEMALE', child: Text('F')),
+          DropdownMenuItem(value: 'X', child: Text('X')),
+        ],
+        onChanged: onChanged,
+      );
+}
+
+class _RoleDropdown extends StatelessWidget {
+  final String value;
+  final List<String> allRoles;
+  final ValueChanged<String?> onChanged;
+  const _RoleDropdown(
+      {required this.value, required this.allRoles, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) => DropdownButton<String>(
+        value: allRoles.contains(value) ? value : 'Any',
+        isDense: true,
+        underline: const SizedBox(),
+        items: allRoles
+            .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+            .toList(),
+        onChanged: onChanged,
+      );
+}
+
+class _LevelBadge extends StatelessWidget {
+  final int level;
+  final Color color;
+  const _LevelBadge({required this.level, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.star_rounded, size: 12, color: color),
+          const SizedBox(width: 2),
+          Text(
+            level.toString(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

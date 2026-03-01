@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pluto_grid/pluto_grid.dart';
+import 'package:teammaker/model/player_entry.dart';
 import 'package:teammaker/utils/team_utils.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -9,24 +9,26 @@ import 'package:teammaker/utils/team_utils.dart';
 class _DraggedPlayer {
   final String name;
   final String fromTeam;
-  final PlutoRow row;
+  final PlayerEntry player;
 
   const _DraggedPlayer({
     required this.name,
     required this.fromTeam,
-    required this.row,
+    required this.player,
   });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TeamResultsView — drag-and-drop version
+// TeamResultsView — drag-and-drop, uses plain PlayerEntry list
 // ─────────────────────────────────────────────────────────────────────────────
 class TeamResultsView extends StatefulWidget {
-  final PlutoGridStateManager? stateManager;
+  final List<PlayerEntry> players;
+  final VoidCallback? onChanged;
 
   const TeamResultsView({
     super.key,
-    required this.stateManager,
+    required this.players,
+    this.onChanged,
   });
 
   @override
@@ -34,8 +36,7 @@ class TeamResultsView extends StatefulWidget {
 }
 
 class _TeamResultsViewState extends State<TeamResultsView> {
-  // Local mirror of teams so we can redraw instantly on drag
-  late Map<String, List<PlutoRow>> _teams;
+  late Map<String, List<PlayerEntry>> _teams;
 
   @override
   void initState() {
@@ -50,51 +51,32 @@ class _TeamResultsViewState extends State<TeamResultsView> {
   }
 
   void _rebuildTeams() {
-    final sm = widget.stateManager;
-    if (sm == null) {
-      _teams = {};
-      return;
-    }
-    final Map<String, List<PlutoRow>> built = {};
-    for (final row in sm.rows) {
-      final team = TeamUtils.normalizeTeamName(
-          row.cells['team_field']?.value.toString());
+    final Map<String, List<PlayerEntry>> built = {};
+    for (final player in widget.players) {
+      final team = TeamUtils.normalizeTeamName(player.team);
       if (team == 'No team') continue;
-      built.putIfAbsent(team, () => []).add(row);
+      built.putIfAbsent(team, () => []).add(player);
     }
     _teams = built;
   }
 
-  /// Moves a player to a new team — updates the PlutoGrid cell and local state.
-  void _movePlayer(PlutoRow row, String toTeam) {
-    final sm = widget.stateManager;
-    if (sm == null) return;
-
-    sm.changeCellValue(
-      row.cells['team_field']!,
-      toTeam,
-      force: true,
-      notify: true,
-    );
-
+  void _movePlayer(PlayerEntry player, String toTeam) {
+    player.team = toTeam;
     HapticFeedback.lightImpact();
-
     setState(() {
       _rebuildTeams();
     });
+    widget.onChanged?.call();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.stateManager == null) return const SizedBox.shrink();
-
     final colorScheme = Theme.of(context).colorScheme;
     final sortedTeams = _teams.keys.toList()..sort();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ── Info banner ──────────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
           child: Row(
@@ -114,15 +96,15 @@ class _TeamResultsViewState extends State<TeamResultsView> {
           ),
         ),
         const SizedBox(height: 4),
-
-        // ── Team columns ─────────────────────────────────────────────────
         ...sortedTeams.map((teamName) {
-          final players = _teams[teamName] ?? [];
-          return _TeamDropZone(
-            teamName: teamName,
-            players: players,
-            allTeamNames: sortedTeams,
-            onPlayerMoved: _movePlayer,
+          final teamPlayers = _teams[teamName] ?? [];
+          return RepaintBoundary(
+            child: _TeamDropZone(
+              teamName: teamName,
+              players: teamPlayers,
+              allTeamNames: sortedTeams,
+              onPlayerMoved: _movePlayer,
+            ),
           );
         }),
       ],
@@ -135,9 +117,9 @@ class _TeamResultsViewState extends State<TeamResultsView> {
 // ─────────────────────────────────────────────────────────────────────────────
 class _TeamDropZone extends StatefulWidget {
   final String teamName;
-  final List<PlutoRow> players;
+  final List<PlayerEntry> players;
   final List<String> allTeamNames;
-  final void Function(PlutoRow row, String toTeam) onPlayerMoved;
+  final void Function(PlayerEntry player, String toTeam) onPlayerMoved;
 
   const _TeamDropZone({
     required this.teamName,
@@ -151,23 +133,28 @@ class _TeamDropZone extends StatefulWidget {
 }
 
 class _TeamDropZoneState extends State<_TeamDropZone> {
+  bool _isDragOver = false;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final teamColor = _teamColor(widget.teamName, colorScheme);
 
     return DragTarget<_DraggedPlayer>(
-      onWillAcceptWithDetails: (details) {
-        // Only accept from a different team
-        return details.data.fromTeam != widget.teamName;
-      },
+      onWillAcceptWithDetails: (details) =>
+          details.data.fromTeam != widget.teamName,
       onAcceptWithDetails: (details) {
-        widget.onPlayerMoved(details.data.row, widget.teamName);
+        widget.onPlayerMoved(details.data.player, widget.teamName);
+        if (mounted) setState(() => _isDragOver = false);
       },
-      onMove: (_) => setState(() {}),
-      onLeave: (_) => setState(() {}),
+      onMove: (_) {
+        if (!_isDragOver && mounted) setState(() => _isDragOver = true);
+      },
+      onLeave: (_) {
+        if (_isDragOver && mounted) setState(() => _isDragOver = false);
+      },
       builder: (context, candidateData, rejectedData) {
-        final isDragOver = candidateData.isNotEmpty;
+        final isDragOver = candidateData.isNotEmpty || _isDragOver;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -193,7 +180,7 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
           ),
           child: Column(
             children: [
-              // ── Team Header ────────────────────────────────────────────
+              // ── Team Header ──────────────────────────────────────────────
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -259,7 +246,7 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
                 ),
               ),
 
-              // ── Player List ────────────────────────────────────────────
+              // ── Player List ──────────────────────────────────────────────
               if (widget.players.isEmpty)
                 Padding(
                   padding: const EdgeInsets.all(16),
@@ -273,28 +260,27 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
                   ),
                 )
               else
-                ...widget.players.asMap().entries.map((entry) {
-                  final row = entry.value;
-                  final name = row.cells['name_field']?.value.toString() ?? '';
-                  final role = row.cells['role_field']?.value.toString() ?? '';
-                  final gender =
-                      row.cells['gender_field']?.value.toString() ?? '';
-                  final level =
-                      (row.cells['skill_level_field']?.value ?? 0) as int;
+                ...widget.players.map((player) {
+                  final name = player.name;
+                  final role = player.role;
+                  final gender = player.gender;
+                  final level = player.level;
 
                   final dragData = _DraggedPlayer(
                     name: name,
                     fromTeam: widget.teamName,
-                    row: row,
+                    player: player,
                   );
 
-                  return _DraggablePlayerTile(
-                    dragData: dragData,
-                    name: name,
-                    role: role,
-                    gender: gender,
-                    level: level,
-                    teamColor: teamColor,
+                  return RepaintBoundary(
+                    child: _DraggablePlayerTile(
+                      dragData: dragData,
+                      name: name,
+                      role: role,
+                      gender: gender,
+                      level: level,
+                      teamColor: teamColor,
+                    ),
                   );
                 }),
 
@@ -306,16 +292,15 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
     );
   }
 
-  /// Deterministic color per team name (cycles through palette)
   Color _teamColor(String teamName, ColorScheme cs) {
     final colors = [
       cs.primary,
       cs.secondary,
       cs.tertiary,
-      const Color(0xFF00897B), // teal
-      const Color(0xFF8E24AA), // purple
-      const Color(0xFFE53935), // red
-      const Color(0xFFFF8F00), // amber
+      const Color(0xFF00897B),
+      const Color(0xFF8E24AA),
+      const Color(0xFFE53935),
+      const Color(0xFFFF8F00),
     ];
     final hash = teamName.codeUnits.fold(0, (a, b) => a + b);
     return colors[hash % colors.length];
@@ -323,7 +308,7 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Draggable player tile
+// Draggable player tile — const where possible
 // ─────────────────────────────────────────────────────────────────────────────
 class _DraggablePlayerTile extends StatelessWidget {
   final _DraggedPlayer dragData;
@@ -374,14 +359,13 @@ class _DraggablePlayerTile extends StatelessWidget {
       ),
       childWhenDragging: Opacity(
         opacity: 0.3,
-        child: _buildTile(context, colorScheme, isFemale),
+        child: _buildTile(colorScheme, isFemale),
       ),
-      child: _buildTile(context, colorScheme, isFemale),
+      child: _buildTile(colorScheme, isFemale),
     );
   }
 
-  Widget _buildTile(
-      BuildContext context, ColorScheme colorScheme, bool isFemale) {
+  Widget _buildTile(ColorScheme colorScheme, bool isFemale) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
@@ -436,7 +420,7 @@ class _DraggablePlayerTile extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Compact star rating
+// Compact star rating — const-safe
 // ─────────────────────────────────────────────────────────────────────────────
 class _StarRating extends StatelessWidget {
   final int level;
@@ -460,25 +444,24 @@ class _StarRating extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// UnassignedPlayersView — also draggable so you can assign stragglers
+// UnassignedPlayersView — draggable unassigned players list
 // ─────────────────────────────────────────────────────────────────────────────
 class UnassignedPlayersView extends StatelessWidget {
-  final PlutoGridStateManager? stateManager;
+  final List<PlayerEntry> players;
+  final VoidCallback? onChanged;
 
   const UnassignedPlayersView({
     super.key,
-    required this.stateManager,
+    required this.players,
+    this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (stateManager == null) return const SizedBox.shrink();
     final colorScheme = Theme.of(context).colorScheme;
 
-    final unassigned = stateManager!.rows.where((row) =>
-        TeamUtils.normalizeTeamName(
-            row.cells['team_field']?.value.toString()) ==
-        'No team');
+    final unassigned =
+        players.where((p) => TeamUtils.normalizeTeamName(p.team) == 'No team');
 
     if (unassigned.isEmpty) {
       return ListTile(
@@ -488,15 +471,15 @@ class UnassignedPlayersView extends StatelessWidget {
     }
 
     return Column(
-      children: unassigned.map((row) {
-        final name = row.cells['name_field']?.value.toString() ?? '';
-        final role = row.cells['role_field']?.value.toString() ?? '';
-        final gender = row.cells['gender_field']?.value.toString() ?? '';
-        final level = (row.cells['skill_level_field']?.value ?? 0) as int;
+      children: unassigned.map((player) {
+        final name = player.name;
+        final role = player.role;
+        final gender = player.gender;
+        final level = player.level;
         final dragData = _DraggedPlayer(
           name: name,
           fromTeam: 'No team',
-          row: row,
+          player: player,
         );
         final isFemale = gender.toUpperCase().startsWith('F');
 
@@ -582,30 +565,26 @@ class UnassignedPlayersView extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PlayerTeamDirectoryView — unchanged, read-only alphabetical list
+// PlayerTeamDirectoryView — alphabetical read-only list
 // ─────────────────────────────────────────────────────────────────────────────
 class PlayerTeamDirectoryView extends StatelessWidget {
-  final PlutoGridStateManager? stateManager;
+  final List<PlayerEntry> players;
 
   const PlayerTeamDirectoryView({
     super.key,
-    required this.stateManager,
+    required this.players,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (stateManager == null) return const SizedBox.shrink();
     final colorScheme = Theme.of(context).colorScheme;
 
-    final sorted = List<PlutoRow>.from(stateManager!.rows);
-    sorted.sort((a, b) =>
-        (a.cells['name_field']?.value.toString().toLowerCase() ?? '').compareTo(
-            b.cells['name_field']?.value.toString().toLowerCase() ?? ''));
+    final sorted = List<PlayerEntry>.from(players)
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     return Column(
-      children: sorted.map((row) {
-        final teamName = TeamUtils.normalizeTeamName(
-            row.cells['team_field']?.value.toString());
+      children: sorted.map((player) {
+        final teamName = TeamUtils.normalizeTeamName(player.team);
         final isAssigned = teamName != 'No team';
         return ListTile(
           dense: true,
@@ -614,15 +593,12 @@ class PlayerTeamDirectoryView extends StatelessWidget {
             color: isAssigned ? colorScheme.primary : colorScheme.error,
             size: 20,
           ),
-          title: Text(row.cells['name_field']?.value.toString() ?? ''),
-          subtitle: () {
-            final role = row.cells['role_field']?.value.toString() ?? '';
-            return (role.isNotEmpty && role != 'Any')
-                ? Text(role,
-                    style: const TextStyle(
-                        fontSize: 11, fontStyle: FontStyle.italic))
-                : null;
-          }(),
+          title: Text(player.name),
+          subtitle: (player.role.isNotEmpty && player.role != 'Any')
+              ? Text(player.role,
+                  style: const TextStyle(
+                      fontSize: 11, fontStyle: FontStyle.italic))
+              : null,
           trailing: Chip(
             label: Text(
               isAssigned ? 'Team $teamName' : 'Unassigned',

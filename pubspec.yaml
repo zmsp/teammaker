@@ -28,7 +28,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: any
-  pluto_grid: any
+  data_table_2: ^2.7.2
   localstorage: any
   url_launcher: any
   url_launcher_web: any

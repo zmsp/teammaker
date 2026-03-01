@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:teammaker/MatchScreen.dart';
 import 'package:teammaker/model/data_model.dart';
+import 'package:teammaker/model/player_entry.dart';
 import 'package:teammaker/theme/app_theme.dart';
-import 'package:pluto_grid/pluto_grid.dart';
 
 class TeamList extends StatefulWidget {
   final List<ListItem> items;
@@ -21,41 +21,11 @@ class TeamList extends StatefulWidget {
 }
 
 class _TeamListState extends State<TeamList> {
-  List<String> findAllPermutations(String source) {
-    List allPermutations = [];
-
-    void permutate(List list, int cursor) {
-      // when the cursor gets this far, we've found one permutation, so save it
-      if (cursor == list.length) {
-        allPermutations.add(list);
-        return;
-      }
-
-      for (int i = cursor; i < list.length; i++) {
-        List permutation = List.from(list);
-        permutation[cursor] = list[i];
-        permutation[i] = list[cursor];
-        permutate(permutation, cursor + 1);
-      }
-    }
-
-    permutate(source.split(''), 0);
-
-    List<String> strPermutations = [];
-    for (List permutation in allPermutations) {
-      strPermutations.add(permutation.join());
-    }
-
-    return strPermutations;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final title = 'Team List';
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: const Text('Team List'),
       ),
       body: ListView.builder(
         itemCount: widget.items.length,
@@ -64,7 +34,7 @@ class _TeamListState extends State<TeamList> {
 
           if (item is MessageItem) {
             return InkWell(
-              onTap: () => _editPlayer(context, item.row),
+              onTap: () => _editPlayer(context, item.player),
               child: item.buildTitle(context),
             );
           }
@@ -73,7 +43,7 @@ class _TeamListState extends State<TeamList> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
+        onPressed: () {
           Navigator.push(
               context,
               MaterialPageRoute(
@@ -86,13 +56,11 @@ class _TeamListState extends State<TeamList> {
     );
   }
 
-  void _editPlayer(BuildContext context, PlutoRow row) {
-    final nameController =
-        TextEditingController(text: row.cells['name_field']?.value.toString());
-    final roleController =
-        TextEditingController(text: row.cells['role_field']?.value.toString());
-    int level = (row.cells['skill_level_field']?.value ?? 3) as int;
-    String gender = row.cells['gender_field']?.value.toString() ?? "MALE";
+  void _editPlayer(BuildContext context, PlayerEntry player) {
+    final nameController = TextEditingController(text: player.name);
+    final roleController = TextEditingController(text: player.role);
+    int level = player.level;
+    String gender = player.gender;
 
     showDialog(
       context: context,
@@ -107,34 +75,48 @@ class _TeamListState extends State<TeamList> {
                 decoration: const InputDecoration(labelText: 'Name'),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<int>(
-                value: level,
+              InputDecorator(
                 decoration: const InputDecoration(labelText: 'Skill Level'),
-                items: List.generate(5, (i) => i + 1)
-                    .map((l) => DropdownMenuItem(value: l, child: Text('$l')))
-                    .toList(),
-                onChanged: (v) => level = v ?? level,
+                child: DropdownButton<int>(
+                  value: level.clamp(1, 5),
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  items: List.generate(5, (i) => i + 1)
+                      .map((l) => DropdownMenuItem(value: l, child: Text('$l')))
+                      .toList(),
+                  onChanged: (v) => level = v ?? level,
+                ),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: gender,
+              InputDecorator(
                 decoration: const InputDecoration(labelText: 'Gender'),
-                items: ['MALE', 'FEMALE', 'X']
-                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-                    .toList(),
-                onChanged: (v) => gender = v ?? gender,
+                child: DropdownButton<String>(
+                  value: ['MALE', 'FEMALE', 'X'].contains(gender)
+                      ? gender
+                      : 'MALE',
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  items: ['MALE', 'FEMALE', 'X']
+                      .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                      .toList(),
+                  onChanged: (v) => gender = v ?? gender,
+                ),
               ),
               const SizedBox(height: 12),
               if (widget.sport != null)
-                DropdownButtonFormField<String>(
-                  value: widget.sport!.roles.contains(roleController.text)
-                      ? roleController.text
-                      : 'Any',
+                InputDecorator(
                   decoration: const InputDecoration(labelText: 'Position'),
-                  items: widget.sport!.roles
-                      .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                      .toList(),
-                  onChanged: (v) => roleController.text = v ?? 'Any',
+                  child: DropdownButton<String>(
+                    value: widget.sport!.roles.contains(roleController.text)
+                        ? roleController.text
+                        : 'Any',
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    items: widget.sport!.roles
+                        .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                        .toList(),
+                    onChanged: (v) => roleController.text = v ?? 'Any',
+                  ),
                 )
               else
                 TextField(
@@ -152,10 +134,10 @@ class _TeamListState extends State<TeamList> {
           FilledButton(
             onPressed: () {
               setState(() {
-                row.cells['name_field']?.value = nameController.text;
-                row.cells['role_field']?.value = roleController.text;
-                row.cells['skill_level_field']?.value = level;
-                row.cells['gender_field']?.value = gender;
+                player.name = nameController.text;
+                player.role = roleController.text;
+                player.level = level;
+                player.gender = gender;
               });
               Navigator.pop(context);
             },
@@ -169,10 +151,7 @@ class _TeamListState extends State<TeamList> {
 
 /// The base class for the different types of items the list can contain.
 abstract class ListItem {
-  /// The title line to show in a list item.
   Widget buildTitle(BuildContext context);
-
-  /// The subtitle line, if any, to show in a list item.
   Widget buildSubtitle(BuildContext context);
 }
 
@@ -221,19 +200,15 @@ class HeadingItem implements ListItem {
   Widget buildSubtitle(BuildContext context) => const SizedBox.shrink();
 }
 
-/// A ListItem that contains data to display a message.
+/// A ListItem that contains a player row.
 class MessageItem implements ListItem {
-  final PlutoRow row;
+  final PlayerEntry player;
 
-  MessageItem(this.row);
+  MessageItem(this.player);
 
   @override
   Widget buildTitle(BuildContext context) {
-    final name = row.cells['name_field']?.value.toString() ?? '';
-    final role = row.cells['role_field']?.value.toString() ?? '';
-    final level = (row.cells['skill_level_field']?.value ?? 0) as int;
-    final gender = row.cells['gender_field']?.value.toString() ?? '';
-    final isFemale = gender.toUpperCase().startsWith('F');
+    final isFemale = player.gender.toUpperCase().startsWith('F');
 
     return Card(
       elevation: 0,
@@ -259,9 +234,10 @@ class MessageItem implements ListItem {
             ),
           ),
         ),
-        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: (role.isNotEmpty && role != 'Any')
-            ? Text(role,
+        title: Text(player.name,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: (player.role.isNotEmpty && player.role != 'Any')
+            ? Text(player.role,
                 style:
                     const TextStyle(fontSize: 12, fontStyle: FontStyle.italic))
             : null,
@@ -269,9 +245,11 @@ class MessageItem implements ListItem {
           mainAxisSize: MainAxisSize.min,
           children: List.generate(5, (i) {
             return Icon(
-              i < level ? Icons.star_rounded : Icons.star_outline_rounded,
+              i < player.level
+                  ? Icons.star_rounded
+                  : Icons.star_outline_rounded,
               size: 14,
-              color: i < level ? Colors.amber : Colors.grey.shade300,
+              color: i < player.level ? Colors.amber : Colors.grey.shade300,
             );
           }),
         ),
