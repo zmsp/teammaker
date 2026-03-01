@@ -1,5 +1,5 @@
 name: teammaker
-description: Team Maker Buddy - Easy Fair Team Balancing
+description: "Team Maker Buddy: Professional Squad Management & Fair Team Balancing"
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 2.0.0+4
+version: 3.0.0+5
 
 environment:
   sdk: ">=3.2.0 <4.0.0"
@@ -43,6 +43,18 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/logo.png"
+    background_color: "#0A0A0A"
+    theme_color: "#0A0A0A"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -85,5 +97,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
-
-

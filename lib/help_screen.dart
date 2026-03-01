@@ -26,81 +26,81 @@ class _HelpExampleState extends State<HelpExample> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("HELP & GUIDE",
+        title: const Text("HELP & RESOURCES",
             style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: <Widget>[
-          _buildHeader(context, "Mastering Team Maker Buddy"),
+          _buildHeader(context, "Optimization Guide"),
           const SizedBox(height: 12),
           _buildHelpSection(
             context,
             icon: Icons.people_alt,
             color: Colors.blue,
-            title: "1. Managing the Roster",
+            title: "1. Roster Management",
             content:
-                "• Add players using the dedicated '+' and 'Add Row' buttons.\n"
-                "• Check the boxes next to players who are present for today's session.\n"
-                "• Toggle 'Edit Mode' (Pencil Icon) to quickly update names, levels, or gender.\n"
-                "• All roster data is automatically persisted to your device.",
+                "• Efficiently add players using 'Quick Add' or bulk 'Add Row' options.\n"
+                "• Mark attendance by selecting active participants for current sessions.\n"
+                "• Enable 'Edit Mode' for rapid synchronization of player details.\n"
+                "• Locally encrypted storage ensures your squad data remains private.",
           ),
           _buildHelpSection(
             context,
             icon: Icons.auto_awesome,
             color: Colors.purple,
-            title: "2. Balancing Teams",
+            title: "2. Advanced Team Balancing",
             content:
-                "• Choose a balancing strategy: 'Fair Mix' is best for balanced skill and gender distribution.\n"
-                "• Adjust 'Players per team' to scale the game size.\n"
-                "• Press 'GENERATE TEAMS' to produce optimized matchups.\n"
-                "• Unassigned players are listed separately for easy rotation.",
+                "• Utilize 'Fair Mix' for sophisticated skill and gender distribution.\n"
+                "• Scale match dynamics by adjusting the 'Players per team' parameter.\n"
+                "• Generate optimized team compositions with a single tap.\n"
+                "• Manage unassigned players seamlessly through the rotation queue.",
           ),
           _buildHelpSection(
             context,
             icon: Icons.bolt,
             color: Colors.orange,
-            title: "3. Using Quick Tools",
+            title: "3. Professional Utility Tools",
             content:
-                "• TAP SCORE: A professional scoreboard for HOME vs AWAY. Features automatic timers, custom max scores, and country-themed color palettes.\n"
-                "• PLAYER QUEUE: A digital 'next-up' system. Set the count and tap cards to issue playing numbers fairly.",
+                "• TAP SCORE: High-performance scoreboard with integrated timers and custom configurations.\n"
+                "• PLAYER QUEUE: Automated sequential system for organized entry and fair turn-taking.",
           ),
           _buildHelpSection(
             context,
             icon: Icons.emoji_events,
             color: Colors.amber,
-            title: "4. Running a Match Maker",
-            content: "• Set your court count and desired rounds.\n"
-                "• Tap 'Create Matches' to generate a full tournament or session schedule.\n"
-                "• Track wins/losses with the built-in score tracking.\n"
-                "• The system balances court time so everyone plays an equal amount.",
+            title: "4. Tournament Match Making",
+            content: "• Define venue capacity and desired competitive rounds.\n"
+                "• Architect full tournament schedules with intelligent court balancing.\n"
+                "• Track performance metrics through integrated results management.\n"
+                "• Ensure equitable participation across all skill levels.",
           ),
           const SizedBox(height: 32),
-          _buildHeader(context, "Video Tutorials"),
+          _buildHeader(context, "Video Learning Center"),
           const SizedBox(height: 12),
           _buildVideoTile(
             context,
-            title: "How to create teams?",
-            subtitle: "Quick walkthrough of the roster and generation process.",
+            title: "Squad Configuration",
+            subtitle: "Technical walkthrough of roster optimization and team generation.",
             url: 'asset/video/meetup.mp4',
             color: Colors.blueAccent,
           ),
           _buildVideoTile(
             context,
-            title: "Scoreboard Features",
-            subtitle: "Learn how to use the interactive Tap Score tool.",
+            title: "Scoreboard Analytics",
+            subtitle: "Master the advanced features of the interactive Tap Score system.",
             url: 'asset/video/meetup.mp4',
             color: Colors.redAccent,
           ),
           const SizedBox(height: 32),
-          _buildHeader(context, "Resources"),
+          _buildHeader(context, "Reference Materials"),
           const SizedBox(height: 12),
           _buildResourceLink(
-              "Full User Manual",
+              "Operational Manual",
               FontAwesomeIcons.bookOpen,
               Colors.teal,
               "https://github.com/zmsp/teammaker/wiki/user-manual"),
-          _buildResourceLink("Report an Issue", FontAwesomeIcons.bug,
+          _buildResourceLink("Technical Support", FontAwesomeIcons.bug,
               Colors.redAccent, "https://github.com/zmsp/teammaker/issues"),
           const SizedBox(height: 12),
           Card(
@@ -114,9 +114,9 @@ class _HelpExampleState extends State<HelpExample> {
             child: ListTile(
               leading: const Icon(Icons.play_circle_fill,
                   color: Colors.blueAccent, size: 20),
-              title: const Text("Take App Tour Again",
+              title: const Text("Re-initiate Application Tour",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              subtitle: const Text("Guided walkthrough of all features."),
+              subtitle: const Text("Comprehensive walkthrough of platform features."),
               onTap: () async {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setBool('tour_shown', false);
@@ -131,17 +131,17 @@ class _HelpExampleState extends State<HelpExample> {
             child: Column(
               children: [
                 Text(
-                  "Team Maker Buddy v2.1",
+                  "Team Maker Buddy v3.0",
                   style: TextStyle(
                       color: colorScheme.primary.withValues(alpha: 0.6),
                       fontSize: 12,
                       fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  "Premium Edition • Zero Data Collection",
+                const Text(
+                  "Professional Edition • High Integrity Privacy",
                   style: TextStyle(
                       color:
-                          colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                          Colors.grey,
                       fontSize: 10),
                 ),
               ],

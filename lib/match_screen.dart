@@ -311,6 +311,7 @@ class _MatchScreenState extends State<MatchScreen> {
           children: <Widget>[
             const SizedBox(height: 12.0),
             ExpansionTile(
+              initiallyExpanded: true,
               leading: const FaIcon(FontAwesomeIcons.gear),
               title: const Text("Match Settings",
                   style: TextStyle(fontWeight: FontWeight.bold)),

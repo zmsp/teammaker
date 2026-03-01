@@ -65,8 +65,8 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   final GlobalKey _key7 = GlobalKey(); // Bottom Nav
 
   late final ShowcaseView _showcase;
-  final ExpansionTileController _rosterController = ExpansionTileController();
-  final ExpansionTileController _strategyController = ExpansionTileController();
+  final ExpansibleController _rosterController = ExpansibleController();
+  final ExpansibleController _strategyController = ExpansibleController();
   int _currentTourPhaseInProgress = 0; // 1: Static1, 2: Static2, 3: Interactive
 
   SettingsData settingsData = SettingsData();
@@ -139,11 +139,16 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
   // ─── Load / save settings ──────────────────────────────────────────────────
   Future<void> _initPrefs() async {
-    _prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    await _loadSettings();
-    await _loadPlayers();
-    _startTour();
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      await _loadSettings();
+      await _loadPlayers();
+      _startTour();
+    } catch (e) {
+      debugPrint("Error initializing preferences: $e");
+      // Optionally show a migration or error message to the user
+    }
   }
 
   void _startTour() {
@@ -330,19 +335,23 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   }
 
   Future<void> _loadPlayers() async {
-    final prefs = _prefs!;
-    final saved = prefs.getString('saved_players');
-    if (saved == null) return;
-    final jsonList = jsonDecode(saved) as List<dynamic>;
-    final loaded = jsonList
-        .map((e) => PlayerEntry.fromJson(e as Map<String, dynamic>))
-        .toList();
-    if (loaded.isEmpty) return;
-    if (!mounted) return;
-    setState(() {
-      _players.clear();
-      _players.addAll(loaded);
-    });
+    try {
+      final prefs = _prefs!;
+      final saved = prefs.getString('saved_players');
+      if (saved == null) return;
+      final decoded = jsonDecode(saved);
+      if (decoded is! List) return;
+      final loaded = decoded
+          .map((e) => PlayerEntry.fromJson(e as Map<String, dynamic>))
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _players.clear();
+        _players.addAll(loaded);
+      });
+    } catch (e) {
+      debugPrint("Error loading players from storage: $e");
+    }
   }
 
   void _saveSettings() {
