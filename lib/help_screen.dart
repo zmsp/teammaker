@@ -32,7 +32,6 @@ class _HelpExampleState extends State<HelpExample> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: <Widget>[
-        
           const SizedBox(height: 32),
           _buildHeader(context, "Support & Tutorials"),
           const SizedBox(height: 12),
@@ -96,96 +95,6 @@ class _HelpExampleState extends State<HelpExample> {
           ),
           const SizedBox(height: 32),
         ],
-      ),
-    );
-  }
-
-  Widget _buildMarkdownSection(BuildContext context,
-      {required String title,
-      required String content,
-      required String imageUrl}) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title.toUpperCase(),
-            style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 12,
-                letterSpacing: 2,
-                color: colorScheme.primary)),
-        const SizedBox(height: 12),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Image.network(
-            imageUrl,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
-                height: 120,
-                width: double.infinity,
-                color: colorScheme.surfaceContainerHighest,
-                child: const Center(child: CircularProgressIndicator()),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) => Container(
-              height: 40,
-              width: double.infinity,
-              color: colorScheme.surfaceContainerHighest,
-              child: const Icon(Icons.image_not_supported, color: Colors.grey),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colorScheme.outlineVariant),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: content.split('\n').map((line) {
-              if (line.trim().isEmpty) return const SizedBox(height: 8);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  line,
-                  style: TextStyle(
-                    fontSize: 13,
-                    height: 1.5,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHelpTile(BuildContext context,
-      {required IconData icon,
-      required Color color,
-      required String title,
-      required String subtitle}) {
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.1),
-          child: Icon(icon, color: color, size: 18),
-        ),
-        title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
       ),
     );
   }
