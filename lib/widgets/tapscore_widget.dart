@@ -226,20 +226,20 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
     setState(() {
       if (team == 'A') {
         _teamAScore++;
-        if (_teamAScore == _maxScore) {
-          _handleGameEnd('A');
+        if (_teamAScore >= _maxScore) {
+          _handleMaxScoreReached('A');
         }
       } else {
         _teamBScore++;
-        if (_teamBScore == _maxScore) {
-          _handleGameEnd('B');
+        if (_teamBScore >= _maxScore) {
+          _handleMaxScoreReached('B');
         }
       }
       _saveState();
     });
   }
 
-  void _handleGameEnd(String winnerId) {
+  void _recordHistoryEntry(String winnerId) {
     String winnerName =
         winnerId == 'A' ? _nameAController.text : _nameBController.text;
     String loserName =
@@ -251,14 +251,29 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
     final timeStr =
         "${now.hour > 12 ? now.hour - 12 : (now.hour == 0 ? 12 : now.hour)}:${now.minute.toString().padLeft(2, '0')} ${now.hour >= 12 ? 'PM' : 'AM'}";
 
+    final durationSeconds = _currentSeconds;
+    final mins = durationSeconds ~/ 60;
+    final secs = durationSeconds % 60;
+    final durationStr = "${mins}m ${secs}s";
+
     String historyEntry =
-        "Round $_roundCount • $timeStr\n🏆 $winnerName ($winnerScore)\n    $loserName ($loserScore)";
+        "Round $_roundCount • $timeStr (${durationStr})\n🏆 $winnerName ($winnerScore)\n    $loserName ($loserScore)";
 
     _history.add(historyEntry);
     _roundCount++;
     _saveState();
+  }
 
+  void _handleMaxScoreReached(String winnerId) {
+    _recordHistoryEntry(winnerId);
     if (_isRunning) _toggleTimer();
+
+    String winnerName =
+        winnerId == 'A' ? _nameAController.text : _nameBController.text;
+    String loserName =
+        winnerId == 'A' ? _nameBController.text : _nameAController.text;
+    int winnerScore = winnerId == 'A' ? _teamAScore : _teamBScore;
+    int loserScore = winnerId == 'A' ? _teamBScore : _teamAScore;
 
     showDialog(
         context: context,
@@ -267,7 +282,7 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
                 title: const Text("Round Complete",
                     style: TextStyle(color: Colors.white)),
                 content: Text(
-                    "🏆 $winnerName wins!\n\n${winnerName}: $winnerScore\n${loserName}: $loserScore",
+                    "🏆 $winnerName reached the max score!\n\n${winnerName}: $winnerScore\n${loserName}: $loserScore",
                     style: const TextStyle(
                         color: Colors.white70, fontSize: 16, height: 1.5)),
                 actions: [
@@ -283,6 +298,41 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
                       child: const Text("NEW ROUND",
                           style: TextStyle(
                               color: Colors.indigoAccent,
+                              fontWeight: FontWeight.bold)))
+                ]));
+  }
+
+  void _requestNextRound() {
+    if (_teamAScore == 0 && _teamBScore == 0 && _elapsedSeconds == 0) {
+      _resetScores();
+      return;
+    }
+
+    showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+                backgroundColor: Colors.grey[900],
+                title: const Text("Start New Round?",
+                    style: TextStyle(color: Colors.white)),
+                content: const Text(
+                    "This will record current scores to history and reset the game state.",
+                    style: TextStyle(color: Colors.white70)),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("CANCEL",
+                          style: TextStyle(color: Colors.white38))),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        String winnerId =
+                            _teamAScore >= _teamBScore ? 'A' : 'B';
+                        _recordHistoryEntry(winnerId);
+                        _resetScores();
+                      },
+                      child: const Text("START NEW",
+                          style: TextStyle(
+                              color: Colors.redAccent,
                               fontWeight: FontWeight.bold)))
                 ]));
   }
@@ -344,39 +394,128 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
 
     final countryThemes = {
       'Manual / Custom': null,
-      'USA (Blue/Red)': [const Color(0xFF1A237E), const Color(0xFFB71C1C)],
-      'Bangladesh (Green/Red)': [
-        const Color(0xFF006A4E),
-        const Color(0xFFF42A41)
+      'USA (Navy/DeepRed)': [const Color(0xFF001F3F), const Color(0xFF8B0000)],
+      'Bangladesh (DarkGreen/Crimson)': [
+        const Color(0xFF004030),
+        const Color(0xFFB22222)
       ],
-      'Brazil (Yellow/Green)': [
-        const Color(0xFFFEDF00),
-        const Color(0xFF009739)
+      'Mexico (ForestGreen/Maroon)': [
+        const Color(0xFF004D33),
+        const Color(0xFF800000)
       ],
-      'Argentina (SkyBlue/White)': [
-        const Color(0xFF75AADB),
-        const Color(0xFFFFFFFF)
+      'India (DeepOrange/DarkGreen)': [
+        const Color(0xFFD35400),
+        const Color(0xFF095A04)
       ],
-      'UK (Navy/Crimson)': [const Color(0xFF00247D), const Color(0xFFCF142B)],
-      'Germany (Black/Gold)': [
+      'China (DarkRed/Gold)': [
+        const Color(0xFF8B0000),
+        const Color(0xFFB8860B)
+      ],
+      'Philippines (Navy/Maroon)': [
+        const Color(0xFF000080),
+        const Color(0xFF800000)
+      ],
+      'El Salvador (DarkBlue/Grey)': [
+        const Color(0xFF003366),
+        const Color(0xFF424242)
+      ],
+      'Vietnam (DarkRed/Gold)': [
+        const Color(0xFF8B0000),
+        const Color(0xFFB8860B)
+      ],
+      'Cuba (Navy/Maroon)': [const Color(0xFF000080), const Color(0xFF800000)],
+      'Dominican Republic (Navy/Maroon)': [
+        const Color(0xFF001A33),
+        const Color(0xFF800000)
+      ],
+      'Guatemala (DeepSkyBlue/Slate)': [
+        const Color(0xFF0074D9),
+        const Color(0xFF424242)
+      ],
+      'South Korea (DarkGrey/Navy)': [
+        const Color(0xFF212121),
+        const Color(0xFF000080)
+      ],
+      'Colombia (Gold/Navy)': [
+        const Color(0xFFB8860B),
+        const Color(0xFF000080)
+      ],
+      'Honduras (Navy/Slate)': [
+        const Color(0xFF001F3F),
+        const Color(0xFF424242)
+      ],
+      'Canada (Maroon/DarkGrey)': [
+        const Color(0xFF800000),
+        const Color(0xFF424242)
+      ],
+      'Jamaica (DarkGreen/Gold)': [
+        const Color(0xFF004D00),
+        const Color(0xFFB8860B)
+      ],
+      'Haiti (Navy/Maroon)': [const Color(0xFF000080), const Color(0xFF800000)],
+      'UK (Navy/DeepRed)': [const Color(0xFF001F3F), const Color(0xFF8B0000)],
+      'Venezuela (Gold/Navy)': [
+        const Color(0xFFB8860B),
+        const Color(0xFF000080)
+      ],
+      'Brazil (Gold/DarkGreen)': [
+        const Color(0xFFB8860B),
+        const Color(0xFF004D00)
+      ],
+      'Germany (Black/DarkRed)': [
         const Color(0xFF000000),
-        const Color(0xFFFFCC00)
+        const Color(0xFF8B0000)
       ],
-      'France (Blue/Red)': [const Color(0xFF002395), const Color(0xFFED2939)],
-      'Italy (Green/Red)': [const Color(0xFF009246), const Color(0xFFCE2B37)],
+      'Russia (DarkGrey/Navy)': [
+        const Color(0xFF424242),
+        const Color(0xFF000080)
+      ],
+      'Peru (Maroon/DarkGrey)': [
+        const Color(0xFF800000),
+        const Color(0xFF424242)
+      ],
+      'Nigeria (DarkGreen/Grey)': [
+        const Color(0xFF004D00),
+        const Color(0xFF424242)
+      ],
+      'Ukraine (Navy/Gold)': [const Color(0xFF000080), const Color(0xFFB8860B)],
+      'Iran (DarkGreen/Maroon)': [
+        const Color(0xFF004D00),
+        const Color(0xFF800000)
+      ],
+      'Pakistan (DarkGreen/Grey)': [
+        const Color(0xFF003300),
+        const Color(0xFF424242)
+      ],
+      'Japan (DarkGrey/Maroon)': [
+        const Color(0xFF424242),
+        const Color(0xFF800000)
+      ],
+      'France (Navy/Maroon)': [
+        const Color(0xFF000080),
+        const Color(0xFF800000)
+      ],
+      'Italy (DarkGreen/Maroon)': [
+        const Color(0xFF004D00),
+        const Color(0xFF800000)
+      ],
+      'Argentina (Navy/Slate)': [
+        const Color(0xFF0074D9),
+        const Color(0xFF424242)
+      ],
     };
 
     final pickableColors = [
-      const Color(0xFF1A237E), // Indigo
-      const Color(0xFFB71C1C), // Red
-      const Color(0xFF1B5E20), // Green
-      const Color(0xFFE65100), // Orange
-      const Color(0xFF4A148C), // Purple
-      const Color(0xFF006064), // Teal
-      const Color(0xFF212121), // Black
-      const Color(0xFF757575), // Grey
-      const Color(0xFFFBC02D), // Yellow
-      const Color(0xFFFFFFFF), // White
+      const Color(0xFF0D47A1), // Darker Indigo
+      const Color(0xFFB71C1C), // Deep Red
+      const Color(0xFF1B5E20), // Dark Green
+      const Color(0xFFE65100), // Dark Orange
+      const Color(0xFF4A148C), // Deep Purple
+      const Color(0xFF004D40), // Dark Teal
+      const Color(0xFF212121), // Charcoal
+      const Color(0xFF455A64), // Blue Grey
+      const Color(0xFFF9A825), // Dark Yellow/Gold
+      const Color(0xFF424242), // Slate/Dark Grey (instead of white)
     ];
 
     showDialog(
@@ -489,6 +628,59 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
                           _saveState();
                         }
                       },
+                    ),
+                    const Divider(color: Colors.white12, height: 32),
+                    const Text("TEAM NAMES",
+                        style: TextStyle(
+                            color: Colors.indigoAccent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2)),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _nameAController,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 14),
+                            decoration: const InputDecoration(
+                              labelText: "TEAM A",
+                              labelStyle: TextStyle(
+                                  color: Colors.white54, fontSize: 12),
+                              enabledBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.white24)),
+                              focusedBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.indigoAccent)),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _nameBController,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 14),
+                            decoration: const InputDecoration(
+                              labelText: "TEAM B",
+                              labelStyle: TextStyle(
+                                  color: Colors.white54, fontSize: 12),
+                              enabledBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.white24)),
+                              focusedBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.indigoAccent)),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
                     const Text("MANUAL COLORS",
@@ -671,7 +863,7 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
                 children: [
                   _ControlCircle(
                     icon: FontAwesomeIcons.forwardStep,
-                    onPressed: _resetScores,
+                    onPressed: _requestNextRound,
                     label: "Next Round",
                   ),
                   const SizedBox(width: 24),
