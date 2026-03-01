@@ -365,6 +365,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   items: teamsListData,
                   settingsData: settingsData,
                   sport: widget.themeController?.palette,
+                  onEditPlayer: (player) => _editPlayer(context, player),
                 )));
   }
 
@@ -912,7 +913,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 childrenPadding: EdgeInsets.zero,
                 tilePadding:
                     const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-                initiallyExpanded: true,
+                initiallyExpanded: false,
                 backgroundColor: colorScheme.surface,
                 collapsedBackgroundColor: colorScheme.surface,
                 leading: CircleAvatar(
@@ -961,6 +962,18 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                           ),
                           const SizedBox(width: 6),
                           GridHeaderButton(
+                            onPressed: () {
+                              setState(() {
+                                _players.removeWhere((p) => p.checked);
+                              });
+                              _triggerSavePlayers();
+                            },
+                            icon: Icons.delete_sweep,
+                            label: 'Clear Selected',
+                            color: colorScheme.error,
+                          ),
+                          const SizedBox(width: 6),
+                          GridHeaderButton(
                             onPressed: () => _showBulkAddDialog(context),
                             icon: Icons.format_list_bulleted_add,
                             label: 'Bulk Add',
@@ -996,17 +1009,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          GridHeaderButton(
-                            onPressed: () {
-                              setState(() {
-                                _players.removeWhere((p) => p.checked);
-                              });
-                              _triggerSavePlayers();
-                            },
-                            icon: Icons.delete_sweep,
-                            label: 'Clear Selected',
-                            color: colorScheme.error,
-                          ),
+
                         ],
                       ),
                     ),
@@ -1057,7 +1060,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 childrenPadding: EdgeInsets.zero,
                 tilePadding:
                     const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-                initiallyExpanded: true,
+                initiallyExpanded: false,
                 backgroundColor: colorScheme.surface,
                 collapsedBackgroundColor: colorScheme.surface,
                 leading: CircleAvatar(
@@ -1168,6 +1171,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   children: [
                     TeamResultsView(
                       players: _players,
+                      onEditPlayer: (p) => _editPlayer(context, p),
                       onChanged: () {
                         setState(() {});
                         _triggerSavePlayers();
@@ -1189,7 +1193,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   childrenPadding: EdgeInsets.zero,
                   tilePadding: const EdgeInsets.symmetric(
                       horizontal: 12.0, vertical: 0.0),
-                  initiallyExpanded: true,
+                  initiallyExpanded: false,
                   leading: CircleAvatar(
                       backgroundColor: colorScheme.surfaceContainerHighest,
                       child:
@@ -1215,7 +1219,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 childrenPadding: EdgeInsets.zero,
                 tilePadding:
                     const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-                initiallyExpanded: true,
+                initiallyExpanded: false,
                 leading: CircleAvatar(
                     backgroundColor:
                         colorScheme.secondaryContainer.withValues(alpha: 0.5),
@@ -1568,13 +1572,7 @@ class _PlayerDataTable extends StatelessWidget {
         // ── Level ─────────────────────────────────────────────────────────
         DataCell(
           isEditable
-              ? _LevelDropdown(
-                  value: p.level,
-                  onChanged: (v) {
-                    p.level = v ?? p.level;
-                    onChanged();
-                  },
-                )
+              ? _LevelBadge(level: p.level, color: colorScheme.primary)
               : _LevelBadge(level: p.level, color: colorScheme.primary),
         ),
         // ── Gender ────────────────────────────────────────────────────────

@@ -8,12 +8,14 @@ class TeamList extends StatefulWidget {
   final List<ListItem> items;
   final SettingsData settingsData;
   final SportPalette? sport;
+  final void Function(PlayerEntry) onEditPlayer;
 
   const TeamList({
     super.key,
     required this.items,
     required this.settingsData,
     this.sport,
+    required this.onEditPlayer,
   });
 
   @override
@@ -34,7 +36,7 @@ class _TeamListState extends State<TeamList> {
 
           if (item is MessageItem) {
             return InkWell(
-              onTap: () => _editPlayer(context, item.player),
+              onTap: () => widget.onEditPlayer(item.player),
               child: item.buildTitle(context),
             );
           }
@@ -52,98 +54,6 @@ class _TeamListState extends State<TeamList> {
         child: Icon(
           widget.sport?.icon ?? Icons.sports,
         ),
-      ),
-    );
-  }
-
-  void _editPlayer(BuildContext context, PlayerEntry player) {
-    final nameController = TextEditingController(text: player.name);
-    final roleController = TextEditingController(text: player.role);
-    int level = player.level;
-    String gender = player.gender;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Player'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-              ),
-              const SizedBox(height: 12),
-              InputDecorator(
-                decoration: const InputDecoration(labelText: 'Skill Level'),
-                child: DropdownButton<int>(
-                  value: level.clamp(1, 5),
-                  isExpanded: true,
-                  underline: const SizedBox(),
-                  items: List.generate(5, (i) => i + 1)
-                      .map((l) => DropdownMenuItem(value: l, child: Text('$l')))
-                      .toList(),
-                  onChanged: (v) => level = v ?? level,
-                ),
-              ),
-              const SizedBox(height: 12),
-              InputDecorator(
-                decoration: const InputDecoration(labelText: 'Gender'),
-                child: DropdownButton<String>(
-                  value: ['MALE', 'FEMALE', 'X'].contains(gender)
-                      ? gender
-                      : 'MALE',
-                  isExpanded: true,
-                  underline: const SizedBox(),
-                  items: ['MALE', 'FEMALE', 'X']
-                      .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-                      .toList(),
-                  onChanged: (v) => gender = v ?? gender,
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (widget.sport != null)
-                InputDecorator(
-                  decoration: const InputDecoration(labelText: 'Position'),
-                  child: DropdownButton<String>(
-                    value: widget.sport!.roles.contains(roleController.text)
-                        ? roleController.text
-                        : 'Any',
-                    isExpanded: true,
-                    underline: const SizedBox(),
-                    items: widget.sport!.roles
-                        .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                        .toList(),
-                    onChanged: (v) => roleController.text = v ?? 'Any',
-                  ),
-                )
-              else
-                TextField(
-                  controller: roleController,
-                  decoration: const InputDecoration(labelText: 'Position'),
-                ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              setState(() {
-                player.name = nameController.text;
-                player.role = roleController.text;
-                player.level = level;
-                player.gender = gender;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }
@@ -165,7 +75,7 @@ class HeadingItem implements ListItem {
   @override
   Widget buildTitle(BuildContext context) {
     return Container(
-        margin: const EdgeInsets.only(top: 16.0, bottom: 4.0),
+        margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primaryContainer,

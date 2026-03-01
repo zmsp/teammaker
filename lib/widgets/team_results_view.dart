@@ -19,15 +19,17 @@ class _DraggedPlayer {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TeamResultsView — drag-and-drop, uses plain PlayerEntry list
+// TeamResultsView — condensed grid view
 // ─────────────────────────────────────────────────────────────────────────────
 class TeamResultsView extends StatefulWidget {
   final List<PlayerEntry> players;
+  final void Function(PlayerEntry) onEditPlayer;
   final VoidCallback? onChanged;
 
   const TeamResultsView({
     super.key,
     required this.players,
+    required this.onEditPlayer,
     this.onChanged,
   });
 
@@ -85,7 +87,7 @@ class _TeamResultsViewState extends State<TeamResultsView> {
                   size: 16, color: colorScheme.onSurfaceVariant),
               const SizedBox(width: 6),
               Text(
-                'Drag a player to switch teams',
+                'Drag to switch • Tap to edit',
                 style: TextStyle(
                   fontSize: 12,
                   color: colorScheme.onSurfaceVariant,
@@ -102,8 +104,8 @@ class _TeamResultsViewState extends State<TeamResultsView> {
             child: _TeamDropZone(
               teamName: teamName,
               players: teamPlayers,
-              allTeamNames: sortedTeams,
               onPlayerMoved: _movePlayer,
+              onEditPlayer: widget.onEditPlayer,
             ),
           );
         }),
@@ -112,20 +114,17 @@ class _TeamResultsViewState extends State<TeamResultsView> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Drop zone card for a single team
-// ─────────────────────────────────────────────────────────────────────────────
 class _TeamDropZone extends StatefulWidget {
   final String teamName;
   final List<PlayerEntry> players;
-  final List<String> allTeamNames;
   final void Function(PlayerEntry player, String toTeam) onPlayerMoved;
+  final void Function(PlayerEntry) onEditPlayer;
 
   const _TeamDropZone({
     required this.teamName,
     required this.players,
-    required this.allTeamNames,
     required this.onPlayerMoved,
+    required this.onEditPlayer,
   });
 
   @override
@@ -159,6 +158,7 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             color: isDragOver
@@ -168,123 +168,48 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
               color: isDragOver ? teamColor : colorScheme.outlineVariant,
               width: isDragOver ? 2.0 : 1.0,
             ),
-            boxShadow: isDragOver
-                ? [
-                    BoxShadow(
-                      color: teamColor.withValues(alpha: 0.25),
-                      blurRadius: 12,
-                      spreadRadius: 1,
-                    )
-                  ]
-                : null,
           ),
           child: Column(
             children: [
               // ── Team Header ──────────────────────────────────────────────
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: teamColor.withValues(alpha: 0.12),
+                  color: teamColor.withValues(alpha: 0.1),
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(15)),
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: teamColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          widget.teamName.length > 2
-                              ? widget.teamName.substring(0, 2).toUpperCase()
-                              : widget.teamName.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Team ${widget.teamName}',
+                    Text('Team ${widget.teamName}',
                         style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                          color: teamColor,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: teamColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '${widget.players.length} players',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: teamColor,
-                        ),
-                      ),
-                    ),
-                    if (isDragOver) ...[
-                      const SizedBox(width: 8),
-                      Icon(Icons.add_circle, color: teamColor, size: 20),
-                    ],
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            color: teamColor)),
+                    const Spacer(),
+                    Text('${widget.players.length} Players',
+                        style: TextStyle(fontSize: 11, color: teamColor)),
                   ],
                 ),
               ),
-
-              // ── Player List ──────────────────────────────────────────────
-              if (widget.players.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Drop a player here',
-                    style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
-                      fontStyle: FontStyle.italic,
-                      fontSize: 13,
-                    ),
-                  ),
-                )
-              else
-                ...widget.players.map((player) {
-                  final name = player.name;
-                  final role = player.role;
-                  final gender = player.gender;
-                  final level = player.level;
-
-                  final dragData = _DraggedPlayer(
-                    name: name,
-                    fromTeam: widget.teamName,
-                    player: player,
-                  );
-
-                  return RepaintBoundary(
-                    child: _DraggablePlayerTile(
-                      dragData: dragData,
-                      name: name,
-                      role: role,
-                      gender: gender,
-                      level: level,
+              const SizedBox(height: 8),
+              // ── Circular Grid ────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.start,
+                  children: widget.players.map((p) {
+                    return _CircularPlayerAvatar(
+                      player: p,
                       teamColor: teamColor,
-                    ),
-                  );
-                }),
-
-              const SizedBox(height: 4),
+                      onTap: () => widget.onEditPlayer(p),
+                    );
+                  }).toList(),
+                ),
+              ),
             ],
           ),
         );
@@ -307,145 +232,108 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Draggable player tile — const where possible
-// ─────────────────────────────────────────────────────────────────────────────
-class _DraggablePlayerTile extends StatelessWidget {
-  final _DraggedPlayer dragData;
-  final String name;
-  final String role;
-  final String gender;
-  final int level;
+class _CircularPlayerAvatar extends StatelessWidget {
+  final PlayerEntry player;
   final Color teamColor;
+  final VoidCallback onTap;
 
-  const _DraggablePlayerTile({
-    required this.dragData,
-    required this.name,
-    required this.role,
-    required this.gender,
-    required this.level,
+  const _CircularPlayerAvatar({
+    required this.player,
     required this.teamColor,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isFemale = player.gender.toUpperCase().startsWith('F');
     final colorScheme = Theme.of(context).colorScheme;
-    final isFemale = gender.toUpperCase().startsWith('F');
 
     return Draggable<_DraggedPlayer>(
-      data: dragData,
+      data: _DraggedPlayer(
+        name: player.name,
+        fromTeam: player.team,
+        player: player,
+      ),
       feedback: Material(
-        elevation: 8,
-        borderRadius: BorderRadius.circular(12),
-        color: teamColor.withValues(alpha: 0.95),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.drag_indicator, color: Colors.white70, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+        color: Colors.transparent,
+        child: Opacity(
+          opacity: 0.8,
+          child: CircleAvatar(
+            radius: 24,
+            backgroundColor: teamColor,
+            child: Text(player.name.substring(0, 1).toUpperCase(),
+                style: const TextStyle(color: Colors.white)),
           ),
         ),
       ),
-      childWhenDragging: Opacity(
-        opacity: 0.3,
-        child: _buildTile(colorScheme, isFemale),
-      ),
-      child: _buildTile(colorScheme, isFemale),
-    );
-  }
-
-  Widget _buildTile(ColorScheme colorScheme, bool isFemale) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: ListTile(
-        dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-        leading: Row(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.drag_indicator,
-                size: 16,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
-            const SizedBox(width: 4),
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: isFemale
-                  ? Colors.pink.withValues(alpha: 0.15)
-                  : Colors.blue.withValues(alpha: 0.12),
-              child: Text(
-                isFemale ? '♀' : '♂',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isFemale ? Colors.pink : Colors.blue,
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: teamColor, width: 2),
+                  ),
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: isFemale
+                        ? Colors.pink.withValues(alpha: 0.1)
+                        : Colors.blue.withValues(alpha: 0.1),
+                    child: Text(
+                      player.name.isNotEmpty
+                          ? player.name.substring(0, 1).toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isFemale ? Colors.pink : Colors.blue,
+                      ),
+                    ),
+                  ),
                 ),
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                      color: teamColor, shape: BoxShape.circle),
+                  child: Text(
+                    player.level.toString(),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: 50,
+              child: Text(
+                player.name,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
               ),
             ),
+            if (player.role != 'Any')
+              Text(
+                player.role,
+                style: TextStyle(fontSize: 8, color: colorScheme.onSurfaceVariant),
+              ),
           ],
         ),
-        title: Text(
-          name,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-        ),
-        subtitle: (role.isNotEmpty && role != 'Any')
-            ? Text(
-                role,
-                style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade500,
-                    fontStyle: FontStyle.italic),
-              )
-            : null,
-        trailing: _StarRating(level: level, color: teamColor),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Compact star rating — const-safe
-// ─────────────────────────────────────────────────────────────────────────────
-class _StarRating extends StatelessWidget {
-  final int level;
-  final Color color;
-
-  const _StarRating({required this.level, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (i) {
-        return Icon(
-          i < level ? Icons.star_rounded : Icons.star_outline_rounded,
-          size: 13,
-          color: i < level ? color : Colors.grey.shade400,
-        );
-      }),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// UnassignedPlayersView — draggable unassigned players list
-// ─────────────────────────────────────────────────────────────────────────────
 class UnassignedPlayersView extends StatelessWidget {
   final List<PlayerEntry> players;
   final VoidCallback? onChanged;
@@ -458,115 +346,27 @@ class UnassignedPlayersView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     final unassigned =
         players.where((p) => TeamUtils.normalizeTeamName(p.team) == 'No team');
+    if (unassigned.isEmpty) return const SizedBox.shrink();
 
-    if (unassigned.isEmpty) {
-      return ListTile(
-        leading: Icon(Icons.check_circle, color: colorScheme.primary),
-        title: const Text('All players assigned!'),
-      );
-    }
-
-    return Column(
-      children: unassigned.map((player) {
-        final name = player.name;
-        final role = player.role;
-        final gender = player.gender;
-        final level = player.level;
-        final dragData = _DraggedPlayer(
-          name: name,
-          fromTeam: 'No team',
-          player: player,
-        );
-        final isFemale = gender.toUpperCase().startsWith('F');
-
-        return Draggable<_DraggedPlayer>(
-          data: dragData,
-          feedback: Material(
-            elevation: 8,
-            borderRadius: BorderRadius.circular(12),
-            color: colorScheme.errorContainer,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.drag_indicator,
-                      color: colorScheme.onErrorContainer, size: 16),
-                  const SizedBox(width: 8),
-                  Text(name,
-                      style: TextStyle(
-                          color: colorScheme.onErrorContainer,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14)),
-                ],
-              ),
-            ),
-          ),
-          childWhenDragging: Opacity(
-            opacity: 0.3,
-            child: _unassignedTile(
-                context, colorScheme, name, role, isFemale, level),
-          ),
-          child: _unassignedTile(
-              context, colorScheme, name, role, isFemale, level),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _unassignedTile(BuildContext context, ColorScheme cs, String name,
-      String role, bool isFemale, int level) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: cs.errorContainer.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: cs.error.withValues(alpha: 0.2)),
-      ),
-      child: ListTile(
-        dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-        leading: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.drag_indicator,
-                size: 16, color: cs.onSurfaceVariant.withValues(alpha: 0.4)),
-            const SizedBox(width: 4),
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: cs.errorContainer,
-              child: Text(
-                isFemale ? '♀' : '♂',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: cs.onErrorContainer,
-                ),
-              ),
-            ),
-          ],
-        ),
-        title: Text(name,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        subtitle: (role.isNotEmpty && role != 'Any')
-            ? Text(role,
-                style: TextStyle(
-                    fontSize: 11,
-                    color: cs.onSurfaceVariant,
-                    fontStyle: FontStyle.italic))
-            : null,
-        trailing: _StarRating(level: level, color: cs.error),
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: unassigned.map((p) {
+          return _CircularPlayerAvatar(
+            player: p,
+            teamColor: Colors.grey,
+            onTap: () {}, // Handled in home_screen
+          );
+        }).toList(),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PlayerTeamDirectoryView — alphabetical read-only list
-// ─────────────────────────────────────────────────────────────────────────────
 class PlayerTeamDirectoryView extends StatelessWidget {
   final List<PlayerEntry> players;
 
@@ -577,46 +377,29 @@ class PlayerTeamDirectoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     final sorted = List<PlayerEntry>.from(players)
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
-    return Column(
-      children: sorted.map((player) {
-        final teamName = TeamUtils.normalizeTeamName(player.team);
-        final isAssigned = teamName != 'No team';
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: sorted.length,
+      separatorBuilder: (_, __) => const Divider(height: 1, indent: 16),
+      itemBuilder: (context, index) {
+        final p = sorted[index];
+        final isAssigned = TeamUtils.normalizeTeamName(p.team) != 'No team';
         return ListTile(
           dense: true,
-          leading: Icon(
-            isAssigned ? Icons.person : Icons.person_off,
-            color: isAssigned ? colorScheme.primary : colorScheme.error,
-            size: 20,
-          ),
-          title: Text(player.name),
-          subtitle: (player.role.isNotEmpty && player.role != 'Any')
-              ? Text(player.role,
-                  style: const TextStyle(
-                      fontSize: 11, fontStyle: FontStyle.italic))
-              : null,
-          trailing: Chip(
-            label: Text(
-              isAssigned ? 'Team $teamName' : 'Unassigned',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: isAssigned ? colorScheme.primary : colorScheme.error,
-              ),
+          title: Text(p.name, style: const TextStyle(fontSize: 13)),
+          trailing: Text(
+            isAssigned ? 'Team ${p.team}' : 'Unassigned',
+            style: TextStyle(
+              fontSize: 11,
+              color: isAssigned ? Theme.of(context).colorScheme.primary : Colors.grey,
             ),
-            backgroundColor:
-                (isAssigned ? colorScheme.primary : colorScheme.error)
-                    .withValues(alpha: 0.1),
-            side: BorderSide.none,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            visualDensity: VisualDensity.compact,
           ),
         );
-      }).toList(),
+      },
     );
   }
 }
