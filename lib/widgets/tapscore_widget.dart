@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 // ---------------------------------------------------------------------------
 // Top-level constants — allocated once, never recreated on dialog open
@@ -67,12 +68,15 @@ class TapScoreScreen extends StatefulWidget {
   final String? initialNameA;
   final String? initialNameB;
 
+  final bool isTour;
+
   const TapScoreScreen({
     super.key,
     this.initialScoreA,
     this.initialScoreB,
     this.initialNameA,
     this.initialNameB,
+    this.isTour = false,
   });
 
   @override
@@ -80,6 +84,9 @@ class TapScoreScreen extends StatefulWidget {
 }
 
 class _TapScoreScreenState extends State<TapScoreScreen> {
+  final GlobalKey _keyScore = GlobalKey();
+  final GlobalKey _keySettings = GlobalKey();
+
   // ── State ─────────────────────────────────────────────────────────────────
   int _teamAScore = 0;
   int _teamBScore = 0;
@@ -114,6 +121,11 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
   void initState() {
     super.initState();
     _initPrefsAndLoad();
+    if (widget.isTour) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowcaseView.get().startShowCase([_keyScore, _keySettings]);
+      });
+    }
   }
 
   @override
@@ -688,14 +700,20 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
           Row(
             children: [
               Expanded(
-                child: RepaintBoundary(
-                  child: _TeamHalf(
-                    team: 'A',
-                    score: _teamAScore,
-                    color: _colorA,
-                    name: _nameA,
-                    onIncrement: () => _incrementScore('A'),
-                    onDecrement: () => _decrementScore('A'),
+                child: Showcase(
+                  key: _keyScore,
+                  title: 'Score Area',
+                  description:
+                      'Tap anywhere on the team side to increase the score. Long press to decrease.',
+                  child: RepaintBoundary(
+                    child: _TeamHalf(
+                      team: 'A',
+                      score: _teamAScore,
+                      color: _colorA,
+                      name: _nameA,
+                      onIncrement: () => _incrementScore('A'),
+                      onDecrement: () => _decrementScore('A'),
+                    ),
                   ),
                 ),
               ),
@@ -749,35 +767,41 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
             bottom: 40,
             left: 0,
             right: 0,
-            child: Opacity(
-              opacity: 0.25,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _ControlCircle(
-                    icon: FontAwesomeIcons.forwardStep,
-                    label: 'Next Round',
-                    onPressed: _requestNextRound,
-                  ),
-                  const SizedBox(width: 24),
-                  _ControlCircle(
-                    icon: FontAwesomeIcons.clockRotateLeft,
-                    label: 'History',
-                    onPressed: _showHistoryPopup,
-                  ),
-                  const SizedBox(width: 24),
-                  _ControlCircle(
-                    icon: FontAwesomeIcons.gear,
-                    label: 'Settings',
-                    onPressed: _showSettingsPopup,
-                  ),
-                  const SizedBox(width: 24),
-                  _ControlCircle(
-                    icon: FontAwesomeIcons.rightLeft,
-                    label: 'Swap',
-                    onPressed: _swapTeams,
-                  ),
-                ],
+            child: Showcase(
+              key: _keySettings,
+              title: 'Tool Controls',
+              description:
+                  'Manage rounds, view history, or change team colors and names here.',
+              child: Opacity(
+                opacity: 0.25,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _ControlCircle(
+                      icon: FontAwesomeIcons.forwardStep,
+                      label: 'Next Round',
+                      onPressed: _requestNextRound,
+                    ),
+                    const SizedBox(width: 24),
+                    _ControlCircle(
+                      icon: FontAwesomeIcons.clockRotateLeft,
+                      label: 'History',
+                      onPressed: _showHistoryPopup,
+                    ),
+                    const SizedBox(width: 24),
+                    _ControlCircle(
+                      icon: FontAwesomeIcons.gear,
+                      label: 'Settings',
+                      onPressed: _showSettingsPopup,
+                    ),
+                    const SizedBox(width: 24),
+                    _ControlCircle(
+                      icon: FontAwesomeIcons.rightLeft,
+                      label: 'Swap',
+                      onPressed: _swapTeams,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

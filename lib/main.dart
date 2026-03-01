@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:teammaker/cell_renderer.dart';
 import 'package:teammaker/theme/app_theme.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 void main() {
   runApp(const TeamMakerApp());
@@ -33,13 +34,15 @@ class _TeamMakerAppState extends State<TeamMakerApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Team Maker Buddy',
-      debugShowCheckedModeBanner: false,
-      theme: _themeController.lightTheme,
-      darkTheme: _themeController.darkTheme,
-      themeMode: _themeController.mode,
-      home: CellRendererScreen(themeController: _themeController),
+    return ShowCaseWidget(
+      builder: (context) => MaterialApp(
+        title: 'Team Maker Buddy',
+        debugShowCheckedModeBanner: false,
+        theme: _themeController.lightTheme,
+        darkTheme: _themeController.darkTheme,
+        themeMode: _themeController.mode,
+        home: CellRendererScreen(themeController: _themeController),
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ---------------------------------------------------------------------------
@@ -20,7 +21,9 @@ enum CardStyle { classic, neon, gradient }
 
 class RandomTeamScreen extends StatefulWidget {
   final int initialTotal;
-  const RandomTeamScreen({super.key, this.initialTotal = 6});
+  final bool isTour;
+  const RandomTeamScreen(
+      {super.key, this.initialTotal = 6, this.isTour = false});
 
   @override
   State<RandomTeamScreen> createState() => _RandomTeamScreenState();
@@ -33,6 +36,7 @@ class _RandomTeamScreenState extends State<RandomTeamScreen>
   List<int> _pool = [];
   List<int> _taken = [];
   int? _current;
+  final GlobalKey _keyDeck = GlobalKey();
 
   // ── Settings ──────────────────────────────────────────────────────────────
   bool _showNumbers = true;
@@ -94,6 +98,12 @@ class _RandomTeamScreenState extends State<RandomTeamScreen>
     // Now safe to call _regenerate() since all controllers are initialized
     _regenerate();
     _initPrefs();
+
+    if (widget.isTour) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowcaseView.get().startShowCase([_keyDeck]);
+      });
+    }
   }
 
   @override
@@ -500,31 +510,35 @@ class _RandomTeamScreenState extends State<RandomTeamScreen>
 
           const Spacer(),
 
-          // ── Card ────────────────────────────────────────────────────────
-          GestureDetector(
-            onTap: _pool.isEmpty ? null : _draw,
-            child: AnimatedBuilder(
-              animation: Listenable.merge([_flipCtrl, _pulseCtrl, _glowCtrl]),
-              builder: (context, _) {
-                return Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..rotateY(_flipAnim.value)
-                    ..scaleByDouble(
-                        _pulseAnim.value, _pulseAnim.value, 1.0, 1.0),
-                  child: RepaintBoundary(
-                    child: _QueueCard(
-                      current: _current,
-                      isFlipping: _isFlipping,
-                      hasMore: _pool.isNotEmpty,
-                      cardStyle: _cardStyle,
-                      colorScheme: cs,
-                      glowIntensity: _glowAnim.value,
+          Showcase(
+            key: _keyDeck,
+            title: 'Player Card',
+            description: 'Tap the card to reveal the next player number!',
+            child: GestureDetector(
+              onTap: _pool.isEmpty ? null : _draw,
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_flipCtrl, _pulseCtrl, _glowCtrl]),
+                builder: (context, _) {
+                  return Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()
+                      ..setEntry(3, 2, 0.001)
+                      ..rotateY(_flipAnim.value)
+                      ..scaleByDouble(
+                          _pulseAnim.value, _pulseAnim.value, 1.0, 1.0),
+                    child: RepaintBoundary(
+                      child: _QueueCard(
+                        current: _current,
+                        isFlipping: _isFlipping,
+                        hasMore: _pool.isNotEmpty,
+                        cardStyle: _cardStyle,
+                        colorScheme: cs,
+                        glowIntensity: _glowAnim.value,
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
 

@@ -35,6 +35,7 @@ dependencies:
   video_player: any
   font_awesome_flutter: any
   shared_preferences: any
+  showcaseview: ^5.0.1
 
 
 

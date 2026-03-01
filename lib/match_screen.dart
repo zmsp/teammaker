@@ -4,11 +4,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/model/player_model.dart';
 import 'package:teammaker/widget/match.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class MatchScreen extends StatefulWidget {
   final SettingsData settingsData;
+  final bool isTour;
 
-  const MatchScreen(this.settingsData, {super.key});
+  const MatchScreen(this.settingsData, {super.key, this.isTour = false});
 
   @override
   State<MatchScreen> createState() => _MatchScreenState();
@@ -18,6 +20,9 @@ class _MatchScreenState extends State<MatchScreen> {
   SettingsData get settingsData => widget.settingsData;
   List<Round> rounds = [];
   List<PlayerModel> players = [];
+
+  final GlobalKey _keySettings = GlobalKey();
+  final GlobalKey _keyGenerate = GlobalKey();
 
   void reportingDialog(BuildContext context) {
     Widget okButton = TextButton(
@@ -130,6 +135,11 @@ class _MatchScreenState extends State<MatchScreen> {
   void initState() {
     super.initState();
     _generateMatches();
+    if (widget.isTour) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ShowcaseView.get().startShowCase([_keySettings, _keyGenerate]);
+      });
+    }
   }
 
   bool _anyScoreEntered() {
@@ -229,81 +239,103 @@ class _MatchScreenState extends State<MatchScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: const Text("Configure teams, venues, and rounds"),
               children: [
-                ListTile(
-                  leading: const FaIcon(FontAwesomeIcons.userGroup),
-                  title: TextFormField(
-                      decoration: const InputDecoration(
-                        label: Text("How many teams are playing?"),
-                        hintText: 'Number of teams',
+                Showcase(
+                  key: _keySettings,
+                  title: 'Match Configuration',
+                  description:
+                      'Adjust how many teams, courts, and rounds you want to schedule.',
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const FaIcon(FontAwesomeIcons.userGroup),
+                        title: TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("How many teams are playing?"),
+                              hintText: 'Number of teams',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.teamCount.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              setState(() {
+                                settingsData.teamCount = int.tryParse(value) ??
+                                    settingsData.teamCount;
+                              });
+                            },
+                            textAlign: TextAlign.left),
                       ),
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      initialValue: settingsData.teamCount.toString(),
-                      keyboardType: TextInputType.number,
-                      onChanged: (value) {
-                        setState(() {
-                          settingsData.teamCount =
-                              int.tryParse(value) ?? settingsData.teamCount;
-                        });
-                      },
-                      textAlign: TextAlign.left),
-                ),
-                ListTile(
-                  leading: const FaIcon(FontAwesomeIcons.landmark),
-                  title: TextFormField(
-                      decoration: const InputDecoration(
-                        label: Text("How many courts are available?"),
-                        hintText: 'Number of available courts/venues?',
+                      ListTile(
+                        leading: const FaIcon(FontAwesomeIcons.landmark),
+                        title: TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("How many courts are available?"),
+                              hintText: 'Number of available courts/venues?',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.gameVenues.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              setState(() {
+                                settingsData.gameVenues = int.tryParse(value) ??
+                                    settingsData.gameVenues;
+                              });
+                            },
+                            textAlign: TextAlign.left),
                       ),
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      initialValue: settingsData.gameVenues.toString(),
-                      keyboardType: TextInputType.number,
-                      onChanged: (value) {
-                        setState(() {
-                          settingsData.gameVenues =
-                              int.tryParse(value) ?? settingsData.gameVenues;
-                        });
-                      },
-                      textAlign: TextAlign.left),
-                ),
-                ListTile(
-                  leading: const FaIcon(FontAwesomeIcons.rotate),
-                  title: TextFormField(
-                      decoration: const InputDecoration(
-                        label: Text("How many rounds of game?"),
-                        hintText: 'Number of rounds or rotations',
+                      ListTile(
+                        leading: const FaIcon(FontAwesomeIcons.rotate),
+                        title: TextFormField(
+                            decoration: const InputDecoration(
+                              label: Text("How many rounds of game?"),
+                              hintText: 'Number of rounds or rotations',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            initialValue: settingsData.gameRounds.toString(),
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              setState(() {
+                                settingsData.gameRounds = int.tryParse(value) ??
+                                    settingsData.gameRounds;
+                              });
+                            },
+                            textAlign: TextAlign.left),
                       ),
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      initialValue: settingsData.gameRounds.toString(),
-                      keyboardType: TextInputType.number,
-                      onChanged: (value) {
-                        setState(() {
-                          settingsData.gameRounds =
-                              int.tryParse(value) ?? settingsData.gameRounds;
-                        });
-                      },
-                      textAlign: TextAlign.left),
+                    ],
+                  ),
                 ),
               ],
             ),
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  if (await _showResetWarning()) {
-                    setState(() {
-                      _generateMatches();
-                    });
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+              child: Showcase(
+                key: _keyGenerate,
+                title: 'Generate Brackets',
+                description:
+                    'Once configured, click here to create the match schedule. Each round will track scores!',
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    if (await _showResetWarning()) {
+                      setState(() {
+                        _generateMatches();
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const FaIcon(FontAwesomeIcons.trophy),
+                  label: const Text("Create matches",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
-                icon: const FaIcon(FontAwesomeIcons.trophy),
-                label: const Text("Create matches",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 24.0),

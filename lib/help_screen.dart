@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:teammaker/video_player.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HelpExample extends StatefulWidget {
-  const HelpExample({super.key});
+  final VoidCallback? onRestartTour;
+  const HelpExample({super.key, this.onRestartTour});
 
   @override
   State<HelpExample> createState() => _HelpExampleState();
@@ -30,17 +32,18 @@ class _HelpExampleState extends State<HelpExample> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: <Widget>[
-          _buildHeader("Mastering Team Buddy"),
+          _buildHeader(context, "Mastering Team Maker Buddy"),
           const SizedBox(height: 12),
           _buildHelpSection(
             context,
             icon: Icons.people_alt,
             color: Colors.blue,
             title: "1. Managing the Roster",
-            content: "• Add players using the '+' buttons.\n"
-                "• Check the boxes next to players who are present.\n"
-                "• Toggle 'Edit Mode' to quickly rewrite names or change levels.\n"
-                "• Scores and names are automatically saved to your device.",
+            content:
+                "• Add players using the dedicated '+' and 'Add Row' buttons.\n"
+                "• Check the boxes next to players who are present for today's session.\n"
+                "• Toggle 'Edit Mode' (Pencil Icon) to quickly update names, levels, or gender.\n"
+                "• All roster data is automatically persisted to your device.",
           ),
           _buildHelpSection(
             context,
@@ -48,10 +51,10 @@ class _HelpExampleState extends State<HelpExample> {
             color: Colors.purple,
             title: "2. Balancing Teams",
             content:
-                "• Choose a strategy (Fair Mix is recommended for most games).\n"
-                "• Set 'Players per team' to your desired group size.\n"
-                "• Press 'GENERATE TEAMS' at the bottom to see results.\n"
-                "• You can lock specific players to teams if needed.",
+                "• Choose a balancing strategy: 'Fair Mix' is best for balanced skill and gender distribution.\n"
+                "• Adjust 'Players per team' to scale the game size.\n"
+                "• Press 'GENERATE TEAMS' to produce optimized matchups.\n"
+                "• Unassigned players are listed separately for easy rotation.",
           ),
           _buildHelpSection(
             context,
@@ -59,54 +62,90 @@ class _HelpExampleState extends State<HelpExample> {
             color: Colors.orange,
             title: "3. Using Quick Tools",
             content:
-                "• TAP SCORE: A fast scoreboard and timer. It starts automatically so you can get playing immediately.\n"
-                "• PLAYER QUEUE: A virtual deck for queue management. Set your player count and tap the card to issue a position number.",
+                "• TAP SCORE: A professional scoreboard for HOME vs AWAY. Features automatic timers, custom max scores, and country-themed color palettes.\n"
+                "• PLAYER QUEUE: A digital 'next-up' system. Set the count and tap cards to issue playing numbers fairly.",
           ),
           _buildHelpSection(
             context,
             icon: Icons.emoji_events,
             color: Colors.amber,
             title: "4. Running a Match Maker",
-            content: "• Set your court count and round count.\n"
-                "• Tap 'Create Matches' to see who plays where.\n"
-                "• Launch the Scoreboard directly from any match to record wins.\n"
-                "• The system tracks participation to ensure everyone gets a game.",
+            content: "• Set your court count and desired rounds.\n"
+                "• Tap 'Create Matches' to generate a full tournament or session schedule.\n"
+                "• Track wins/losses with the built-in score tracking.\n"
+                "• The system balances court time so everyone plays an equal amount.",
           ),
           const SizedBox(height: 32),
-          _buildHeader("Video Tutorials"),
+          _buildHeader(context, "Video Tutorials"),
           const SizedBox(height: 12),
           _buildVideoTile(
             context,
             title: "How to create teams?",
-            subtitle: "Short video on adding players and generating teams.",
+            subtitle: "Quick walkthrough of the roster and generation process.",
             url: 'asset/video/meetup.mp4',
             color: Colors.blueAccent,
           ),
           _buildVideoTile(
             context,
-            title: "Import from Meetup",
-            subtitle: "Learn how to pull player RSVPs from Meetup.",
+            title: "Scoreboard Features",
+            subtitle: "Learn how to use the interactive Tap Score tool.",
             url: 'asset/video/meetup.mp4',
             color: Colors.redAccent,
           ),
           const SizedBox(height: 32),
-          _buildHeader("Resources"),
+          _buildHeader(context, "Resources"),
           const SizedBox(height: 12),
           _buildResourceLink(
               "Full User Manual",
               FontAwesomeIcons.bookOpen,
               Colors.teal,
               "https://github.com/zmsp/teammaker/wiki/user-manual"),
-          _buildResourceLink("Report a Problem", FontAwesomeIcons.bug,
+          _buildResourceLink("Report an Issue", FontAwesomeIcons.bug,
               Colors.redAccent, "https://github.com/zmsp/teammaker/issues"),
+          const SizedBox(height: 12),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+            color: Colors.blueAccent.withValues(alpha: 0.1),
+            child: ListTile(
+              leading: const Icon(Icons.play_circle_fill,
+                  color: Colors.blueAccent, size: 20),
+              title: const Text("Take App Tour Again",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              subtitle: const Text("Guided walkthrough of all features."),
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('tour_shown', false);
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  widget.onRestartTour?.call();
+                }
+              },
+            ),
+          ),
           const SizedBox(height: 40),
           Center(
-            child: Text(
-              "Team Buddy v2.0 • Premium Edition",
-              style: TextStyle(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold),
+            child: Column(
+              children: [
+                Text(
+                  "Team Maker Buddy v2.1",
+                  style: TextStyle(
+                      color: colorScheme.primary.withValues(alpha: 0.6),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "Premium Edition • Zero Data Collection",
+                  style: TextStyle(
+                      color:
+                          colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                      fontSize: 10),
+                ),
+              ],
             ),
           ),
         ],
@@ -114,14 +153,14 @@ class _HelpExampleState extends State<HelpExample> {
     );
   }
 
-  Widget _buildHeader(String text) {
+  Widget _buildHeader(BuildContext context, String text) {
     return Text(
       text.toUpperCase(),
-      style: const TextStyle(
+      style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w900,
           letterSpacing: 2,
-          color: Colors.grey),
+          color: Theme.of(context).colorScheme.primary),
     );
   }
 

@@ -23,6 +23,7 @@ import 'package:teammaker/utils/team_utils.dart';
 import 'package:teammaker/widgets/team_results_view.dart';
 import 'package:teammaker/widgets/tapscore_widget.dart';
 import 'package:teammaker/widgets/random_team_widget.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 // ─── Available roles (built once) ─────────────────────────────────────────────
 final _allRoles = SportPalette.values.expand((e) => e.roles).toSet().toList();
@@ -52,6 +53,17 @@ class PlutoExampleScreen extends StatefulWidget {
 enum Status { none, running, stopped, paused }
 
 class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
+  final GlobalKey _key1 = GlobalKey(); // Header
+  final GlobalKey _keyScore = GlobalKey(); // Score Keeper
+  final GlobalKey _keyMatch = GlobalKey(); // Match Maker
+  final GlobalKey _keyQueue = GlobalKey(); // Player Queue
+  final GlobalKey _key2 = GlobalKey(); // Roster Section
+  final GlobalKey _key3 = GlobalKey(); // Add Player
+  final GlobalKey _key4 = GlobalKey(); // Edit Mode
+  final GlobalKey _key5 = GlobalKey(); // Strategy
+  final GlobalKey _key6 = GlobalKey(); // Generate
+  final GlobalKey _key7 = GlobalKey(); // Bottom Nav
+
   SettingsData settingsData = SettingsData();
   bool _isEditable = false;
   Timer? _saveTimer;
@@ -89,6 +101,156 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     if (!mounted) return;
     await _loadSettings();
     await _loadPlayers();
+    _startTour();
+  }
+
+  void _startTour() {
+    if (_prefs!.getBool('tour_shown') != true) {
+      _loadDemoData();
+      _prefs!.setBool('tour_shown', true);
+      _runHomePhase1();
+    }
+  }
+
+  void _runHomePhase1() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ShowcaseView.get().startShowCase([
+        _key1, // App Title
+        _key2, // Roster Section
+        _key5, // Strategy
+        _key6, // Generate Button
+        _keyScore, // Score Tool (Interactive)
+      ]);
+    });
+  }
+
+  void _loadDemoData() {
+    if (_players.isNotEmpty) return;
+    setState(() {
+      _players.addAll([
+        PlayerEntry(
+            name: 'Alex R.',
+            level: 5,
+            gender: 'MALE',
+            role: 'Setter',
+            checked: true),
+        PlayerEntry(
+            name: 'Jordan M.',
+            level: 5,
+            gender: 'FEMALE',
+            role: 'Outside',
+            checked: true),
+        PlayerEntry(
+            name: 'Sam T.',
+            level: 4,
+            gender: 'X',
+            role: 'Libero',
+            checked: true),
+        PlayerEntry(
+            name: 'Chris P.',
+            level: 3,
+            gender: 'MALE',
+            role: 'Middle',
+            checked: true),
+        PlayerEntry(
+            name: 'Taylor S.',
+            level: 4,
+            gender: 'FEMALE',
+            role: 'Opposite',
+            checked: true),
+        PlayerEntry(
+            name: 'Pat B.',
+            level: 2,
+            gender: 'FEMALE',
+            role: 'Any',
+            checked: true),
+        PlayerEntry(
+            name: 'Casey K.',
+            level: 3,
+            gender: 'MALE',
+            role: 'Setter',
+            checked: true),
+        PlayerEntry(
+            name: 'Skyler J.',
+            level: 5,
+            gender: 'X',
+            role: 'Outside',
+            checked: true),
+        PlayerEntry(
+            name: 'Morgan L.',
+            level: 4,
+            gender: 'FEMALE',
+            role: 'Middle',
+            checked: true),
+        PlayerEntry(
+            name: 'Riley H.',
+            level: 3,
+            gender: 'MALE',
+            role: 'Libero',
+            checked: true),
+        PlayerEntry(
+            name: 'Quinn W.',
+            level: 1,
+            gender: 'FEMALE',
+            role: 'Any',
+            checked: true),
+        PlayerEntry(
+            name: 'Jamie V.',
+            level: 4,
+            gender: 'MALE',
+            role: 'Opposite',
+            checked: true),
+        PlayerEntry(
+            name: 'Reese F.',
+            level: 2,
+            gender: 'X',
+            role: 'Any',
+            checked: true),
+        PlayerEntry(
+            name: 'Dakota G.',
+            level: 5,
+            gender: 'FEMALE',
+            role: 'Outside',
+            checked: true),
+        PlayerEntry(
+            name: 'Emery N.',
+            level: 3,
+            gender: 'MALE',
+            role: 'Middle',
+            checked: true),
+        PlayerEntry(
+            name: 'Blake D.',
+            level: 4,
+            gender: 'FEMALE',
+            role: 'Setter',
+            checked: false),
+        PlayerEntry(
+            name: 'Avery Z.',
+            level: 2,
+            gender: 'X',
+            role: 'Any',
+            checked: false),
+        PlayerEntry(
+            name: 'Parker Y.',
+            level: 5,
+            gender: 'MALE',
+            role: 'Outside',
+            checked: true),
+        PlayerEntry(
+            name: 'Finley Q.',
+            level: 3,
+            gender: 'FEMALE',
+            role: 'Middle',
+            checked: true),
+        PlayerEntry(
+            name: 'Sage C.',
+            level: 4,
+            gender: 'MALE',
+            role: 'Opposite',
+            checked: true),
+      ]);
+    });
+    _savePlayers();
   }
 
   Future<void> _loadSettings() async {
@@ -597,8 +759,11 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
             tooltip: 'Get help',
             icon: const FaIcon(FontAwesomeIcons.circleQuestion, size: 20),
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => HelpExample()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          HelpExample(onRestartTour: _startTour)));
             },
           ),
           const SizedBox(width: 8),
@@ -611,10 +776,16 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
             // ── Quick Tools ────────────────────────────────────────────────
             FadeSlideIn(
               delay: Duration.zero,
-              child: SectionHeader(
-                  title: 'QUICK TOOLS',
-                  icon: FontAwesomeIcons.bolt,
-                  color: colorScheme.primary),
+              child: Showcase(
+                key: _key1,
+                title: 'Quick Tools',
+                description:
+                    'Access the Score Keeper, Match Maker, and Player Queue instantly.',
+                child: SectionHeader(
+                    title: 'QUICK TOOLS',
+                    icon: FontAwesomeIcons.bolt,
+                    color: colorScheme.primary),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -622,42 +793,90 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    QuickToolCard(
-                      title: 'TAP SCORE',
-                      icon: Theme.of(context)
-                              .extension<SportIconExtension>()
-                              ?.icon ??
-                          Icons.sports,
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const TapScoreScreen()));
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    QuickToolCard(
-                      title: 'MATCH MAKER',
-                      icon: FontAwesomeIcons.trophy,
-                      onTap: () {
-                        Navigator.push(
+                    Showcase(
+                      key: _keyScore,
+                      title: 'Score Keeper',
+                      description:
+                          'Tap to see the Pro Scoreboard in action! (Click to enter)',
+                      onTargetClick: () async {
+                        await Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    MatchScreen(settingsData)));
+                                    const TapScoreScreen(isTour: true)));
+                        // When returning, highlight the next tool
+                        ShowcaseView.get().startShowCase([_keyMatch]);
                       },
+                      disposeOnTap: true,
+                      child: QuickToolCard(
+                        title: 'SCORE KEEPER',
+                        icon: Theme.of(context)
+                                .extension<SportIconExtension>()
+                                ?.icon ??
+                            Icons.sports,
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const TapScoreScreen()));
+                        },
+                      ),
                     ),
                     const SizedBox(width: 12),
-                    QuickToolCard(
-                      title: 'PLAYER QUEUE',
-                      icon: FontAwesomeIcons.dice,
-                      onTap: () {
-                        Navigator.push(
+                    Showcase(
+                      key: _keyMatch,
+                      title: 'Match Maker',
+                      description:
+                          'Tap to see rotation and round scheduling! (Click to enter)',
+                      onTargetClick: () async {
+                        await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    MatchScreen(settingsData, isTour: true)));
+                        ShowcaseView.get().startShowCase([_keyQueue]);
+                      },
+                      disposeOnTap: true,
+                      child: QuickToolCard(
+                        title: 'MATCH MAKER',
+                        icon: FontAwesomeIcons.trophy,
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      MatchScreen(settingsData)));
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Showcase(
+                      key: _keyQueue,
+                      title: 'Player Queue',
+                      description:
+                          'Tap to see the digital sequence revealing system! (Click to enter)',
+                      onTargetClick: () async {
+                        await Navigator.push(
                             context,
                             PageRouteBuilder(
                                 pageBuilder: (context, anim, sec) =>
-                                    const RandomTeamScreen(initialTotal: 6)));
+                                    const RandomTeamScreen(
+                                        initialTotal: 6, isTour: true)));
+                        ShowcaseView.get().startShowCase([_key7]);
                       },
+                      disposeOnTap: true,
+                      child: QuickToolCard(
+                        title: 'PLAYER QUEUE',
+                        icon: FontAwesomeIcons.dice,
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                  pageBuilder: (context, anim, sec) =>
+                                      const RandomTeamScreen(initialTotal: 6)));
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -668,10 +887,16 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
             // ── 1. Player Roster ───────────────────────────────────────────
             FadeSlideIn(
               delay: const Duration(milliseconds: 80),
-              child: SectionHeader(
-                  title: '1. PLAYER ROSTER',
-                  icon: FontAwesomeIcons.users,
-                  color: colorScheme.primary),
+              child: Showcase(
+                key: _key2,
+                title: 'Player Roster',
+                description:
+                    'Manage your players here. Check the boxes for those present today.',
+                child: SectionHeader(
+                    title: '1. PLAYER ROSTER',
+                    icon: FontAwesomeIcons.users,
+                    color: colorScheme.primary),
+              ),
             ),
             Card(
               elevation: 0,
@@ -714,19 +939,25 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          GridHeaderButton(
-                            onPressed: () async {
-                              final List<PlayerModel>? players =
-                                  await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              AddPlayersScreen()));
-                              if (players != null) addPlayers(players);
-                            },
-                            icon: Icons.group_add,
-                            label: 'Quick Add',
-                            color: colorScheme.primary,
+                          Showcase(
+                            key: _key3,
+                            title: 'Add Players',
+                            description:
+                                'Add players one by one or import them in bulk.',
+                            child: GridHeaderButton(
+                              onPressed: () async {
+                                final List<PlayerModel>? players =
+                                    await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                AddPlayersScreen()));
+                                if (players != null) addPlayers(players);
+                              },
+                              icon: Icons.group_add,
+                              label: 'Quick Add',
+                              color: colorScheme.primary,
+                            ),
                           ),
                           const SizedBox(width: 6),
                           GridHeaderButton(
@@ -748,15 +979,21 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                             color: colorScheme.secondary,
                           ),
                           const SizedBox(width: 6),
-                          GridHeaderButton(
-                            onPressed: () {
-                              setState(() => _isEditable = !_isEditable);
-                            },
-                            icon: _isEditable ? Icons.edit_off : Icons.edit,
-                            label: _isEditable ? 'Lock' : 'Edit',
-                            color: _isEditable
-                                ? colorScheme.tertiary
-                                : colorScheme.onSurfaceVariant,
+                          Showcase(
+                            key: _key4,
+                            title: 'Edit Mode',
+                            description:
+                                'Toggle this to quickly edit names and levels directly in the table.',
+                            child: GridHeaderButton(
+                              onPressed: () {
+                                setState(() => _isEditable = !_isEditable);
+                              },
+                              icon: _isEditable ? Icons.edit_off : Icons.edit,
+                              label: _isEditable ? 'Lock' : 'Edit',
+                              color: _isEditable
+                                  ? colorScheme.tertiary
+                                  : colorScheme.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(width: 6),
                           GridHeaderButton(
@@ -795,10 +1032,16 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
             // ── 2. Balance Strategy ────────────────────────────────────────
             FadeSlideIn(
               delay: const Duration(milliseconds: 160),
-              child: SectionHeader(
-                  title: '2. BALANCE STRATEGY',
-                  icon: FontAwesomeIcons.gears,
-                  color: colorScheme.primary),
+              child: Showcase(
+                key: _key5,
+                title: 'Balance Strategy',
+                description:
+                    'Select how you want to split teams: by Skill, Gender, or Randomly.',
+                child: SectionHeader(
+                    title: '2. BALANCE STRATEGY',
+                    icon: FontAwesomeIcons.gears,
+                    color: colorScheme.primary),
+              ),
             ),
             Card(
               elevation: 0,
@@ -843,41 +1086,47 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: generateTeams,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                          elevation: 4,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Theme.of(context)
-                                      .extension<SportIconExtension>()
-                                      ?.icon ??
-                                  Icons.sports,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'GENERATE TEAMS',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.2,
+                    child: Showcase(
+                      key: _key6,
+                      title: 'Generate Teams',
+                      description:
+                          'Hit this to create fair matches! Results will appear below.',
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: generateTeams,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            elevation: 4,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Theme.of(context)
+                                        .extension<SportIconExtension>()
+                                        ?.icon ??
+                                    Icons.sports,
+                                size: 20,
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.flash_on, size: 16),
-                          ],
+                              const SizedBox(width: 10),
+                              const Text(
+                                'GENERATE TEAMS',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.flash_on, size: 16),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -988,76 +1237,82 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            )
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                BottomNavButton(
-                  onPressed: () async {
-                    final List<PlayerModel>? players = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => AddPlayersScreen()));
-                    if (players != null) addPlayers(players);
-                  },
-                  icon: FontAwesomeIcons.userPlus,
-                  label: 'Add',
-                ),
-                BottomNavButton(
-                  onPressed: _navigateToTeam,
-                  icon: FontAwesomeIcons.usersViewfinder,
-                  label: 'Teams',
-                ),
-                BottomNavButton(
-                  onPressed: () {
-                    final activeTeams = _players
-                        .where((p) => p.checked)
-                        .map((p) => p.team)
-                        .where((t) => t != 'No team' && t != 'None')
-                        .toSet()
-                        .length;
+      bottomNavigationBar: Showcase(
+        key: _key7,
+        title: 'Quick Access',
+        description:
+            'Navigate to Teams history, Match Maker, or Scoreboard any time.',
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              )
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  BottomNavButton(
+                    onPressed: () async {
+                      final List<PlayerModel>? players = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AddPlayersScreen()));
+                      if (players != null) addPlayers(players);
+                    },
+                    icon: FontAwesomeIcons.userPlus,
+                    label: 'Add',
+                  ),
+                  BottomNavButton(
+                    onPressed: _navigateToTeam,
+                    icon: FontAwesomeIcons.usersViewfinder,
+                    label: 'Teams',
+                  ),
+                  BottomNavButton(
+                    onPressed: () {
+                      final activeTeams = _players
+                          .where((p) => p.checked)
+                          .map((p) => p.team)
+                          .where((t) => t != 'No team' && t != 'None')
+                          .toSet()
+                          .length;
 
-                    if (activeTeams >= 2) {
-                      settingsData.teamCount = activeTeams;
-                    }
+                      if (activeTeams >= 2) {
+                        settingsData.teamCount = activeTeams;
+                      }
 
-                    settingsData.gameVenues = 1;
-                    settingsData.gameRounds = settingsData.teamCount.isOdd
-                        ? settingsData.teamCount
-                        : (settingsData.teamCount - 1).clamp(1, 99);
+                      settingsData.gameVenues = 1;
+                      settingsData.gameRounds = settingsData.teamCount.isOdd
+                          ? settingsData.teamCount
+                          : (settingsData.teamCount - 1).clamp(1, 99);
 
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => MatchScreen(settingsData)));
-                  },
-                  icon: FontAwesomeIcons.trophy,
-                  label: 'Match',
-                ),
-                BottomNavButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const TapScoreScreen()));
-                  },
-                  icon: FontAwesomeIcons.stopwatch20,
-                  label: 'Score',
-                ),
-              ],
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MatchScreen(settingsData)));
+                    },
+                    icon: FontAwesomeIcons.trophy,
+                    label: 'Match',
+                  ),
+                  BottomNavButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const TapScoreScreen()));
+                    },
+                    icon: FontAwesomeIcons.stopwatch20,
+                    label: 'Score',
+                  ),
+                ],
+              ),
             ),
           ),
         ),
