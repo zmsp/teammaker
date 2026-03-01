@@ -113,6 +113,9 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
   // ── Name-save debounce ────────────────────────────────────────────────────
   Timer? _saveDebounce;
 
+  // ── Guard: prevent duplicate max-score dialogs ────────────────────────────
+  bool _maxScoreDialogShowing = false;
+
   // ─────────────────────────────────────────────────────────────────────────
   // Lifecycle
   // ─────────────────────────────────────────────────────────────────────────
@@ -333,6 +336,9 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
   }
 
   void _handleMaxScoreReached(String winnerId) {
+    // Guard: don't stack dialogs if one is already open
+    if (_maxScoreDialogShowing) return;
+
     _recordHistoryEntry(winnerId);
     if (_isRunning) _toggleTimer();
 
@@ -341,38 +347,53 @@ class _TapScoreScreenState extends State<TapScoreScreen> {
     final winnerScore = winnerId == 'A' ? _teamAScore : _teamBScore;
     final loserScore = winnerId == 'A' ? _teamBScore : _teamAScore;
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        final cs = Theme.of(context).colorScheme;
-        return AlertDialog(
-          title: const Text('Round Complete'),
-          content: Text(
-            '🏆 $winnerName reached the max score!\n\n$winnerName: $winnerScore\n$loserName: $loserScore',
-            style: TextStyle(
-                color: cs.onSurfaceVariant, fontSize: 16, height: 1.5),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('KEEP PLAYING',
-                  style: TextStyle(color: cs.onSurface.withValues(alpha: 0.4))),
+    // Defer showDialog until after the current build/setState cycle completes,
+    // so the dialog context is always valid and the dialog can be re-shown.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _maxScoreDialogShowing = true;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          final cs = Theme.of(context).colorScheme;
+          return AlertDialog(
+            title: const Text('Round Complete'),
+            content: Text(
+              '🏆 $winnerName reached the max score!\n\n$winnerName: $winnerScore\n$loserName: $loserScore',
+              style: TextStyle(
+                  color: cs.onSurfaceVariant, fontSize: 16, height: 1.5),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _resetScores();
-              },
-              child: Text(
-                'NEW ROUND',
-                style:
-                    TextStyle(color: cs.primary, fontWeight: FontWeight.bold),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _maxScoreDialogShowing = false;
+                  Navigator.pop(context);
+                },
+                child: Text('KEEP PLAYING',
+                    style:
+                        TextStyle(color: cs.onSurface.withValues(alpha: 0.4))),
               ),
-            ),
-          ],
-        );
-      },
-    );
+              TextButton(
+                onPressed: () {
+                  _maxScoreDialogShowing = false;
+                  Navigator.pop(context);
+                  _resetScores();
+                },
+                child: Text(
+                  'NEW ROUND',
+                  style:
+                      TextStyle(color: cs.primary, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          );
+        },
+      ).whenComplete(() {
+        // Failsafe: ensure flag is cleared even if dialog is dismissed another way
+        _maxScoreDialogShowing = false;
+      });
+    });
   }
 
   void _requestNextRound() {
