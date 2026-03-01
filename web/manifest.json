@@ -3,9 +3,9 @@
     "short_name": "Team Buddy",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0A0A0A",
-    "theme_color": "#0A0A0A",
-    "description": "Premium Team Generator & Match Maker",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "description": "Professional Squad Management & Fair Team Balancing",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

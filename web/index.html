@@ -1,50 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+  <base href="/">
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <meta name="description" content="Team Maker Buddy: Professional Squad Management & Fair Team Balancing for referees and organizers.">
+  <meta name="keywords" content="team maker, squad management, fair teams, referee tools, tournament maker">
+  <meta name="author" content="Shahadat">
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-  -->
-  <!-- Google Tag Manager -->
-  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://teambuddy.shahadat.us/">
+  <meta property="og:title" content="Team Buddy">
+  <meta property="og:description" content="Professional Squad Management & Fair Team Balancing.">
+  <meta property="og:image" content="icons/Icon-512.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://teambuddy.shahadat.us/">
+  <meta property="twitter:title" content="Team Buddy">
+  <meta property="twitter:description" content="Professional Squad Management & Fair Team Balancing.">
+  <meta property="twitter:image" content="icons/Icon-512.png">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Team Buddy">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Team Buddy</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+
+  <!-- Google Tag Manager / Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RD19H2EW3Q"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-
     gtag('config', 'G-RD19H2EW3Q');
-
   </script>
-  <!-- End Google Tag Manager -->
-  <base href="/">
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="creates teams">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="teammaker">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <title>Team Buddy</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0A0A0A">
   <style>
     body {
-      background-color: #0A0A0A;
+      background-color: #000000;
       margin: 0;
       padding: 0;
       overflow: hidden;
+      /* Borderless feel on mobile */
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: white;
+      font-family: sans-serif;
     }
   </style>
 </head>
@@ -55,10 +74,21 @@
     <iframe height="0" src="https://www.googletagmanager.com/ns.html?id=GTM-PGDBNL3"
       style="display:none;visibility:hidden" width="0"></iframe>
   </noscript>
-  <!-- End Google Tag Manager (noscript) -->
 
-  <!-- Service worker removed as it is deprecated in Flutter -->
+  <div id="loading">
+    <p>Loading Team Buddy...</p>
+  </div>
+
   <script src="main.dart.js" type="application/javascript"></script>
+  <script>
+    window.addEventListener('load', function() {
+      // Remove loading indicator once script is loaded
+      var loading = document.getElementById('loading');
+      if (loading) {
+        loading.remove();
+      }
+    });
+  </script>
 </body>
 
 </html>

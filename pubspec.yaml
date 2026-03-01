@@ -67,7 +67,6 @@ flutter:
   # Add any new images, fonts, or data files here before referencing them in code.
   assets:
     - assets/logo.png               # App logo / icon source
-    - asset/video/meetup.mp4        # Tutorial walkthrough video
 
   # To add custom fonts:
   # fonts:
