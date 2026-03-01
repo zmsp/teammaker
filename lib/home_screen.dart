@@ -67,6 +67,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   late final ShowcaseView _showcase;
   final ExpansionTileController _rosterController = ExpansionTileController();
   final ExpansionTileController _strategyController = ExpansionTileController();
+  int _currentTourPhaseInProgress = 0; // 1: Static1, 2: Static2, 3: Interactive
 
   SettingsData settingsData = SettingsData();
   bool _isEditable = false;
@@ -115,7 +116,13 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         await _prefs?.setBool('tour_shown', true);
       },
       onFinish: () async {
-        await _prefs?.setBool('tour_shown', true);
+        if (_currentTourPhaseInProgress == 1) {
+          await _prefs?.setInt('tour_phase', 1);
+        } else if (_currentTourPhaseInProgress == 2) {
+          await _prefs?.setInt('tour_phase', 2);
+        } else if (_currentTourPhaseInProgress == 3) {
+          await _prefs?.setBool('tour_shown', true);
+        }
       },
       globalTooltipActions: [
         TooltipActionButton(
@@ -140,22 +147,36 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   }
 
   void _startTour() {
-    if (_prefs!.getBool('tour_shown') != true) {
+    if (_prefs!.getBool('tour_shown') == true) return;
+    int phase = _prefs!.getInt('tour_phase') ?? 0;
+    if (phase == 0) {
       _loadDemoData();
-      _prefs!.setBool('tour_shown', true);
       _runHomePhase1();
+    } else if (phase == 1) {
+      _runHomePhase2();
     }
   }
 
   void _runHomePhase1() {
+    _currentTourPhaseInProgress = 1;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _showcase.startShowCase([
           _key1, // Quick Tools header
           _key2, // Roster section
           _key5, // Strategy section
+        ]);
+      }
+    });
+  }
+
+  void _runHomePhase2() {
+    _currentTourPhaseInProgress = 2;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _showcase.startShowCase([
           _key6, // Generate button
-          _keyScore, // Score Keeper (interactive, chains to match/queue/nav)
+          _keyScore, // Score Keeper
         ]);
       }
     });
@@ -751,6 +772,16 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            tooltip: 'Restart Tutorial',
+            icon: const Icon(Icons.help_outline, size: 20),
+            onPressed: () async {
+              await _prefs?.remove('tour_shown');
+              await _prefs?.remove('tour_phase');
+              _loadDemoData();
+              _runHomePhase1();
+            },
+          ),
+          IconButton(
             tooltip: 'Team Picker',
             icon: const FaIcon(FontAwesomeIcons.dice, size: 20),
             onPressed: () {
@@ -838,6 +869,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                                     const TapScoreScreen(isTour: true)));
                         // When returning, highlight the next tool
                         if (context.mounted) {
+                          _currentTourPhaseInProgress = 3;
                           _showcase.startShowCase([_keyMatch]);
                         }
                       },
@@ -870,6 +902,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                                 builder: (context) =>
                                     MatchScreen(settingsData, isTour: true)));
                         if (context.mounted) {
+                          _currentTourPhaseInProgress = 3;
                           _showcase.startShowCase([_keyQueue]);
                         }
                       },
@@ -900,6 +933,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                                     const RandomTeamScreen(
                                         initialTotal: 6, isTour: true)));
                         if (context.mounted) {
+                          _currentTourPhaseInProgress = 3;
                           _showcase.startShowCase([_key7]);
                         }
                       },
@@ -944,7 +978,8 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 side: BorderSide(color: colorScheme.outlineVariant),
               ),
               margin: const EdgeInsets.only(bottom: 8.0),
-              child: ExpansionTile(controller: _rosterController,
+              child: ExpansionTile(
+                controller: _rosterController,
                 dense: true,
                 visualDensity: VisualDensity.compact,
                 childrenPadding: EdgeInsets.zero,
@@ -1090,7 +1125,8 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 side: BorderSide(color: colorScheme.outlineVariant),
               ),
               margin: const EdgeInsets.only(bottom: 8.0),
-              child: ExpansionTile(controller: _strategyController,
+              child: ExpansionTile(
+                controller: _strategyController,
                 dense: true,
                 visualDensity: VisualDensity.compact,
                 childrenPadding: EdgeInsets.zero,
