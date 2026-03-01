@@ -20,17 +20,28 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late SettingsData settingsData;
+  late TextEditingController _proportionController;
+  late TextEditingController _teamCountController;
+  late TextEditingController _divisionController;
 
   @override
   void initState() {
     super.initState();
     settingsData = widget.settingsData;
-    // Rebuild when theme controller changes
+    _proportionController =
+        TextEditingController(text: settingsData.proportion.toString());
+    _teamCountController =
+        TextEditingController(text: settingsData.teamCount.toString());
+    _divisionController =
+        TextEditingController(text: settingsData.division.toString());
     widget.themeController?.addListener(_onThemeChanged);
   }
 
   @override
   void dispose() {
+    _proportionController.dispose();
+    _teamCountController.dispose();
+    _divisionController.dispose();
     widget.themeController?.removeListener(_onThemeChanged);
     super.dispose();
   }
@@ -134,6 +145,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             settingsData.proportion = d.playersPerTeam;
                             settingsData.teamCount = d.teamCount;
                             settingsData.o = d.strategy;
+                            _proportionController.text =
+                                d.playersPerTeam.toString();
+                            _teamCountController.text = d.teamCount.toString();
                           });
                           ScaffoldMessenger.of(context).clearSnackBars();
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -197,20 +211,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     extraConfig: settingsData.o == GenOption.roleBalanced
                         ? Padding(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            child: TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Players per team',
-                                prefixIcon: Icon(Icons.group),
-                              ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
+                            child: Column(
+                              children: [
+                                if (tc != null) ...[
+                                  DropdownButtonFormField<SportPalette>(
+                                    decoration: const InputDecoration(
+                                      labelText: 'Select Sport Context',
+                                      prefixIcon: Icon(Icons.sports_basketball),
+                                    ),
+                                    value: tc.palette,
+                                    items: SportPalette.values.map((s) {
+                                      return DropdownMenuItem(
+                                        value: s,
+                                        child: Text(s.label),
+                                      );
+                                    }).toList(),
+                                    onChanged: (p) {
+                                      if (p != null) {
+                                        tc.setPalette(p);
+                                        setState(() {
+                                          settingsData.proportion =
+                                              p.defaultSettings.playersPerTeam;
+                                          settingsData.teamCount =
+                                              p.defaultSettings.teamCount;
+                                          _proportionController.text =
+                                              settingsData.proportion
+                                                  .toString();
+                                          _teamCountController.text =
+                                              settingsData.teamCount.toString();
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                                TextFormField(
+                                  controller: _teamCountController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Number of teams',
+                                    prefixIcon: Icon(Icons.grid_view),
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly
+                                  ],
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (v) {
+                                    settingsData.teamCount = int.tryParse(v) ??
+                                        settingsData.teamCount;
+                                  },
+                                ),
                               ],
-                              initialValue: settingsData.proportion.toString(),
-                              keyboardType: TextInputType.number,
-                              onChanged: (v) {
-                                settingsData.proportion =
-                                    int.tryParse(v) ?? settingsData.proportion;
-                              },
                             ),
                           )
                         : null,

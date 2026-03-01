@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/MatchScreen.dart';
 import 'package:teammaker/model/data_model.dart';
 import 'package:teammaker/theme/app_theme.dart';
+import 'package:pluto_grid/pluto_grid.dart';
 
-class TeamList extends StatelessWidget {
+class TeamList extends StatefulWidget {
   final List<ListItem> items;
   final SettingsData settingsData;
-  //
-  const TeamList({super.key, required this.items, required this.settingsData});
+  final SportPalette? sport;
 
+  const TeamList({
+    super.key,
+    required this.items,
+    required this.settingsData,
+    this.sport,
+  });
+
+  @override
+  State<TeamList> createState() => _TeamListState();
+}
+
+class _TeamListState extends State<TeamList> {
   List<String> findAllPermutations(String source) {
     List allPermutations = [];
 
@@ -47,17 +58,18 @@ class TeamList extends StatelessWidget {
         title: Text(title),
       ),
       body: ListView.builder(
-        // Let the ListView know how many items it needs to build.
-        itemCount: items.length,
-        // Provide a builder function. This is where the magic happens.
-        // Convert each item into a widget based on the type of item it is.
+        itemCount: widget.items.length,
         itemBuilder: (context, index) {
-          final item = items[index];
+          final item = widget.items[index];
 
-          return ListTile(
-            title: item.buildTitle(context),
-            subtitle: item.buildSubtitle(context),
-          );
+          if (item is MessageItem) {
+            return InkWell(
+              onTap: () => _editPlayer(context, item.row),
+              child: item.buildTitle(context),
+            );
+          }
+
+          return item.buildTitle(context);
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -65,12 +77,91 @@ class TeamList extends StatelessWidget {
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => MatchScreen(settingsData)));
+                  builder: (context) => MatchScreen(widget.settingsData)));
         },
         child: Icon(
-          Theme.of(context).extension<SportIconExtension>()?.icon ??
-              Icons.sports,
+          widget.sport?.icon ?? Icons.sports,
         ),
+      ),
+    );
+  }
+
+  void _editPlayer(BuildContext context, PlutoRow row) {
+    final nameController =
+        TextEditingController(text: row.cells['name_field']?.value.toString());
+    final roleController =
+        TextEditingController(text: row.cells['role_field']?.value.toString());
+    int level = (row.cells['skill_level_field']?.value ?? 3) as int;
+    String gender = row.cells['gender_field']?.value.toString() ?? "MALE";
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Player'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                value: level,
+                decoration: const InputDecoration(labelText: 'Skill Level'),
+                items: List.generate(5, (i) => i + 1)
+                    .map((l) => DropdownMenuItem(value: l, child: Text('$l')))
+                    .toList(),
+                onChanged: (v) => level = v ?? level,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: gender,
+                decoration: const InputDecoration(labelText: 'Gender'),
+                items: ['MALE', 'FEMALE', 'X']
+                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                    .toList(),
+                onChanged: (v) => gender = v ?? gender,
+              ),
+              const SizedBox(height: 12),
+              if (widget.sport != null)
+                DropdownButtonFormField<String>(
+                  value: widget.sport!.roles.contains(roleController.text)
+                      ? roleController.text
+                      : 'Any',
+                  decoration: const InputDecoration(labelText: 'Position'),
+                  items: widget.sport!.roles
+                      .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                      .toList(),
+                  onChanged: (v) => roleController.text = v ?? 'Any',
+                )
+              else
+                TextField(
+                  controller: roleController,
+                  decoration: const InputDecoration(labelText: 'Position'),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              setState(() {
+                row.cells['name_field']?.value = nameController.text;
+                row.cells['role_field']?.value = roleController.text;
+                row.cells['skill_level_field']?.value = level;
+                row.cells['gender_field']?.value = gender;
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }
@@ -132,33 +223,58 @@ class HeadingItem implements ListItem {
 
 /// A ListItem that contains data to display a message.
 class MessageItem implements ListItem {
-  final String sender;
-  final String body;
+  final PlutoRow row;
 
-  MessageItem(this.sender, this.body);
+  MessageItem(this.row);
 
   @override
   Widget buildTitle(BuildContext context) {
+    final name = row.cells['name_field']?.value.toString() ?? '';
+    final role = row.cells['role_field']?.value.toString() ?? '';
+    final level = (row.cells['skill_level_field']?.value ?? 0) as int;
+    final gender = row.cells['gender_field']?.value.toString() ?? '';
+    final isFemale = gender.toUpperCase().startsWith('F');
+
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
       shape: RoundedRectangleBorder(
         side: BorderSide(
             color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
-        borderRadius: BorderRadius.circular(8.0),
+        borderRadius: BorderRadius.circular(12.0),
       ),
       child: ListTile(
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
         leading: CircleAvatar(
-          radius: 16,
-          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-          child: FaIcon(FontAwesomeIcons.userAstronaut,
-              size: 16,
-              color: Theme.of(context).colorScheme.onSecondaryContainer),
+          radius: 18,
+          backgroundColor: isFemale
+              ? Colors.pink.withValues(alpha: 0.1)
+              : Colors.blue.withValues(alpha: 0.1),
+          child: Text(
+            isFemale ? '♀' : '♂',
+            style: TextStyle(
+              fontSize: 16,
+              color: isFemale ? Colors.pink : Colors.blue,
+            ),
+          ),
         ),
-        title:
-            Text(sender, style: const TextStyle(fontWeight: FontWeight.w500)),
+        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: (role.isNotEmpty && role != 'Any')
+            ? Text(role,
+                style:
+                    const TextStyle(fontSize: 12, fontStyle: FontStyle.italic))
+            : null,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(5, (i) {
+            return Icon(
+              i < level ? Icons.star_rounded : Icons.star_outline_rounded,
+              size: 14,
+              color: i < level ? Colors.amber : Colors.grey.shade300,
+            );
+          }),
+        ),
       ),
     );
   }

@@ -507,7 +507,7 @@ Jane,4,F""";
     stateManager!.sortAscending(columns[3]);
     List<PlutoRow?> dat = stateManager?.rows ?? [];
 
-    Map<String, List<String>> teamsNameList = {};
+    Map<String, List<PlutoRow>> teamsRows = {};
     Map<String, double> teamsTotalScore = {};
 
     //find checked items
@@ -527,20 +527,13 @@ Jane,4,F""";
               (dat[i]?.cells["skill_level_field"]?.value ?? 0).toDouble(),
         );
 
-        teamsNameList.update(
+        teamsRows.update(
           dat[i]?.cells["team_field"]?.value ?? "None",
-          // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
           (existingValue) {
-            existingValue.add(dat[i]?.cells["name_field"]?.value +
-                "\n     ${dat[i]?.cells["gender_field"]?.value} with level ${dat[i]?.cells["skill_level_field"]?.value.toString()}"
-                    .toLowerCase());
+            existingValue.add(dat[i]!);
             return existingValue;
           },
-          ifAbsent: () => [
-            (dat[i]?.cells["name_field"]?.value +
-                "\n     ${dat[i]?.cells["gender_field"]?.value} with level  ${dat[i]?.cells["skill_level_field"]?.value.toString()}"
-                    .toLowerCase())
-          ],
+          ifAbsent: () => [dat[i]!],
         );
       } else {
         //TODO unassign team
@@ -552,26 +545,29 @@ Jane,4,F""";
     // }
     List<ListItem> teamsListData = [];
     // print(teams_list.toString());
-    teamsNameList.keys.toList().forEach((value) {
+    teamsRows.keys.toList().forEach((value) {
       if (value == "None") return;
-      var players = teamsNameList[value]!.length;
+      var players = teamsRows[value]!.length;
       var totalScore = teamsTotalScore[value];
-      var avgScore = (teamsTotalScore[value]! / teamsNameList[value]!.length)
+      var avgScore = (teamsTotalScore[value]! / teamsRows[value]!.length)
           .toStringAsFixed(2);
-      print(avgScore);
+
       teamsListData.add(HeadingItem('TEAM#: $value',
           '$players players with average level  $avgScore and combine level  $totalScore'));
-      teamsNameList[value]?.toList().forEach((name) {
-        teamsListData.add(MessageItem(name.toString(), name.toString()));
-      });
+      for (var row in teamsRows[value]!) {
+        teamsListData.add(MessageItem(row));
+      }
     });
     // print(teams_list_data);
 
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                TeamList(items: teamsListData, settingsData: settingsData)));
+            builder: (context) => TeamList(
+                  items: teamsListData,
+                  settingsData: settingsData,
+                  sport: widget.themeController?.palette,
+                )));
   }
 
   void generateTeams() {
@@ -590,8 +586,7 @@ Jane,4,F""";
       }
     });
 
-    if (settingsData.o == GenOption.evenGender ||
-        settingsData.o == GenOption.roleBalanced) {
+    if (settingsData.o == GenOption.evenGender) {
       int playerNum = dat.length;
       if (settingsData.preferExtraTeam) {
         settingsData.teamCount = (playerNum / settingsData.proportion).ceil();
