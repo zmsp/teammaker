@@ -26,75 +26,85 @@ class _HelpExampleState extends State<HelpExample> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("HELP & RESOURCES",
+        title: const Text("USER GUIDE",
             style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: <Widget>[
-          _buildHeader(context, "Optimization Guide"),
-          const SizedBox(height: 12),
-          _buildHelpSection(
+          _buildMarkdownSection(
             context,
-            icon: Icons.people_alt,
-            color: Colors.blue,
-            title: "1. Roster Management",
-            content:
-                "• Efficiently add players using 'Quick Add' or bulk 'Add Row' options.\n"
-                "• Mark attendance by selecting active participants for current sessions.\n"
-                "• Enable 'Edit Mode' for rapid synchronization of player details.\n"
-                "• Locally encrypted storage ensures your squad data remains private.",
+            title: "How to use",
+            imageUrl: "https://i.imgur.com/y7ktqtP.png",
+            content: "# Steps to generate a team:\n"
+                "1. Press **Add Players** button (+ sign).\n"
+                "2. In the textbox, add comma separated values of **NAME, SKILL LEVEL, GENDER** (name is required, others optional).\n"
+                "3. Press **Add**.\n"
+                "4. Press **Generate Team** button (the icon with the clock).",
           ),
-          _buildHelpSection(
+          const SizedBox(height: 24),
+          _buildMarkdownSection(
             context,
-            icon: Icons.auto_awesome,
-            color: Colors.purple,
-            title: "2. Advanced Team Balancing",
-            content:
-                "• Utilize 'Fair Mix' for sophisticated skill and gender distribution.\n"
-                "• Scale match dynamics by adjusting the 'Players per team' parameter.\n"
-                "• Generate optimized team compositions with a single tap.\n"
-                "• Manage unassigned players seamlessly through the rotation queue.",
+            title: "Advanced Functionality",
+            imageUrl: "https://i.imgur.com/czQJm7Q.png",
+            content: "### Change number of teams or generation function\n"
+                "By default, the app will generate 4 teams with balanced skill and gender. "
+                "You can change these in the **Settings**. Access settings via the palette icon in the top right "
+                "of the main screen.\n\n"
+                "• **Fair Mix**: Best for gender and skill balance.\n"
+                "• **Role Balanced**: Optimized for role-specific sports like Volleyball.\n"
+                "• **Skill Balance**: Focuses purely on level distribution.",
           ),
-          _buildHelpSection(
+          const SizedBox(height: 24),
+          _buildMarkdownSection(
             context,
-            icon: Icons.bolt,
-            color: Colors.orange,
-            title: "3. Professional Utility Tools",
-            content:
-                "• TAP SCORE: High-performance scoreboard with integrated timers and custom configurations.\n"
-                "• PLAYER QUEUE: Automated sequential system for organized entry and fair turn-taking.",
-          ),
-          _buildHelpSection(
-            context,
-            icon: Icons.emoji_events,
-            color: Colors.amber,
-            title: "4. Tournament Match Making",
-            content: "• Define venue capacity and desired competitive rounds.\n"
-                "• Architect full tournament schedules with intelligent court balancing.\n"
-                "• Track performance metrics through integrated results management.\n"
-                "• Ensure equitable participation across all skill levels.",
+            title: "Meetup Import",
+            imageUrl: "https://i.imgur.com/y2lzEsy.png",
+            content: "### Entering data from Meetup\n"
+                "• Copy-paste the Meetup attendance list from desktop or mobile.\n"
+                "• In the Add menu, paste the text and press **'Format Text From Meetup'**.\n"
+                "• Level 3 and Male gender are added by default to formatted rows.\n"
+                "• Press **'Check/Validate'** to ensure everything looks correct.\n"
+                "• Press **'Add All'** to update your player list.",
           ),
           const SizedBox(height: 32),
-          _buildHeader(context, "Video Learning Center"),
+          _buildHeader(context, "Quick Access Tools"),
+          const SizedBox(height: 12),
+          _buildHelpTile(
+            context,
+            icon: Icons.sports_score,
+            color: Colors.orange,
+            title: "Pro Scoreboard",
+            subtitle:
+                "Custom team names, country themes, and integrated timers.",
+          ),
+          _buildHelpTile(
+            context,
+            icon: Icons.list_alt,
+            color: Colors.blue,
+            title: "Player Queue",
+            subtitle:
+                "Managed entry system with digital reveal and rotation logic.",
+          ),
+          _buildHelpTile(
+            context,
+            icon: Icons.history,
+            color: Colors.purple,
+            title: "Match History",
+            subtitle: "Track previous team compositions and tournament rounds.",
+          ),
+          const SizedBox(height: 32),
+          _buildHeader(context, "Support & Tutorials"),
           const SizedBox(height: 12),
           _buildVideoTile(
             context,
-            title: "Squad Configuration",
-            subtitle: "Technical walkthrough of roster optimization and team generation.",
-            url: 'asset/video/meetup.mp4',
+            title: "Visual Walkthrough",
+            subtitle:
+                "Technical guide on roster optimization and team generation.",
+            url:
+                'https://raw.githubusercontent.com/zmsp/teammaker/refs/heads/master/asset/video/meetup.mp4',
             color: Colors.blueAccent,
           ),
-          _buildVideoTile(
-            context,
-            title: "Scoreboard Analytics",
-            subtitle: "Master the advanced features of the interactive Tap Score system.",
-            url: 'asset/video/meetup.mp4',
-            color: Colors.redAccent,
-          ),
-          const SizedBox(height: 32),
-          _buildHeader(context, "Reference Materials"),
-          const SizedBox(height: 12),
           _buildResourceLink(
               "Operational Manual",
               FontAwesomeIcons.bookOpen,
@@ -110,13 +120,14 @@ class _HelpExampleState extends State<HelpExample> {
               side: BorderSide(
                   color: Theme.of(context).colorScheme.outlineVariant),
             ),
-            color: Colors.blueAccent.withValues(alpha: 0.1),
+            color: colorScheme.secondaryContainer.withValues(alpha: 0.1),
             child: ListTile(
-              leading: const Icon(Icons.play_circle_fill,
-                  color: Colors.blueAccent, size: 20),
+              leading: Icon(Icons.play_circle_fill,
+                  color: colorScheme.secondary, size: 20),
               title: const Text("Re-initiate Application Tour",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              subtitle: const Text("Comprehensive walkthrough of platform features."),
+              subtitle:
+                  const Text("Start the guided tutorial from the beginning."),
               onTap: () async {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setBool('tour_shown', false);
@@ -126,28 +137,116 @@ class _HelpExampleState extends State<HelpExample> {
               },
             ),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 48),
           Center(
             child: Column(
               children: [
                 Text(
-                  "Team Maker Buddy v3.0",
+                  "Team Maker Buddy v3.1",
                   style: TextStyle(
                       color: colorScheme.primary.withValues(alpha: 0.6),
                       fontSize: 12,
                       fontWeight: FontWeight.bold),
                 ),
                 const Text(
-                  "Professional Edition • High Integrity Privacy",
-                  style: TextStyle(
-                      color:
-                          Colors.grey,
-                      fontSize: 10),
+                  "Offline Capable • Privacy First",
+                  style: TextStyle(color: Colors.grey, fontSize: 10),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 32),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMarkdownSection(BuildContext context,
+      {required String title,
+      required String content,
+      required String imageUrl}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title.toUpperCase(),
+            style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
+                letterSpacing: 2,
+                color: colorScheme.primary)),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.network(
+            imageUrl,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                height: 120,
+                width: double.infinity,
+                color: colorScheme.surfaceContainerHighest,
+                child: const Center(child: CircularProgressIndicator()),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) => Container(
+              height: 40,
+              width: double.infinity,
+              color: colorScheme.surfaceContainerHighest,
+              child: const Icon(Icons.image_not_supported, color: Colors.grey),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colorScheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: content.split('\n').map((line) {
+              if (line.trim().isEmpty) return const SizedBox(height: 8);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  line,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHelpTile(BuildContext context,
+      {required IconData icon,
+      required Color color,
+      required String title,
+      required String subtitle}) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withValues(alpha: 0.1),
+          child: Icon(icon, color: color, size: 18),
+        ),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 11)),
       ),
     );
   }
@@ -160,41 +259,6 @@ class _HelpExampleState extends State<HelpExample> {
           fontWeight: FontWeight.w900,
           letterSpacing: 2,
           color: Theme.of(context).colorScheme.primary),
-    );
-  }
-
-  Widget _buildHelpSection(BuildContext context,
-      {required IconData icon,
-      required Color color,
-      required String title,
-      required String content}) {
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.1),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(72, 0, 24, 20),
-            child: Text(
-              content,
-              style: TextStyle(
-                  fontSize: 13,
-                  height: 1.5,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
