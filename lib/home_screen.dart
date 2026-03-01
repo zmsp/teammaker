@@ -65,6 +65,8 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   final GlobalKey _key7 = GlobalKey(); // Bottom Nav
 
   late final ShowcaseView _showcase;
+  final ExpansionTileController _rosterController = ExpansionTileController();
+  final ExpansionTileController _strategyController = ExpansionTileController();
 
   SettingsData settingsData = SettingsData();
   bool _isEditable = false;
@@ -97,11 +99,18 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         'saved_players', jsonEncode(_players.map((p) => p.toJson()).toList()));
   }
 
-  // ─── Load / save settings ──────────────────────────────────────────────────
-  Future<void> _initPrefs() async {
-    _prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
+  @override
+  void initState() {
+    super.initState();
     _showcase = ShowcaseView.register(
+      enableAutoScroll: true,
+      onStart: (index, key) {
+        if (key == _key2 || key == _key3 || key == _key4) {
+          _rosterController.expand();
+        } else if (key == _key5 || key == _key6) {
+          _strategyController.expand();
+        }
+      },
       onDismiss: (_) async {
         await _prefs?.setBool('tour_shown', true);
       },
@@ -118,6 +127,13 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         TooltipActionButton(type: TooltipDefaultActionType.next),
       ],
     );
+    _initPrefs();
+  }
+
+  // ─── Load / save settings ──────────────────────────────────────────────────
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     await _loadSettings();
     await _loadPlayers();
     _startTour();
@@ -317,12 +333,6 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     _prefs!.setInt('gameRounds', settingsData.gameRounds);
     _prefs!.setBool('preferExtraTeam', settingsData.preferExtraTeam);
     _prefs!.setString('genOption', settingsData.o.toString());
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _initPrefs();
   }
 
   @override
@@ -934,7 +944,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 side: BorderSide(color: colorScheme.outlineVariant),
               ),
               margin: const EdgeInsets.only(bottom: 8.0),
-              child: ExpansionTile(
+              child: ExpansionTile(controller: _rosterController,
                 dense: true,
                 visualDensity: VisualDensity.compact,
                 childrenPadding: EdgeInsets.zero,
@@ -1080,7 +1090,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                 side: BorderSide(color: colorScheme.outlineVariant),
               ),
               margin: const EdgeInsets.only(bottom: 8.0),
-              child: ExpansionTile(
+              child: ExpansionTile(controller: _strategyController,
                 dense: true,
                 visualDensity: VisualDensity.compact,
                 childrenPadding: EdgeInsets.zero,
