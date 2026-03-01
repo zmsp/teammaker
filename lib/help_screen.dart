@@ -120,10 +120,9 @@ class _HelpExampleState extends State<HelpExample> {
               onTap: () async {
                 final prefs = await SharedPreferences.getInstance();
                 await prefs.setBool('tour_shown', false);
-                if (mounted) {
-                  Navigator.of(context).pop();
-                  widget.onRestartTour?.call();
-                }
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
+                widget.onRestartTour?.call();
               },
             ),
           ),

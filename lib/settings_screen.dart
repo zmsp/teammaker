@@ -201,199 +201,212 @@ class _SettingsScreenState extends State<SettingsScreen> {
             margin: const EdgeInsets.only(bottom: 8),
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Column(
-                children: [
-                  _strategyTile(
-                    title: 'Sport Roles (Recommended)',
-                    subtitle: 'Balances key positions (Setter, Gaffer, etc)',
-                    icon: Icons.sports_score,
-                    value: GenOption.roleBalanced,
-                    extraConfig: settingsData.o == GenOption.roleBalanced
-                        ? Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            child: Column(
-                              children: [
-                                if (tc != null) ...[
-                                  DropdownButtonFormField<SportPalette>(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Select Sport Context',
-                                      prefixIcon: Icon(Icons.sports_basketball),
+              child: RadioGroup<GenOption>(
+                groupValue: settingsData.o,
+                onChanged: (v) {
+                  setState(() {
+                    settingsData.o = v ?? settingsData.o;
+                  });
+                },
+                child: Column(
+                  children: [
+                    _strategyTile(
+                      title: 'Sport Roles (Recommended)',
+                      subtitle: 'Balances key positions (Setter, Gaffer, etc)',
+                      icon: Icons.sports_score,
+                      value: GenOption.roleBalanced,
+                      extraConfig: settingsData.o == GenOption.roleBalanced
+                          ? Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                              child: Column(
+                                children: [
+                                  if (tc != null) ...[
+                                    DropdownButtonFormField<SportPalette>(
+                                      decoration: const InputDecoration(
+                                        labelText: 'Select Sport Context',
+                                        prefixIcon:
+                                            Icon(Icons.sports_basketball),
+                                      ),
+                                      initialValue: tc.palette,
+                                      items: SportPalette.values.map((s) {
+                                        return DropdownMenuItem(
+                                          value: s,
+                                          child: Text(s.label),
+                                        );
+                                      }).toList(),
+                                      onChanged: (p) {
+                                        if (p != null) {
+                                          tc.setPalette(p);
+                                          setState(() {
+                                            settingsData.proportion = p
+                                                .defaultSettings.playersPerTeam;
+                                            settingsData.teamCount =
+                                                p.defaultSettings.teamCount;
+                                            _proportionController.text =
+                                                settingsData.proportion
+                                                    .toString();
+                                            _teamCountController.text =
+                                                settingsData.teamCount
+                                                    .toString();
+                                          });
+                                        }
+                                      },
                                     ),
-                                    initialValue: tc.palette,
-                                    items: SportPalette.values.map((s) {
-                                      return DropdownMenuItem(
-                                        value: s,
-                                        child: Text(s.label),
-                                      );
-                                    }).toList(),
-                                    onChanged: (p) {
-                                      if (p != null) {
-                                        tc.setPalette(p);
-                                        setState(() {
-                                          settingsData.proportion =
-                                              p.defaultSettings.playersPerTeam;
-                                          settingsData.teamCount =
-                                              p.defaultSettings.teamCount;
-                                          _proportionController.text =
-                                              settingsData.proportion
-                                                  .toString();
-                                          _teamCountController.text =
-                                              settingsData.teamCount.toString();
-                                        });
-                                      }
+                                    const SizedBox(height: 12),
+                                  ],
+                                  TextFormField(
+                                    controller: _teamCountController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Number of teams',
+                                      prefixIcon: Icon(Icons.grid_view),
+                                    ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (v) {
+                                      settingsData.teamCount =
+                                          int.tryParse(v) ??
+                                              settingsData.teamCount;
                                     },
                                   ),
-                                  const SizedBox(height: 12),
                                 ],
-                                TextFormField(
-                                  controller: _teamCountController,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Number of teams',
-                                    prefixIcon: Icon(Icons.grid_view),
-                                  ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly
-                                  ],
-                                  keyboardType: TextInputType.number,
-                                  onChanged: (v) {
-                                    settingsData.teamCount = int.tryParse(v) ??
-                                        settingsData.teamCount;
-                                  },
-                                ),
-                              ],
-                            ),
-                          )
-                        : null,
-                  ),
-                  const Divider(height: 1),
-                  _strategyTile(
-                    title: 'Fair Mix',
-                    subtitle: 'Mixes players by gender and skill fairly',
-                    icon: Icons.wc,
-                    value: GenOption.evenGender,
-                    extraConfig: settingsData.o == GenOption.evenGender
-                        ? Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            child: TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Players per team',
-                                prefixIcon: Icon(Icons.group),
                               ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
-                              ],
-                              initialValue: settingsData.proportion.toString(),
-                              keyboardType: TextInputType.number,
-                              onChanged: (v) {
-                                settingsData.proportion =
-                                    int.tryParse(v) ?? settingsData.proportion;
-                              },
-                            ),
-                          )
-                        : null,
-                  ),
-                  const Divider(height: 1),
-                  _strategyTile(
-                    title: 'Skill Balance',
-                    subtitle: 'Splits players by skill level only',
-                    icon: Icons.balance,
-                    value: GenOption.distribute,
-                    extraConfig: settingsData.o == GenOption.distribute
-                        ? Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            child: TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Number of teams',
-                                prefixIcon: Icon(Icons.grid_view),
-                              ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
-                              ],
-                              initialValue: settingsData.teamCount.toString(),
-                              keyboardType: TextInputType.number,
-                              onChanged: (v) {
-                                settingsData.teamCount =
-                                    int.tryParse(v) ?? settingsData.teamCount;
-                              },
-                            ),
-                          )
-                        : null,
-                  ),
-                  const Divider(height: 1),
-                  _strategyTile(
-                    title: 'Ranked Groups',
-                    subtitle: 'Keeps strong players together',
-                    icon: Icons.military_tech,
-                    value: GenOption.division,
-                    extraConfig: settingsData.o == GenOption.division
-                        ? Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            child: Column(
-                              children: [
-                                TextFormField(
-                                  decoration: const InputDecoration(
-                                    labelText: 'Number of groups',
-                                  ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly
-                                  ],
-                                  initialValue:
-                                      settingsData.division.toString(),
-                                  keyboardType: TextInputType.number,
-                                  onChanged: (v) {
-                                    settingsData.division = int.tryParse(v) ??
-                                        settingsData.division;
-                                  },
+                            )
+                          : null,
+                    ),
+                    const Divider(height: 1),
+                    _strategyTile(
+                      title: 'Fair Mix',
+                      subtitle: 'Mixes players by gender and skill fairly',
+                      icon: Icons.wc,
+                      value: GenOption.evenGender,
+                      extraConfig: settingsData.o == GenOption.evenGender
+                          ? Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                              child: TextFormField(
+                                decoration: const InputDecoration(
+                                  labelText: 'Players per team',
+                                  prefixIcon: Icon(Icons.group),
                                 ),
-                                const SizedBox(height: 8),
-                                TextFormField(
-                                  decoration: const InputDecoration(
-                                    labelText: 'Number of teams',
-                                  ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly
-                                  ],
-                                  initialValue:
-                                      settingsData.teamCount.toString(),
-                                  keyboardType: TextInputType.number,
-                                  onChanged: (v) {
-                                    settingsData.teamCount = int.tryParse(v) ??
-                                        settingsData.teamCount;
-                                  },
-                                ),
-                              ],
-                            ),
-                          )
-                        : null,
-                  ),
-                  const Divider(height: 1),
-                  _strategyTile(
-                    title: 'Random Mix',
-                    subtitle: 'Pure random team splitting',
-                    icon: Icons.shuffle,
-                    value: GenOption.random,
-                    extraConfig: settingsData.o == GenOption.random
-                        ? Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                            child: TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Number of teams',
-                                prefixIcon: Icon(Icons.grid_view),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                initialValue:
+                                    settingsData.proportion.toString(),
+                                keyboardType: TextInputType.number,
+                                onChanged: (v) {
+                                  settingsData.proportion = int.tryParse(v) ??
+                                      settingsData.proportion;
+                                },
                               ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
-                              ],
-                              initialValue: settingsData.teamCount.toString(),
-                              keyboardType: TextInputType.number,
-                              onChanged: (v) {
-                                settingsData.teamCount =
-                                    int.tryParse(v) ?? settingsData.teamCount;
-                              },
-                            ),
-                          )
-                        : null,
-                  ),
-                ],
+                            )
+                          : null,
+                    ),
+                    const Divider(height: 1),
+                    _strategyTile(
+                      title: 'Skill Balance',
+                      subtitle: 'Splits players by skill level only',
+                      icon: Icons.balance,
+                      value: GenOption.distribute,
+                      extraConfig: settingsData.o == GenOption.distribute
+                          ? Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                              child: TextFormField(
+                                decoration: const InputDecoration(
+                                  labelText: 'Number of teams',
+                                  prefixIcon: Icon(Icons.grid_view),
+                                ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                initialValue: settingsData.teamCount.toString(),
+                                keyboardType: TextInputType.number,
+                                onChanged: (v) {
+                                  settingsData.teamCount =
+                                      int.tryParse(v) ?? settingsData.teamCount;
+                                },
+                              ),
+                            )
+                          : null,
+                    ),
+                    const Divider(height: 1),
+                    _strategyTile(
+                      title: 'Ranked Groups',
+                      subtitle: 'Keeps strong players together',
+                      icon: Icons.military_tech,
+                      value: GenOption.division,
+                      extraConfig: settingsData.o == GenOption.division
+                          ? Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                              child: Column(
+                                children: [
+                                  TextFormField(
+                                    decoration: const InputDecoration(
+                                      labelText: 'Number of groups',
+                                    ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
+                                    initialValue:
+                                        settingsData.division.toString(),
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (v) {
+                                      settingsData.division = int.tryParse(v) ??
+                                          settingsData.division;
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    decoration: const InputDecoration(
+                                      labelText: 'Number of teams',
+                                    ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
+                                    initialValue:
+                                        settingsData.teamCount.toString(),
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (v) {
+                                      settingsData.teamCount =
+                                          int.tryParse(v) ??
+                                              settingsData.teamCount;
+                                    },
+                                  ),
+                                ],
+                              ),
+                            )
+                          : null,
+                    ),
+                    const Divider(height: 1),
+                    _strategyTile(
+                      title: 'Random Mix',
+                      subtitle: 'Pure random team splitting',
+                      icon: Icons.shuffle,
+                      value: GenOption.random,
+                      extraConfig: settingsData.o == GenOption.random
+                          ? Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                              child: TextFormField(
+                                decoration: const InputDecoration(
+                                  labelText: 'Number of teams',
+                                  prefixIcon: Icon(Icons.grid_view),
+                                ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
+                                initialValue: settingsData.teamCount.toString(),
+                                keyboardType: TextInputType.number,
+                                onChanged: (v) {
+                                  settingsData.teamCount =
+                                      int.tryParse(v) ?? settingsData.teamCount;
+                                },
+                              ),
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -448,12 +461,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
           trailing: Radio<GenOption>(
             value: value,
-            groupValue: settingsData.o,
-            onChanged: (v) {
-              setState(() {
-                settingsData.o = v ?? settingsData.o;
-              });
-            },
           ),
           onTap: () {
             setState(() {

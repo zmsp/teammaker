@@ -34,6 +34,7 @@ class _TeamMakerAppState extends State<TeamMakerApp> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: deprecated_member_use
     return ShowCaseWidget(
       builder: (context) => MaterialApp(
         title: 'Team Maker Buddy',
