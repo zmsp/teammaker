@@ -87,6 +87,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
         'skill_level_field': e.cells['skill_level_field']?.value,
         'gender_field': e.cells['gender_field']?.value,
         'team_field': e.cells['team_field']?.value,
+        'role_field': e.cells['role_field']?.value,
         'checked': e.checked,
       };
     }).toList();
@@ -105,6 +106,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
             'skill_level_field': PlutoCell(value: e['skill_level_field'] ?? 3),
             'team_field': PlutoCell(value: e['team_field'] ?? "None"),
             'gender_field': PlutoCell(value: e['gender_field'] ?? "MALE"),
+            'role_field': PlutoCell(value: e['role_field'] ?? "Any"),
           },
         );
         if (e['checked'] != null) {
@@ -129,7 +131,7 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     }
   }
 
-  List<PlutoColumn> columns = GridColumns.getColumns();
+  late List<PlutoColumn> columns;
 
   List<PlutoRow> rows = [];
 
@@ -148,6 +150,9 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
   @override
   void initState() {
     super.initState();
+    final allRoles =
+        SportPalette.values.expand((e) => e.roles).toSet().toList();
+    columns = GridColumns.getColumns(allRoles);
     _loadSettings();
     rebuild_options();
   }
@@ -465,6 +470,7 @@ Jane,4,F""";
             'skill_level_field': PlutoCell(value: player.level),
             'team_field': PlutoCell(value: player.team),
             'gender_field': PlutoCell(value: player.gender),
+            'role_field': PlutoCell(value: player.role),
           },
         )
       ]);

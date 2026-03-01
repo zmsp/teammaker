@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teammaker/model/data_model.dart';
 
 // ─── Sport Color Presets ───────────────────────────────────────────────────
 // High-saturation palettes designed for outdoor glare readability.
@@ -15,6 +16,8 @@ enum SportPalette {
   rugby,
   handball,
   netball,
+  americanFootball,
+  ultimateFrisbee,
 }
 
 extension SportPaletteInfo on SportPalette {
@@ -36,6 +39,10 @@ extension SportPaletteInfo on SportPalette {
         return 'Handball';
       case SportPalette.netball:
         return 'Netball';
+      case SportPalette.americanFootball:
+        return 'Am. Football';
+      case SportPalette.ultimateFrisbee:
+        return 'Ultimate';
     }
   }
 
@@ -57,6 +64,10 @@ extension SportPaletteInfo on SportPalette {
         return 'Electric blue & amber — fast & powerful';
       case SportPalette.netball:
         return 'Royal purple & pink — fast and fluid';
+      case SportPalette.americanFootball:
+        return 'Navy & silver — strategy and power';
+      case SportPalette.ultimateFrisbee:
+        return 'Sky blue & white — spirit of the game';
     }
   }
 
@@ -78,6 +89,10 @@ extension SportPaletteInfo on SportPalette {
         return const Color(0xFF0D47A1); // electric blue
       case SportPalette.netball:
         return const Color(0xFF6A1B9A); // royal purple
+      case SportPalette.americanFootball:
+        return const Color(0xFF002244); // navy
+      case SportPalette.ultimateFrisbee:
+        return const Color(0xFF00BFFF); // sky blue
     }
   }
 
@@ -99,6 +114,10 @@ extension SportPaletteInfo on SportPalette {
         return const Color(0xFFFFAB00); // amber
       case SportPalette.netball:
         return const Color(0xFFE91E63); // vivid pink
+      case SportPalette.americanFootball:
+        return const Color(0xFFB0B7BC); // silver
+      case SportPalette.ultimateFrisbee:
+        return const Color(0xFFFFFFFF); // white
     }
   }
 
@@ -121,8 +140,137 @@ extension SportPaletteInfo on SportPalette {
         return Icons.sports_handball;
       case SportPalette.netball:
         return Icons.sports;
+      case SportPalette.americanFootball:
+        return Icons.sports_football;
+      case SportPalette.ultimateFrisbee:
+        return Icons.blur_circular;
     }
   }
+
+  /// Standard competition defaults for this sport.
+  SportDefaults get defaultSettings {
+    switch (this) {
+      case SportPalette.volleyball:
+        // Indoor volleyball: 6v6, beach: 2v2. Default to indoor.
+        return const SportDefaults(
+            playersPerTeam: 6, teamCount: 2, strategy: GenOption.evenGender);
+      case SportPalette.basketball:
+        return const SportDefaults(
+            playersPerTeam: 5, teamCount: 2, strategy: GenOption.distribute);
+      case SportPalette.football:
+        return const SportDefaults(
+            playersPerTeam: 11, teamCount: 2, strategy: GenOption.evenGender);
+      case SportPalette.cricket:
+        return const SportDefaults(
+            playersPerTeam: 11, teamCount: 2, strategy: GenOption.distribute);
+      case SportPalette.tennis:
+        // Doubles = 2 per side
+        return const SportDefaults(
+            playersPerTeam: 2, teamCount: 2, strategy: GenOption.random);
+      case SportPalette.rugby:
+        // Rugby Union: 15. Rugby Sevens: 7. Default to 7 (more common casual)
+        return const SportDefaults(
+            playersPerTeam: 7, teamCount: 2, strategy: GenOption.distribute);
+      case SportPalette.handball:
+        return const SportDefaults(
+            playersPerTeam: 7, teamCount: 2, strategy: GenOption.evenGender);
+      case SportPalette.netball:
+        return const SportDefaults(
+            playersPerTeam: 7, teamCount: 2, strategy: GenOption.evenGender);
+      case SportPalette.americanFootball:
+        return const SportDefaults(
+            playersPerTeam: 11, teamCount: 2, strategy: GenOption.distribute);
+      case SportPalette.ultimateFrisbee:
+        return const SportDefaults(
+            playersPerTeam: 7, teamCount: 2, strategy: GenOption.evenGender);
+    }
+  }
+
+  /// Typical player roles/positions for this sport.
+  List<String> get roles {
+    switch (this) {
+      case SportPalette.volleyball:
+        return [
+          'Any',
+          'Setter',
+          'Libero',
+          'Outside Hitter',
+          'Middle Blocker',
+          'Opposite'
+        ];
+      case SportPalette.basketball:
+        return [
+          'Any',
+          'Point Guard',
+          'Shooting Guard',
+          'Small Forward',
+          'Power Forward',
+          'Center'
+        ];
+      case SportPalette.football:
+        return ['Any', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
+      case SportPalette.cricket:
+        return ['Any', 'Batter', 'Bowler', 'All-rounder', 'Wicketkeeper'];
+      case SportPalette.tennis:
+        return ['Any', 'Server', 'Receiver', 'Net Player', 'Baseline'];
+      case SportPalette.rugby:
+        return [
+          'Any',
+          'Prop',
+          'Hooker',
+          'Lock',
+          'Flanker',
+          'Number 8',
+          'Scrum-half',
+          'Fly-half',
+          'Center',
+          'Wing',
+          'Fullback'
+        ];
+      case SportPalette.handball:
+        return [
+          'Any',
+          'Goalkeeper',
+          'Left Wing',
+          'Left Back',
+          'Center Back',
+          'Right Back',
+          'Right Wing',
+          'Pivot'
+        ];
+      case SportPalette.netball:
+        return ['Any', 'GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
+      case SportPalette.americanFootball:
+        return [
+          'Any',
+          'QB',
+          'RB',
+          'WR',
+          'TE',
+          'OL',
+          'DL',
+          'LB',
+          'CB',
+          'S',
+          'K/P'
+        ];
+      case SportPalette.ultimateFrisbee:
+        return ['Any', 'Handler', 'Cutter', 'Deep', 'Stack'];
+    }
+  }
+}
+
+/// Carries the standard competition defaults for a sport.
+class SportDefaults {
+  final int playersPerTeam;
+  final int teamCount;
+  final GenOption strategy;
+
+  const SportDefaults({
+    required this.playersPerTeam,
+    required this.teamCount,
+    required this.strategy,
+  });
 }
 
 // ─── Theme Controller ─────────────────────────────────────────────────────

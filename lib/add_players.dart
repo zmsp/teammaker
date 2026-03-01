@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/model/player_model.dart';
+import 'package:teammaker/theme/app_theme.dart';
 import 'package:teammaker/widget/player.dart';
 
 class AddPlayersScreen extends StatefulWidget {
@@ -21,6 +22,8 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
   int _selectedLevel = 3;
   String _selectedGender = "MALE";
   bool _useBulkMode = false;
+  SportPalette _selectedSport = SportPalette.volleyball;
+  String _selectedRole = "Any";
 
   List<PlayerModel> players = [];
 
@@ -36,9 +39,19 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
       players.insert(
           0,
           PlayerModel(_selectedLevel, _playerNameController.text.trim(), "0",
-              _selectedGender));
+              _selectedGender, _selectedRole));
       _playerNameController.clear();
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Added ${players.first.name}"),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+        width: 200,
+      ),
+    );
+
     _nameFocusNode.requestFocus();
   }
 
@@ -66,6 +79,7 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
         }
       }
       if (data.length > 3) player.team = data[3].trim();
+      if (data.length > 4) player.role = data[4].trim();
 
       players.insert(0, player);
       addedCount++;
@@ -76,7 +90,11 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("$addedCount players added from text")),
+      SnackBar(
+        content: Text("$addedCount players added from text"),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -105,6 +123,160 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
     setState(() {
       _batchController.text = playerLines.join("\n");
     });
+  }
+
+  void _editPlayer(int index) {
+    final player = players[index];
+    final theme = Theme.of(context);
+
+    String editName = player.name;
+    int editLevel = player.level;
+    String editGender = player.gender;
+    SportPalette editSport = SportPalette.volleyball;
+    String editRole = player.role;
+
+    // Try to find the matching sport for the role if possible
+    for (var s in SportPalette.values) {
+      if (s.roles.contains(player.role)) {
+        editSport = s;
+        break;
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Text("Edit Player", style: theme.textTheme.headlineSmall),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                autofocus: true,
+                controller: TextEditingController(text: editName),
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: "Player Name",
+                  prefixIcon: const Icon(Icons.person),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onChanged: (v) => editName = v.trim(),
+              ),
+              const SizedBox(height: 20),
+              Text("Skill Level", style: theme.textTheme.labelLarge),
+              const SizedBox(height: 8),
+              SegmentedButton<int>(
+                segments: _levels
+                    .map((l) => ButtonSegment(value: l, label: Text("$l")))
+                    .toList(),
+                selected: {editLevel},
+                onSelectionChanged: (val) =>
+                    setModalState(() => editLevel = val.first),
+              ),
+              const SizedBox(height: 20),
+              Text("Gender", style: theme.textTheme.labelLarge),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                      value: "MALE", label: Text("M"), icon: Icon(Icons.male)),
+                  ButtonSegment(
+                      value: "FEMALE",
+                      label: Text("F"),
+                      icon: Icon(Icons.female)),
+                  ButtonSegment(
+                      value: "X",
+                      label: Text("X"),
+                      icon: Icon(Icons.horizontal_rule)),
+                ],
+                selected: {editGender},
+                onSelectionChanged: (val) =>
+                    setModalState(() => editGender = val.first),
+              ),
+              const SizedBox(height: 20),
+              Text("Sport", style: theme.textTheme.labelLarge),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<SportPalette>(
+                value: editSport,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(editSport.icon),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+                items: SportPalette.values.map((s) {
+                  return DropdownMenuItem(
+                    value: s,
+                    child: Text(s.label),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setModalState(() {
+                      editSport = val;
+                      editRole = "Any";
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 20),
+              Text("Role / Position", style: theme.textTheme.labelLarge),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: editSport.roles.map((r) {
+                  final isSelected = editRole == r;
+                  return ChoiceChip(
+                    label: Text(r),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) setModalState(() => editRole = r);
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () {
+                  if (editName.isEmpty) return;
+                  setState(() {
+                    players[index] = PlayerModel(
+                        editLevel, editName, player.team, editGender, editRole);
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text("Save Changes"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -214,7 +386,10 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
                   onDismissed: (direction) {
                     setState(() => players.removeAt(index));
                   },
-                  child: PlayerWidget(player: player),
+                  child: PlayerWidget(
+                    player: player,
+                    onTap: () => _editPlayer(index),
+                  ),
                 );
               },
               childCount: players.length,
@@ -319,6 +494,64 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
                     setState(() => _selectedGender = val.first),
               ),
             ),
+            const SizedBox(height: 20),
+            Text("Sport", style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<SportPalette>(
+              value: _selectedSport,
+              decoration: InputDecoration(
+                prefixIcon: Icon(_selectedSport.icon),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              items: SportPalette.values.map((s) {
+                return DropdownMenuItem(
+                  value: s,
+                  child: Text(s.label),
+                );
+              }).toList(),
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() {
+                    _selectedSport = val;
+                    _selectedRole = "Any"; // Reset on sport change
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 20),
+            Text("Role / Position", style: theme.textTheme.labelLarge),
+            const SizedBox(height: 8),
+            // Use Wrap so roles that don't fit wrap cleanly to next line
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _selectedSport.roles.map((r) {
+                final isSelected = _selectedRole == r;
+                return ChoiceChip(
+                  label: Text(r),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() => _selectedRole = r);
+                    }
+                  },
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  selectedColor: theme.colorScheme.primaryContainer,
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? theme.colorScheme.onPrimaryContainer
+                        : theme.colorScheme.onSurfaceVariant,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  side: isSelected
+                      ? BorderSide.none
+                      : BorderSide(color: theme.colorScheme.outlineVariant),
+                );
+              }).toList(),
+            ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -348,8 +581,9 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
           controller: _batchController,
           maxLines: 8,
           decoration: InputDecoration(
-            hintText: "Name, Level, Gender\nJohn, 3, M\nJane, 4, F",
-            helperText: "Format: Name, Level (1-5), Gender (M/F/X)",
+            hintText:
+                "Name, Level, Gender, Team, Role\nJohn, 3, M, 1, Setter\nJane, 4, F, 2, Libero",
+            helperText: "Format: Name, Level, Gender, Team, Role",
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
             fillColor:

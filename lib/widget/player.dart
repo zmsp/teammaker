@@ -4,8 +4,9 @@ import 'package:teammaker/model/player_model.dart';
 
 class PlayerWidget extends StatelessWidget {
   final PlayerModel player;
+  final VoidCallback? onTap;
 
-  const PlayerWidget({super.key, required this.player});
+  const PlayerWidget({super.key, required this.player, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -24,44 +25,52 @@ class PlayerWidget extends StatelessWidget {
             color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
         borderRadius: BorderRadius.circular(12.0),
       ),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-        leading: CircleAvatar(
-          backgroundColor: player.getGenderString().toUpperCase() == "FEMALE" ||
-                  player.getGenderString().toUpperCase() == "F"
-              ? colorScheme.secondaryContainer
-              : colorScheme.primaryContainer,
-          child: FaIcon(
-            player.getGenderString().toUpperCase() == "FEMALE" ||
-                    player.getGenderString().toUpperCase() == "F"
-                ? FontAwesomeIcons.personDress
-                : FontAwesomeIcons.person,
-            color: player.getGenderString().toUpperCase() == "FEMALE" ||
-                    player.getGenderString().toUpperCase() == "F"
-                ? colorScheme.onSecondaryContainer
-                : colorScheme.onPrimaryContainer,
-            size: 18,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12.0),
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+          leading: CircleAvatar(
+            backgroundColor:
+                player.getGenderString().toUpperCase() == "FEMALE" ||
+                        player.getGenderString().toUpperCase() == "F"
+                    ? colorScheme.secondaryContainer
+                    : colorScheme.primaryContainer,
+            child: FaIcon(
+              player.getGenderString().toUpperCase() == "FEMALE" ||
+                      player.getGenderString().toUpperCase() == "F"
+                  ? FontAwesomeIcons.personDress
+                  : FontAwesomeIcons.person,
+              color: player.getGenderString().toUpperCase() == "FEMALE" ||
+                      player.getGenderString().toUpperCase() == "F"
+                  ? colorScheme.onSecondaryContainer
+                  : colorScheme.onPrimaryContainer,
+              size: 18,
+            ),
           ),
-        ),
-        title: Text(
-          player.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(player.getGenderString(),
-            style:
-                TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(5, (index) {
-            return Icon(
-              index < player.level ? Icons.star : Icons.star_border,
-              color: index < player.level
-                  ? colorScheme.primary
-                  : colorScheme.outlineVariant,
-              size: 16,
-            );
-          }),
+          title: Text(
+            player.name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+              player.role != "Any"
+                  ? "${player.getGenderString()} · ${player.role}"
+                  : player.getGenderString(),
+              style:
+                  TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(5, (index) {
+              return Icon(
+                index < player.level ? Icons.star : Icons.star_border,
+                color: index < player.level
+                    ? colorScheme.primary
+                    : colorScheme.outlineVariant,
+                size: 16,
+              );
+            }),
+          ),
         ),
       ),
     );

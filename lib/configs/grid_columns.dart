@@ -1,7 +1,7 @@
 import 'package:pluto_grid/pluto_grid.dart';
 
 class GridColumns {
-  static List<PlutoColumn> getColumns() {
+  static List<PlutoColumn> getColumns(List<String> roles) {
     return [
       PlutoColumn(
         enableRowDrag: true,
@@ -19,6 +19,12 @@ class GridColumns {
         textAlign: PlutoColumnTextAlign.center,
         width: 80,
         type: PlutoColumnType.text(),
+      ),
+      PlutoColumn(
+        title: 'Position',
+        field: 'role_field',
+        width: 120,
+        type: PlutoColumnType.select(roles),
       ),
       PlutoColumn(
         title: 'gender',

@@ -126,7 +126,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       return _PaletteTile(
                         palette: palette,
                         isSelected: isSelected,
-                        onTap: () => tc.setPalette(palette),
+                        onTap: () {
+                          tc.setPalette(palette);
+                          // Auto-apply sport defaults to strategy
+                          final d = palette.defaultSettings;
+                          setState(() {
+                            settingsData.proportion = d.playersPerTeam;
+                            settingsData.teamCount = d.teamCount;
+                            settingsData.o = d.strategy;
+                          });
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                              duration: const Duration(seconds: 3),
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
+                              content: Row(
+                                children: [
+                                  Icon(palette.icon,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                      size: 20),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      '${palette.label} defaults applied'
+                                      ' — ${d.playersPerTeam} players/team'
+                                      ' · ${d.strategy.displayName}',
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       );
                     }),
                   ],

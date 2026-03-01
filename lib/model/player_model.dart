@@ -3,8 +3,10 @@ class PlayerModel {
   String name = "";
   String team = "";
   String gender = "MALE";
+  String role = "Any";
 
-  PlayerModel(this.level, this.name, this.team, this.gender);
+  PlayerModel(this.level, this.name, this.team, this.gender,
+      [this.role = "Any"]);
 
   String getGenderString() {
     return gender[0].toUpperCase();
