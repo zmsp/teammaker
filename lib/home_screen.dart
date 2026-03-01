@@ -114,13 +114,15 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
   void _runHomePhase1() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ShowcaseView.get().startShowCase([
-        _key1, // App Title
-        _key2, // Roster Section
-        _key5, // Strategy
-        _key6, // Generate Button
-        _keyScore, // Score Tool (Interactive)
-      ]);
+      if (mounted) {
+        ShowcaseView.get().startShowCase([
+          _key1, // App Title
+          _key2, // Roster Section
+          _key5, // Strategy
+          _key6, // Generate Button
+          _keyScore, // Score Tool (Interactive)
+        ]);
+      }
     });
   }
 
@@ -712,448 +714,214 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
     final hasResults =
         _players.any((p) => TeamUtils.normalizeTeamName(p.team) != 'No team');
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Team Maker Buddy',
-            style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          IconButton(
-            tooltip: 'Team Picker',
-            icon: const FaIcon(FontAwesomeIcons.dice, size: 20),
-            onPressed: () {
-              Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          RandomTeamScreen(initialTotal: 6)));
-            },
-          ),
-          IconButton(
-            tooltip: 'Export to CSV',
-            icon: const FaIcon(FontAwesomeIcons.fileExport, size: 20),
-            onPressed: () {
-              exportToCsv();
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('Data Copied to Clipboard!'),
-                behavior: SnackBarBehavior.floating,
-              ));
-            },
-          ),
-          IconButton(
-            tooltip: 'Appearance',
-            icon: const FaIcon(FontAwesomeIcons.palette, size: 20),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SettingsScreen(
-                    settingsData,
-                    themeController: widget.themeController,
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: 'Get help',
-            icon: const FaIcon(FontAwesomeIcons.circleQuestion, size: 20),
-            onPressed: () {
-              Navigator.push(
+    // ignore: deprecated_member_use
+    return ShowCaseWidget(
+      onFinish: () async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('tour_shown', true);
+      },
+      builder: (context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Team Maker Buddy',
+              style:
+                  TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+          centerTitle: true,
+          elevation: 0,
+          actions: [
+            IconButton(
+              tooltip: 'Team Picker',
+              icon: const FaIcon(FontAwesomeIcons.dice, size: 20),
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            RandomTeamScreen(initialTotal: 6)));
+              },
+            ),
+            IconButton(
+              tooltip: 'Export to CSV',
+              icon: const FaIcon(FontAwesomeIcons.fileExport, size: 20),
+              onPressed: () {
+                exportToCsv();
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Data Copied to Clipboard!'),
+                  behavior: SnackBarBehavior.floating,
+                ));
+              },
+            ),
+            IconButton(
+              tooltip: 'Appearance',
+              icon: const FaIcon(FontAwesomeIcons.palette, size: 20),
+              onPressed: () {
+                Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) =>
-                          HelpExample(onRestartTour: _startTour)));
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: RepaintBoundary(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          children: [
-            // ── Quick Tools ────────────────────────────────────────────────
-            FadeSlideIn(
-              delay: Duration.zero,
-              child: Showcase(
-                key: _key1,
-                title: 'Quick Tools',
-                description:
-                    'Access the Score Keeper, Match Maker, and Player Queue instantly.',
-                child: SectionHeader(
-                    title: 'QUICK TOOLS',
-                    icon: FontAwesomeIcons.bolt,
-                    color: colorScheme.primary),
-              ),
+                    builder: (context) => SettingsScreen(
+                      settingsData,
+                      themeController: widget.themeController,
+                    ),
+                  ),
+                );
+              },
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Showcase(
-                      key: _keyScore,
-                      title: 'Score Keeper',
-                      description:
-                          'Tap to see the Pro Scoreboard in action! (Click to enter)',
-                      onTargetClick: () async {
-                        await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const TapScoreScreen(isTour: true)));
-                        // When returning, highlight the next tool
-                        ShowcaseView.get().startShowCase([_keyMatch]);
-                      },
-                      disposeOnTap: true,
-                      child: QuickToolCard(
-                        title: 'SCORE KEEPER',
-                        icon: Theme.of(context)
-                                .extension<SportIconExtension>()
-                                ?.icon ??
-                            Icons.sports,
-                        onTap: () {
-                          Navigator.push(
+            IconButton(
+              tooltip: 'Get help',
+              icon: const FaIcon(FontAwesomeIcons.circleQuestion, size: 20),
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            HelpExample(onRestartTour: _startTour)));
+              },
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: RepaintBoundary(
+          child: ListView(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            children: [
+              // ── Quick Tools ────────────────────────────────────────────────
+              FadeSlideIn(
+                delay: Duration.zero,
+                child: Showcase(
+                  key: _key1,
+                  title: 'Quick Tools',
+                  description:
+                      'Access the Score Keeper, Match Maker, and Player Queue instantly.',
+                  child: SectionHeader(
+                      title: 'QUICK TOOLS',
+                      icon: FontAwesomeIcons.bolt,
+                      color: colorScheme.primary),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Showcase(
+                        key: _keyScore,
+                        title: 'Score Keeper',
+                        description:
+                            'Tap to see the Pro Scoreboard in action! (Click to enter)',
+                        onTargetClick: () async {
+                          await Navigator.push(
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      const TapScoreScreen()));
+                                      const TapScoreScreen(isTour: true)));
+                          // When returning, highlight the next tool
+                          if (context.mounted) {
+                            ShowcaseView.get().startShowCase([_keyMatch]);
+                          }
                         },
+                        disposeOnTap: true,
+                        child: QuickToolCard(
+                          title: 'SCORE KEEPER',
+                          icon: Theme.of(context)
+                                  .extension<SportIconExtension>()
+                                  ?.icon ??
+                              Icons.sports,
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const TapScoreScreen()));
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Showcase(
-                      key: _keyMatch,
-                      title: 'Match Maker',
-                      description:
-                          'Tap to see rotation and round scheduling! (Click to enter)',
-                      onTargetClick: () async {
-                        await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    MatchScreen(settingsData, isTour: true)));
-                        ShowcaseView.get().startShowCase([_keyQueue]);
-                      },
-                      disposeOnTap: true,
-                      child: QuickToolCard(
-                        title: 'MATCH MAKER',
-                        icon: FontAwesomeIcons.trophy,
-                        onTap: () {
-                          Navigator.push(
+                      const SizedBox(width: 12),
+                      Showcase(
+                        key: _keyMatch,
+                        title: 'Match Maker',
+                        description:
+                            'Tap to see rotation and round scheduling! (Click to enter)',
+                        onTargetClick: () async {
+                          await Navigator.push(
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
-                                      MatchScreen(settingsData)));
+                                      MatchScreen(settingsData, isTour: true)));
+                          if (context.mounted) {
+                            ShowcaseView.get().startShowCase([_keyQueue]);
+                          }
                         },
+                        disposeOnTap: true,
+                        child: QuickToolCard(
+                          title: 'MATCH MAKER',
+                          icon: FontAwesomeIcons.trophy,
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        MatchScreen(settingsData)));
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Showcase(
-                      key: _keyQueue,
-                      title: 'Player Queue',
-                      description:
-                          'Tap to see the digital sequence revealing system! (Click to enter)',
-                      onTargetClick: () async {
-                        await Navigator.push(
-                            context,
-                            PageRouteBuilder(
-                                pageBuilder: (context, anim, sec) =>
-                                    const RandomTeamScreen(
-                                        initialTotal: 6, isTour: true)));
-                        ShowcaseView.get().startShowCase([_key7]);
-                      },
-                      disposeOnTap: true,
-                      child: QuickToolCard(
-                        title: 'PLAYER QUEUE',
-                        icon: FontAwesomeIcons.dice,
-                        onTap: () {
-                          Navigator.push(
+                      const SizedBox(width: 12),
+                      Showcase(
+                        key: _keyQueue,
+                        title: 'Player Queue',
+                        description:
+                            'Tap to see the digital sequence revealing system! (Click to enter)',
+                        onTargetClick: () async {
+                          await Navigator.push(
                               context,
                               PageRouteBuilder(
                                   pageBuilder: (context, anim, sec) =>
-                                      const RandomTeamScreen(initialTotal: 6)));
+                                      const RandomTeamScreen(
+                                          initialTotal: 6, isTour: true)));
+                          if (context.mounted) {
+                            ShowcaseView.get().startShowCase([_key7]);
+                          }
                         },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // ── 1. Player Roster ───────────────────────────────────────────
-            FadeSlideIn(
-              delay: const Duration(milliseconds: 80),
-              child: Showcase(
-                key: _key2,
-                title: 'Player Roster',
-                description:
-                    'Manage your players here. Check the boxes for those present today.',
-                child: SectionHeader(
-                    title: '1. PLAYER ROSTER',
-                    icon: FontAwesomeIcons.users,
-                    color: colorScheme.primary),
-              ),
-            ),
-            Card(
-              elevation: 0,
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: colorScheme.outlineVariant),
-              ),
-              margin: const EdgeInsets.only(bottom: 8.0),
-              child: ExpansionTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                childrenPadding: EdgeInsets.zero,
-                tilePadding:
-                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-                initiallyExpanded: false,
-                backgroundColor: colorScheme.surface,
-                collapsedBackgroundColor: colorScheme.surface,
-                leading: CircleAvatar(
-                    backgroundColor: colorScheme.primaryContainer,
-                    child:
-                        Icon(Icons.people_outline, color: colorScheme.primary)),
-                title: const Text('Manage Players',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('${_players.length} Players listed',
-                    style: const TextStyle(color: Color(0xFF8A99A8))),
-                children: [
-                  // ── Toolbar ──────────────────────────────────────────────
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 4.0, vertical: 4.0),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.3),
-                      border: Border(
-                          bottom:
-                              BorderSide(color: colorScheme.outlineVariant)),
-                    ),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          Showcase(
-                            key: _key3,
-                            title: 'Add Players',
-                            description:
-                                'Add players one by one or import them in bulk.',
-                            child: GridHeaderButton(
-                              onPressed: () async {
-                                final List<PlayerModel>? players =
-                                    await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                AddPlayersScreen()));
-                                if (players != null) addPlayers(players);
-                              },
-                              icon: Icons.group_add,
-                              label: 'Quick Add',
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          GridHeaderButton(
-                            onPressed: () {
-                              setState(() {
-                                _players.removeWhere((p) => p.checked);
-                              });
-                              _triggerSavePlayers();
-                            },
-                            icon: Icons.delete_sweep,
-                            label: 'Clear Selected',
-                            color: colorScheme.error,
-                          ),
-                          const SizedBox(width: 6),
-                          GridHeaderButton(
-                            onPressed: () => _showBulkAddDialog(context),
-                            icon: Icons.format_list_bulleted_add,
-                            label: 'Bulk Add',
-                            color: colorScheme.secondary,
-                          ),
-                          const SizedBox(width: 6),
-                          GridHeaderButton(
-                            onPressed: () {
-                              setState(() {
-                                _players.add(PlayerEntry(checked: true));
-                              });
-                              _triggerSavePlayers();
-                            },
-                            icon: Icons.person_add,
-                            label: 'Add Row',
-                            color: colorScheme.secondary,
-                          ),
-                          const SizedBox(width: 6),
-                          Showcase(
-                            key: _key4,
-                            title: 'Edit Mode',
-                            description:
-                                'Toggle this to quickly edit names and levels directly in the table.',
-                            child: GridHeaderButton(
-                              onPressed: () {
-                                setState(() => _isEditable = !_isEditable);
-                              },
-                              icon: _isEditable ? Icons.edit_off : Icons.edit,
-                              label: _isEditable ? 'Lock' : 'Edit',
-                              color: _isEditable
-                                  ? colorScheme.tertiary
-                                  : colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-
-                        ],
-                      ),
-                    ),
-                  ),
-                  // ── DataTable2 ────────────────────────────────────────────
-                  RepaintBoundary(
-                    child: _PlayerDataTable(
-                      players: _players,
-                      allRoles: _allRoles,
-                      isEditable: _isEditable,
-                      colorScheme: colorScheme,
-                      onEdit: (p) => _editPlayer(context, p),
-                      onChanged: () {
-                        setState(() {});
-                        _triggerSavePlayers();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── 2. Balance Strategy ────────────────────────────────────────
-            FadeSlideIn(
-              delay: const Duration(milliseconds: 160),
-              child: Showcase(
-                key: _key5,
-                title: 'Balance Strategy',
-                description:
-                    'Select how you want to split teams: by Skill, Gender, or Randomly.',
-                child: SectionHeader(
-                    title: '2. BALANCE STRATEGY',
-                    icon: FontAwesomeIcons.gears,
-                    color: colorScheme.primary),
-              ),
-            ),
-            Card(
-              elevation: 0,
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: colorScheme.outlineVariant),
-              ),
-              margin: const EdgeInsets.only(bottom: 8.0),
-              child: ExpansionTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                childrenPadding: EdgeInsets.zero,
-                tilePadding:
-                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-                initiallyExpanded: false,
-                backgroundColor: colorScheme.surface,
-                collapsedBackgroundColor: colorScheme.surface,
-                leading: CircleAvatar(
-                    backgroundColor: colorScheme.secondaryContainer,
-                    child:
-                        Icon(Icons.auto_awesome, color: colorScheme.secondary)),
-                title: const Text('Team Splitting Rules',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(
-                  'Mode: ${settingsData.o.toString().split('.').last.replaceAll('_', ' ').toUpperCase()} • $checkedCount Players Selected',
-                  style: TextStyle(
-                      fontSize: 12, color: colorScheme.onSurfaceVariant),
-                ),
-                children: [
-                  _StrategySection(
-                    settingsData: settingsData,
-                    onStrategyChanged: (v) {
-                      setState(() {
-                        settingsData.o = v ?? settingsData.o;
-                        _saveSettings();
-                      });
-                    },
-                    onSettingsChanged: () {
-                      setState(() => _saveSettings());
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    child: Showcase(
-                      key: _key6,
-                      title: 'Generate Teams',
-                      description:
-                          'Hit this to create fair matches! Results will appear below.',
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: generateTeams,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
-                            foregroundColor: colorScheme.onPrimary,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
-                            elevation: 4,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Theme.of(context)
-                                        .extension<SportIconExtension>()
-                                        ?.icon ??
-                                    Icons.sports,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 10),
-                              const Text(
-                                'GENERATE TEAMS',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.flash_on, size: 16),
-                            ],
-                          ),
+                        disposeOnTap: true,
+                        child: QuickToolCard(
+                          title: 'PLAYER QUEUE',
+                          icon: FontAwesomeIcons.dice,
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                    pageBuilder: (context, anim, sec) =>
+                                        const RandomTeamScreen(
+                                            initialTotal: 6)));
+                          },
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
 
-            // ── 3. Results (conditional) ───────────────────────────────────
-            if (hasResults) ...[
+              // ── 1. Player Roster ───────────────────────────────────────────
               FadeSlideIn(
-                delay: Duration.zero,
-                child: SectionHeader(
-                    title: '3. RESULTS',
-                    icon: FontAwesomeIcons.trophy,
-                    color: colorScheme.primary),
+                delay: const Duration(milliseconds: 80),
+                child: Showcase(
+                  key: _key2,
+                  title: 'Player Roster',
+                  description:
+                      'Manage your players here. Check the boxes for those present today.',
+                  child: SectionHeader(
+                      title: '1. PLAYER ROSTER',
+                      icon: FontAwesomeIcons.users,
+                      color: colorScheme.primary),
+                ),
               ),
               Card(
-                elevation: 4,
-                shadowColor: colorScheme.tertiary.withValues(alpha: 0.2),
+                elevation: 0,
+                clipBehavior: Clip.antiAlias,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                      color: colorScheme.tertiary.withValues(alpha: 0.3)),
+                  side: BorderSide(color: colorScheme.outlineVariant),
                 ),
                 margin: const EdgeInsets.only(bottom: 8.0),
                 child: ExpansionTile(
@@ -1162,14 +930,322 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   childrenPadding: EdgeInsets.zero,
                   tilePadding: const EdgeInsets.symmetric(
                       horizontal: 12.0, vertical: 0.0),
-                  initiallyExpanded: true,
+                  initiallyExpanded: false,
+                  backgroundColor: colorScheme.surface,
+                  collapsedBackgroundColor: colorScheme.surface,
                   leading: CircleAvatar(
-                      backgroundColor: colorScheme.tertiaryContainer,
-                      child: Icon(Icons.groups, color: colorScheme.tertiary)),
-                  title: const Text('Active Teams',
+                      backgroundColor: colorScheme.primaryContainer,
+                      child: Icon(Icons.people_outline,
+                          color: colorScheme.primary)),
+                  title: const Text('Manage Players',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text('${_players.length} Players listed',
+                      style: const TextStyle(color: Color(0xFF8A99A8))),
+                  children: [
+                    // ── Toolbar ──────────────────────────────────────────────
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4.0, vertical: 4.0),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        border: Border(
+                            bottom:
+                                BorderSide(color: colorScheme.outlineVariant)),
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            Showcase(
+                              key: _key3,
+                              title: 'Add Players',
+                              description:
+                                  'Add players one by one or import them in bulk.',
+                              child: GridHeaderButton(
+                                onPressed: () async {
+                                  final List<PlayerModel>? players =
+                                      await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  AddPlayersScreen()));
+                                  if (players != null) addPlayers(players);
+                                },
+                                icon: Icons.group_add,
+                                label: 'Quick Add',
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            GridHeaderButton(
+                              onPressed: () {
+                                setState(() {
+                                  _players.removeWhere((p) => p.checked);
+                                });
+                                _triggerSavePlayers();
+                              },
+                              icon: Icons.delete_sweep,
+                              label: 'Clear Selected',
+                              color: colorScheme.error,
+                            ),
+                            const SizedBox(width: 6),
+                            GridHeaderButton(
+                              onPressed: () => _showBulkAddDialog(context),
+                              icon: Icons.format_list_bulleted_add,
+                              label: 'Bulk Add',
+                              color: colorScheme.secondary,
+                            ),
+                            const SizedBox(width: 6),
+                            GridHeaderButton(
+                              onPressed: () {
+                                setState(() {
+                                  _players.add(PlayerEntry(checked: true));
+                                });
+                                _triggerSavePlayers();
+                              },
+                              icon: Icons.person_add,
+                              label: 'Add Row',
+                              color: colorScheme.secondary,
+                            ),
+                            const SizedBox(width: 6),
+                            Showcase(
+                              key: _key4,
+                              title: 'Edit Mode',
+                              description:
+                                  'Toggle this to quickly edit names and levels directly in the table.',
+                              child: GridHeaderButton(
+                                onPressed: () {
+                                  setState(() => _isEditable = !_isEditable);
+                                },
+                                icon: _isEditable ? Icons.edit_off : Icons.edit,
+                                label: _isEditable ? 'Lock' : 'Edit',
+                                color: _isEditable
+                                    ? colorScheme.tertiary
+                                    : colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // ── DataTable2 ────────────────────────────────────────────
+                    RepaintBoundary(
+                      child: _PlayerDataTable(
+                        players: _players,
+                        allRoles: _allRoles,
+                        isEditable: _isEditable,
+                        colorScheme: colorScheme,
+                        onEdit: (p) => _editPlayer(context, p),
+                        onChanged: () {
+                          setState(() {});
+                          _triggerSavePlayers();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── 2. Balance Strategy ────────────────────────────────────────
+              FadeSlideIn(
+                delay: const Duration(milliseconds: 160),
+                child: Showcase(
+                  key: _key5,
+                  title: 'Balance Strategy',
+                  description:
+                      'Select how you want to split teams: by Skill, Gender, or Randomly.',
+                  child: SectionHeader(
+                      title: '2. BALANCE STRATEGY',
+                      icon: FontAwesomeIcons.gears,
+                      color: colorScheme.primary),
+                ),
+              ),
+              Card(
+                elevation: 0,
+                clipBehavior: Clip.antiAlias,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: colorScheme.outlineVariant),
+                ),
+                margin: const EdgeInsets.only(bottom: 8.0),
+                child: ExpansionTile(
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  childrenPadding: EdgeInsets.zero,
+                  tilePadding: const EdgeInsets.symmetric(
+                      horizontal: 12.0, vertical: 0.0),
+                  initiallyExpanded: false,
+                  backgroundColor: colorScheme.surface,
+                  collapsedBackgroundColor: colorScheme.surface,
+                  leading: CircleAvatar(
+                      backgroundColor: colorScheme.secondaryContainer,
+                      child: Icon(Icons.auto_awesome,
+                          color: colorScheme.secondary)),
+                  title: const Text('Team Splitting Rules',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    'Mode: ${settingsData.o.toString().split('.').last.replaceAll('_', ' ').toUpperCase()} • $checkedCount Players Selected',
+                    style: TextStyle(
+                        fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  ),
+                  children: [
+                    _StrategySection(
+                      settingsData: settingsData,
+                      onStrategyChanged: (v) {
+                        setState(() {
+                          settingsData.o = v ?? settingsData.o;
+                          _saveSettings();
+                        });
+                      },
+                      onSettingsChanged: () {
+                        setState(() => _saveSettings());
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      child: Showcase(
+                        key: _key6,
+                        title: 'Generate Teams',
+                        description:
+                            'Hit this to create fair matches! Results will appear below.',
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: generateTeams,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colorScheme.primary,
+                              foregroundColor: colorScheme.onPrimary,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                              elevation: 4,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Theme.of(context)
+                                          .extension<SportIconExtension>()
+                                          ?.icon ??
+                                      Icons.sports,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'GENERATE TEAMS',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.flash_on, size: 16),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── 3. Results (conditional) ───────────────────────────────────
+              if (hasResults) ...[
+                FadeSlideIn(
+                  delay: Duration.zero,
+                  child: SectionHeader(
+                      title: '3. RESULTS',
+                      icon: FontAwesomeIcons.trophy,
+                      color: colorScheme.primary),
+                ),
+                Card(
+                  elevation: 4,
+                  shadowColor: colorScheme.tertiary.withValues(alpha: 0.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                        color: colorScheme.tertiary.withValues(alpha: 0.3)),
+                  ),
+                  margin: const EdgeInsets.only(bottom: 8.0),
+                  child: ExpansionTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    childrenPadding: EdgeInsets.zero,
+                    tilePadding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 0.0),
+                    initiallyExpanded: true,
+                    leading: CircleAvatar(
+                        backgroundColor: colorScheme.tertiaryContainer,
+                        child: Icon(Icons.groups, color: colorScheme.tertiary)),
+                    title: const Text('Active Teams',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    children: [
+                      TeamResultsView(
+                        players: _players,
+                        onEditPlayer: (p) => _editPlayer(context, p),
+                        onChanged: () {
+                          setState(() {});
+                          _triggerSavePlayers();
+                        },
+                      )
+                    ],
+                  ),
+                ),
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ExpansionTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    childrenPadding: EdgeInsets.zero,
+                    tilePadding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 0.0),
+                    initiallyExpanded: false,
+                    leading: CircleAvatar(
+                        backgroundColor: colorScheme.surfaceContainerHighest,
+                        child: Icon(Icons.map,
+                            color: colorScheme.onSurfaceVariant)),
+                    title: const Text('Player/Team Directory',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    children: [PlayerTeamDirectoryView(players: _players)],
+                  ),
+                ),
+              ],
+
+              // ── Unassigned list ────────────────────────────────────────────
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: colorScheme.outlineVariant),
+                ),
+                margin: const EdgeInsets.only(bottom: 8.0),
+                child: ExpansionTile(
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  childrenPadding: EdgeInsets.zero,
+                  tilePadding: const EdgeInsets.symmetric(
+                      horizontal: 12.0, vertical: 0.0),
+                  initiallyExpanded: false,
+                  leading: CircleAvatar(
+                      backgroundColor:
+                          colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                      child:
+                          Icon(Icons.person_off, color: colorScheme.secondary)),
+                  title: const Text('Unassigned List',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   children: [
-                    TeamResultsView(
+                    UnassignedPlayersView(
                       players: _players,
                       onEditPlayer: (p) => _editPlayer(context, p),
                       onChanged: () {
@@ -1180,142 +1256,86 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
                   ],
                 ),
               ),
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(color: colorScheme.outlineVariant),
-                ),
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ExpansionTile(
-                  dense: true,
-                  visualDensity: VisualDensity.compact,
-                  childrenPadding: EdgeInsets.zero,
-                  tilePadding: const EdgeInsets.symmetric(
-                      horizontal: 12.0, vertical: 0.0),
-                  initiallyExpanded: false,
-                  leading: CircleAvatar(
-                      backgroundColor: colorScheme.surfaceContainerHighest,
-                      child:
-                          Icon(Icons.map, color: colorScheme.onSurfaceVariant)),
-                  title: const Text('Player/Team Directory',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  children: [PlayerTeamDirectoryView(players: _players)],
-                ),
-              ),
-            ],
-
-            // ── Unassigned list ────────────────────────────────────────────
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: colorScheme.outlineVariant),
-              ),
-              margin: const EdgeInsets.only(bottom: 8.0),
-              child: ExpansionTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                childrenPadding: EdgeInsets.zero,
-                tilePadding:
-                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-                initiallyExpanded: false,
-                leading: CircleAvatar(
-                    backgroundColor:
-                        colorScheme.secondaryContainer.withValues(alpha: 0.5),
-                    child:
-                        Icon(Icons.person_off, color: colorScheme.secondary)),
-                title: const Text('Unassigned List',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                children: [
-                  UnassignedPlayersView(
-                    players: _players,
-                    onChanged: () {
-                      setState(() {});
-                      _triggerSavePlayers();
-                    },
-                  )
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Showcase(
-        key: _key7,
-        title: 'Quick Access',
-        description:
-            'Navigate to Teams history, Match Maker, or Scoreboard any time.',
-        child: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.shadow.withValues(alpha: 0.1),
-                blurRadius: 8,
-                offset: const Offset(0, -2),
-              )
             ],
           ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  BottomNavButton(
-                    onPressed: () async {
-                      final List<PlayerModel>? players = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => AddPlayersScreen()));
-                      if (players != null) addPlayers(players);
-                    },
-                    icon: FontAwesomeIcons.userPlus,
-                    label: 'Add',
-                  ),
-                  BottomNavButton(
-                    onPressed: _navigateToTeam,
-                    icon: FontAwesomeIcons.usersViewfinder,
-                    label: 'Teams',
-                  ),
-                  BottomNavButton(
-                    onPressed: () {
-                      final activeTeams = _players
-                          .where((p) => p.checked)
-                          .map((p) => p.team)
-                          .where((t) => t != 'No team' && t != 'None')
-                          .toSet()
-                          .length;
+        ),
+        bottomNavigationBar: Showcase(
+          key: _key7,
+          title: 'Quick Access',
+          description:
+              'Navigate to Teams history, Match Maker, or Scoreboard any time.',
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
+                )
+              ],
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    BottomNavButton(
+                      onPressed: () async {
+                        final List<PlayerModel>? players = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => AddPlayersScreen()));
+                        if (players != null) addPlayers(players);
+                      },
+                      icon: FontAwesomeIcons.userPlus,
+                      label: 'Add',
+                    ),
+                    BottomNavButton(
+                      onPressed: _navigateToTeam,
+                      icon: FontAwesomeIcons.usersViewfinder,
+                      label: 'Teams',
+                    ),
+                    BottomNavButton(
+                      onPressed: () {
+                        final activeTeams = _players
+                            .where((p) => p.checked)
+                            .map((p) => p.team)
+                            .where((t) => t != 'No team' && t != 'None')
+                            .toSet()
+                            .length;
 
-                      if (activeTeams >= 2) {
-                        settingsData.teamCount = activeTeams;
-                      }
+                        if (activeTeams >= 2) {
+                          settingsData.teamCount = activeTeams;
+                        }
 
-                      settingsData.gameVenues = 1;
-                      settingsData.gameRounds = settingsData.teamCount.isOdd
-                          ? settingsData.teamCount
-                          : (settingsData.teamCount - 1).clamp(1, 99);
+                        settingsData.gameVenues = 1;
+                        settingsData.gameRounds = settingsData.teamCount.isOdd
+                            ? settingsData.teamCount
+                            : (settingsData.teamCount - 1).clamp(1, 99);
 
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => MatchScreen(settingsData)));
-                    },
-                    icon: FontAwesomeIcons.trophy,
-                    label: 'Match',
-                  ),
-                  BottomNavButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const TapScoreScreen()));
-                    },
-                    icon: FontAwesomeIcons.stopwatch20,
-                    label: 'Score',
-                  ),
-                ],
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    MatchScreen(settingsData)));
+                      },
+                      icon: FontAwesomeIcons.trophy,
+                      label: 'Match',
+                    ),
+                    BottomNavButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const TapScoreScreen()));
+                      },
+                      icon: FontAwesomeIcons.stopwatch20,
+                      label: 'Score',
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1572,7 +1592,13 @@ class _PlayerDataTable extends StatelessWidget {
         // ── Level ─────────────────────────────────────────────────────────
         DataCell(
           isEditable
-              ? _LevelBadge(level: p.level, color: colorScheme.primary)
+              ? _LevelDropdown(
+                  value: p.level,
+                  onChanged: (v) {
+                    p.level = v ?? p.level;
+                    onChanged();
+                  },
+                )
               : _LevelBadge(level: p.level, color: colorScheme.primary),
         ),
         // ── Gender ────────────────────────────────────────────────────────

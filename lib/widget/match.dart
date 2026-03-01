@@ -6,8 +6,9 @@ import 'package:teammaker/widgets/tapscore_widget.dart';
 
 class MatchWidget extends StatefulWidget {
   final Round round;
+  final VoidCallback? onChanged;
 
-  const MatchWidget({super.key, required this.round});
+  const MatchWidget({super.key, required this.round, this.onChanged});
 
   @override
   State<MatchWidget> createState() => _MatchWidgetState();
@@ -156,6 +157,7 @@ class _MatchWidgetState extends State<MatchWidget> {
                                             match.scoreTeam1 =
                                                 int.tryParse(val);
                                           });
+                                          widget.onChanged?.call();
                                         },
                                       ),
                                     ),
@@ -193,6 +195,7 @@ class _MatchWidgetState extends State<MatchWidget> {
                                             match.scoreTeam2 =
                                                 int.tryParse(val);
                                           });
+                                          widget.onChanged?.call();
                                         },
                                       ),
                                     ),
@@ -229,6 +232,7 @@ class _MatchWidgetState extends State<MatchWidget> {
                                       match.scoreTeam1 = result['scoreA'];
                                       match.scoreTeam2 = result['scoreB'];
                                     });
+                                    widget.onChanged?.call();
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(

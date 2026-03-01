@@ -33,6 +33,20 @@ class Game {
 
   Game(this.team, this.venue, {this.scoreTeam1, this.scoreTeam2});
 
+  factory Game.fromJson(Map<String, dynamic> json) => Game(
+        json['team'] as String,
+        json['venue'] as String,
+        scoreTeam1: json['scoreTeam1'] as int?,
+        scoreTeam2: json['scoreTeam2'] as int?,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'team': team,
+        'venue': venue,
+        'scoreTeam1': scoreTeam1,
+        'scoreTeam2': scoreTeam2,
+      };
+
   @override
   String toString() {
     return 'Game{teams: $team, venue: $venue, score: $scoreTeam1 - $scoreTeam2}';
@@ -44,6 +58,18 @@ class Round {
   String roundName;
 
   Round(this.matches, this.roundName);
+
+  factory Round.fromJson(Map<String, dynamic> json) => Round(
+        (json['matches'] as List<dynamic>)
+            .map((e) => Game.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        json['roundName'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'matches': matches.map((e) => e.toJson()).toList(),
+        'roundName': roundName,
+      };
 
   @override
   String toString() {
