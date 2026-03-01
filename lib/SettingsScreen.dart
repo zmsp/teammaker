@@ -190,7 +190,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 children: [
                   _strategyTile(
-                    title: 'Fair Mix (Recommended)',
+                    title: 'Sport Roles (Recommended)',
+                    subtitle: 'Balances key positions (Setter, Gaffer, etc)',
+                    icon: Icons.sports_score,
+                    value: GenOption.roleBalanced,
+                    extraConfig: settingsData.o == GenOption.roleBalanced
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Players per team',
+                                prefixIcon: Icon(Icons.group),
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              initialValue: settingsData.proportion.toString(),
+                              keyboardType: TextInputType.number,
+                              onChanged: (v) {
+                                settingsData.proportion =
+                                    int.tryParse(v) ?? settingsData.proportion;
+                              },
+                            ),
+                          )
+                        : null,
+                  ),
+                  const Divider(height: 1),
+                  _strategyTile(
+                    title: 'Fair Mix',
                     subtitle: 'Mixes players by gender and skill fairly',
                     icon: Icons.wc,
                     value: GenOption.evenGender,

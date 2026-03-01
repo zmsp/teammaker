@@ -51,7 +51,7 @@ class Round {
   }
 }
 
-enum GenOption { distribute, division, random, evenGender }
+enum GenOption { distribute, division, random, evenGender, roleBalanced }
 
 extension GenOptionExtension on GenOption {
   String get displayName {
@@ -64,6 +64,8 @@ extension GenOptionExtension on GenOption {
         return 'RANDOM';
       case GenOption.evenGender:
         return 'FAIR MIX';
+      case GenOption.roleBalanced:
+        return 'SPORT ROLES';
     }
   }
 }

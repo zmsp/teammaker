@@ -59,15 +59,16 @@ class _PlutoExampleScreenState extends State<PlutoExampleScreen> {
 
     StringBuffer csvBuffer = StringBuffer();
     // Headers
-    csvBuffer.writeln("Name,Level,Gender,Team");
+    csvBuffer.writeln("Name,Level,Gender,Team,Position");
 
     for (var row in stateManager!.rows) {
       String name = row.cells['name_field']?.value?.toString() ?? "";
       String level = row.cells['skill_level_field']?.value?.toString() ?? "";
       String gender = row.cells['gender_field']?.value?.toString() ?? "";
       String team = row.cells['team_field']?.value?.toString() ?? "";
+      String role = row.cells['role_field']?.value?.toString() ?? "Any";
 
-      csvBuffer.writeln("$name,$level,$gender,$team");
+      csvBuffer.writeln("$name,$level,$gender,$team,$role");
     }
 
     await Clipboard.setData(ClipboardData(text: csvBuffer.toString()));
@@ -266,18 +267,27 @@ Jane,4,F""";
                 var dateFieldRegex =
                     RegExp(r'^(J|F|M|A|M|J|A|S|O|N|D).*(AM|PM)$');
                 var recordFlag = true;
-                for (var i = 0; i <= lines.length - 1; i++) {
-                  if ((recordFlag == true) && (lines[i].trim() != "")) {
-                    print(lines[i]);
-                    playerLine.add("${lines[i]},3,M");
+                for (var i = 0; i < lines.length; i++) {
+                  String line = lines[i].trim();
+                  if (line.isEmpty) continue;
+
+                  if (recordFlag && !dateFieldRegex.hasMatch(line)) {
+                    String name = line;
+                    String position = "Any";
+                    if (line.contains("(") && line.contains(")")) {
+                      final start = line.lastIndexOf("(");
+                      final end = line.lastIndexOf(")");
+                      if (end > start) {
+                        position = line.substring(start + 1, end).trim();
+                        name = line.substring(0, start).trim();
+                      }
+                    }
+                    playerLine.add("$name,3,M,,$position");
                     recordFlag = false;
                     continue;
                   }
-                  // Here if we find a pattern for date field, we record the next line.
-                  print(lines[i]);
-                  print(dateFieldRegex.hasMatch(lines[i]));
-                  if (dateFieldRegex.hasMatch(lines[i]) == true) {
-                    // print()
+
+                  if (dateFieldRegex.hasMatch(line)) {
                     recordFlag = true;
                   }
                 }
@@ -330,7 +340,8 @@ Jane,4,F""";
                     "name": "x",
                     "level": 3,
                     "gender": "MALE",
-                    "team": "None"
+                    "team": "None",
+                    "position": "Any"
                   };
 
                   var data = lines[i].split(",");
@@ -363,6 +374,11 @@ Jane,4,F""";
                       case 3:
                         {
                           mapData["team"] = data[3];
+                        }
+                        break;
+                      case 4:
+                        {
+                          mapData["position"] = data[4];
                         }
                         break;
                       default:
@@ -402,7 +418,8 @@ Jane,4,F""";
                 "name": "x",
                 "level": 3,
                 "gender": "MALE",
-                "team": "None"
+                "team": "None",
+                "position": "Any"
               };
 
               var data = lines[i].split(",");
@@ -434,6 +451,11 @@ Jane,4,F""";
                       mapData["team"] = data[3];
                     }
                     break;
+                  case 4:
+                    {
+                      mapData["position"] = data[4];
+                    }
+                    break;
                   default:
                     {
                       break;
@@ -449,6 +471,7 @@ Jane,4,F""";
                     'skill_level_field': PlutoCell(value: mapData["level"]),
                     'team_field': PlutoCell(value: mapData["team"]),
                     'gender_field': PlutoCell(value: mapData["gender"]),
+                    'role_field': PlutoCell(value: mapData["position"]),
                   },
                 )
               ]);
@@ -492,10 +515,10 @@ Jane,4,F""";
     for (var i = 0; i < dat.length; i++) {
       if (dat[i]?.checked ?? false) {
         // teams_name_list.update(dat[i]?.cells?["team_field"]?.value?? "None", (value) => null)
-        var t = dat[i]?.cells["skill_level_field"]?.value;
+        var t = dat[i]!.cells["skill_level_field"]?.value;
         print(t.runtimeType);
         teamsTotalScore.update(
-          dat[i]?.cells["team_field"]?.value ?? "None",
+          dat[i]!.cells["team_field"]?.value ?? "None",
           // You can ignore the incoming parameter if you want to always update the value even if it is already in the map
           (existingValue) =>
               existingValue +
@@ -567,7 +590,8 @@ Jane,4,F""";
       }
     });
 
-    if (settingsData.o == GenOption.evenGender) {
+    if (settingsData.o == GenOption.evenGender ||
+        settingsData.o == GenOption.roleBalanced) {
       int playerNum = dat.length;
       if (settingsData.preferExtraTeam) {
         settingsData.teamCount = (playerNum / settingsData.proportion).ceil();
@@ -578,8 +602,11 @@ Jane,4,F""";
       print("TEAMS CALCULATED: ${settingsData.teamCount}");
     }
 
-    Map<String, List<PlutoRow>> teamsList =
-        TeamGenerator.generateTeams(dat, settingsData);
+    Map<String, List<PlutoRow>> teamsList = TeamGenerator.generateTeams(
+      dat,
+      settingsData,
+      sport: widget.themeController?.palette,
+    );
 
     teamsList.forEach((key, value) {
       for (var element in value) {

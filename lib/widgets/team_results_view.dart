@@ -276,6 +276,7 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
                 ...widget.players.asMap().entries.map((entry) {
                   final row = entry.value;
                   final name = row.cells['name_field']?.value.toString() ?? '';
+                  final role = row.cells['role_field']?.value.toString() ?? '';
                   final gender =
                       row.cells['gender_field']?.value.toString() ?? '';
                   final level =
@@ -290,6 +291,7 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
                   return _DraggablePlayerTile(
                     dragData: dragData,
                     name: name,
+                    role: role,
                     gender: gender,
                     level: level,
                     teamColor: teamColor,
@@ -326,6 +328,7 @@ class _TeamDropZoneState extends State<_TeamDropZone> {
 class _DraggablePlayerTile extends StatelessWidget {
   final _DraggedPlayer dragData;
   final String name;
+  final String role;
   final String gender;
   final int level;
   final Color teamColor;
@@ -333,6 +336,7 @@ class _DraggablePlayerTile extends StatelessWidget {
   const _DraggablePlayerTile({
     required this.dragData,
     required this.name,
+    required this.role,
     required this.gender,
     required this.level,
     required this.teamColor,
@@ -416,6 +420,15 @@ class _DraggablePlayerTile extends StatelessWidget {
           name,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
         ),
+        subtitle: (role.isNotEmpty && role != 'Any')
+            ? Text(
+                role,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade500,
+                    fontStyle: FontStyle.italic),
+              )
+            : null,
         trailing: _StarRating(level: level, color: teamColor),
       ),
     );
@@ -477,6 +490,7 @@ class UnassignedPlayersView extends StatelessWidget {
     return Column(
       children: unassigned.map((row) {
         final name = row.cells['name_field']?.value.toString() ?? '';
+        final role = row.cells['role_field']?.value.toString() ?? '';
         final gender = row.cells['gender_field']?.value.toString() ?? '';
         final level = (row.cells['skill_level_field']?.value ?? 0) as int;
         final dragData = _DraggedPlayer(
@@ -511,16 +525,18 @@ class UnassignedPlayersView extends StatelessWidget {
           ),
           childWhenDragging: Opacity(
             opacity: 0.3,
-            child: _unassignedTile(context, colorScheme, name, isFemale, level),
+            child: _unassignedTile(
+                context, colorScheme, name, role, isFemale, level),
           ),
-          child: _unassignedTile(context, colorScheme, name, isFemale, level),
+          child: _unassignedTile(
+              context, colorScheme, name, role, isFemale, level),
         );
       }).toList(),
     );
   }
 
   Widget _unassignedTile(BuildContext context, ColorScheme cs, String name,
-      bool isFemale, int level) {
+      String role, bool isFemale, int level) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
@@ -552,6 +568,13 @@ class UnassignedPlayersView extends StatelessWidget {
         ),
         title: Text(name,
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        subtitle: (role.isNotEmpty && role != 'Any')
+            ? Text(role,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: cs.onSurfaceVariant,
+                    fontStyle: FontStyle.italic))
+            : null,
         trailing: _StarRating(level: level, color: cs.error),
       ),
     );
@@ -592,6 +615,14 @@ class PlayerTeamDirectoryView extends StatelessWidget {
             size: 20,
           ),
           title: Text(row.cells['name_field']?.value.toString() ?? ''),
+          subtitle: () {
+            final role = row.cells['role_field']?.value.toString() ?? '';
+            return (role.isNotEmpty && role != 'Any')
+                ? Text(role,
+                    style: const TextStyle(
+                        fontSize: 11, fontStyle: FontStyle.italic))
+                : null;
+          }(),
           trailing: Chip(
             label: Text(
               isAssigned ? 'Team $teamName' : 'Unassigned',

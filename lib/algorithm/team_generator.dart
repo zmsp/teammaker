@@ -1,9 +1,11 @@
 import 'package:teammaker/model/data_model.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:teammaker/theme/app_theme.dart';
 
 class TeamGenerator {
   static Map<String, List<PlutoRow>> generateTeams(
-      List<PlutoRow> dat, SettingsData settingsData) {
+      List<PlutoRow> dat, SettingsData settingsData,
+      {SportPalette? sport}) {
     List<PlutoRow> tmpRows = [];
     for (var i = 0; i < dat.length; i++) {
       if (dat[i].checked ?? false) {
@@ -168,6 +170,65 @@ class TeamGenerator {
         for (int i = 0; i < players.length; i++) {
           String targetTeam = indexToTeam[snakeIndices[i]]!;
           teamsList[targetTeam]?.add(players[i]);
+        }
+      }
+    } else if (settingsData.o == GenOption.roleBalanced) {
+      // Role-Balanced Algorithm
+      // 1. Group players by role
+      Map<String, List<PlutoRow>> roleGroups = {};
+      List<PlutoRow> fillers = [];
+
+      for (var row in tmpRows) {
+        String role = row.cells["role_field"]?.value.toString() ?? "Any";
+        if (role == "Any" || role == "none" || role.isEmpty) {
+          fillers.add(row);
+        } else {
+          roleGroups.putIfAbsent(role, () => []).add(row);
+        }
+      }
+
+      // 2. Sort within each group by skill level (descending)
+      roleGroups.forEach((role, players) {
+        players.sort((a, b) => (b.cells["skill_level_field"]?.value as num)
+            .compareTo(a.cells["skill_level_field"]?.value as num));
+      });
+      fillers.sort((a, b) => (b.cells["skill_level_field"]?.value as num)
+          .compareTo(a.cells["skill_level_field"]?.value as num));
+
+      List<String> teamKeys = teamsList.keys.toList();
+      if (teamKeys.isNotEmpty) {
+        // 3. Distribution approach: Assign roles to the team with fewest players of THAT role
+        // or just cycle through roles. To be very balanced, we cycle through roles and assign.
+
+        List<String> priorityRoles = [];
+        if (sport != null) {
+          priorityRoles = sport.idealRoleDistribution.keys.toList();
+        }
+
+        // Combine priority roles with any other roles found
+        List<String> allRoles = List.from(priorityRoles);
+        for (var r in roleGroups.keys) {
+          if (!allRoles.contains(r)) allRoles.add(r);
+        }
+
+        for (var role in allRoles) {
+          List<PlutoRow>? players = roleGroups[role];
+          if (players == null || players.isEmpty) continue;
+
+          // Distribute players for this role to teams with fewest players TOTAL
+          // This ensures teams stay roughly equal size.
+          for (var player in players) {
+            teamKeys.sort(
+                (a, b) => teamsList[a]!.length.compareTo(teamsList[b]!.length));
+            teamsList[teamKeys.first]?.add(player);
+          }
+        }
+
+        // 4. Finally distribute filler players to balance sizes
+        for (var player in fillers) {
+          teamKeys.sort(
+              (a, b) => teamsList[a]!.length.compareTo(teamsList[b]!.length));
+          teamsList[teamKeys.first]?.add(player);
         }
       }
     } else if (settingsData.o == GenOption.random) {

@@ -153,13 +153,13 @@ extension SportPaletteInfo on SportPalette {
       case SportPalette.volleyball:
         // Indoor volleyball: 6v6, beach: 2v2. Default to indoor.
         return const SportDefaults(
-            playersPerTeam: 6, teamCount: 2, strategy: GenOption.evenGender);
+            playersPerTeam: 6, teamCount: 2, strategy: GenOption.roleBalanced);
       case SportPalette.basketball:
         return const SportDefaults(
-            playersPerTeam: 5, teamCount: 2, strategy: GenOption.distribute);
+            playersPerTeam: 5, teamCount: 2, strategy: GenOption.roleBalanced);
       case SportPalette.football:
         return const SportDefaults(
-            playersPerTeam: 11, teamCount: 2, strategy: GenOption.evenGender);
+            playersPerTeam: 11, teamCount: 2, strategy: GenOption.roleBalanced);
       case SportPalette.cricket:
         return const SportDefaults(
             playersPerTeam: 11, teamCount: 2, strategy: GenOption.distribute);
@@ -170,19 +170,19 @@ extension SportPaletteInfo on SportPalette {
       case SportPalette.rugby:
         // Rugby Union: 15. Rugby Sevens: 7. Default to 7 (more common casual)
         return const SportDefaults(
-            playersPerTeam: 7, teamCount: 2, strategy: GenOption.distribute);
+            playersPerTeam: 7, teamCount: 2, strategy: GenOption.roleBalanced);
       case SportPalette.handball:
         return const SportDefaults(
-            playersPerTeam: 7, teamCount: 2, strategy: GenOption.evenGender);
+            playersPerTeam: 7, teamCount: 2, strategy: GenOption.roleBalanced);
       case SportPalette.netball:
         return const SportDefaults(
-            playersPerTeam: 7, teamCount: 2, strategy: GenOption.evenGender);
+            playersPerTeam: 7, teamCount: 2, strategy: GenOption.roleBalanced);
       case SportPalette.americanFootball:
         return const SportDefaults(
-            playersPerTeam: 11, teamCount: 2, strategy: GenOption.distribute);
+            playersPerTeam: 11, teamCount: 2, strategy: GenOption.roleBalanced);
       case SportPalette.ultimateFrisbee:
         return const SportDefaults(
-            playersPerTeam: 7, teamCount: 2, strategy: GenOption.evenGender);
+            playersPerTeam: 7, teamCount: 2, strategy: GenOption.roleBalanced);
     }
   }
 
@@ -256,6 +256,91 @@ extension SportPaletteInfo on SportPalette {
         ];
       case SportPalette.ultimateFrisbee:
         return ['Any', 'Handler', 'Cutter', 'Deep', 'Stack'];
+    }
+  }
+
+  /// Ideal distribution of roles per team for balanced gameplay.
+  Map<String, int> get idealRoleDistribution {
+    switch (this) {
+      case SportPalette.volleyball:
+        return {
+          'Setter': 1,
+          'Libero': 1,
+          'Outside Hitter': 2,
+          'Middle Blocker': 2,
+        };
+      case SportPalette.basketball:
+        return {
+          'Point Guard': 1,
+          'Shooting Guard': 1,
+          'Small Forward': 1,
+          'Power Forward': 1,
+          'Center': 1,
+        };
+      case SportPalette.football:
+        return {
+          'Goalkeeper': 1,
+          'Defender': 2,
+          'Midfielder': 2,
+          'Forward': 1,
+        };
+      case SportPalette.cricket:
+        return {
+          'Batter': 4,
+          'Bowler': 4,
+          'All-rounder': 2,
+          'Wicketkeeper': 1,
+        };
+      case SportPalette.tennis:
+        return {
+          'Server': 1,
+          'Receiver': 1,
+        };
+      case SportPalette.rugby:
+        return {
+          'Prop': 2,
+          'Hooker': 1,
+          'Scrum-half': 1,
+          'Fly-half': 1,
+          'Center': 1,
+          'Wing': 1,
+        };
+      case SportPalette.handball:
+        return {
+          'Goalkeeper': 1,
+          'Center Back': 1,
+          'Pivot': 1,
+          'Left Wing': 1,
+          'Right Wing': 1,
+        };
+      case SportPalette.netball:
+        return {
+          'GS': 1,
+          'GA': 1,
+          'WA': 1,
+          'C': 1,
+          'WD': 1,
+          'GD': 1,
+          'GK': 1,
+        };
+      case SportPalette.americanFootball:
+        return {
+          'QB': 1,
+          'RB': 1,
+          'WR': 2,
+          'OL': 2,
+          'DL': 2,
+          'LB': 1,
+          'CB': 1,
+          'S': 1,
+        };
+      case SportPalette.ultimateFrisbee:
+        return {
+          'Handler': 2,
+          'Cutter': 3,
+          'Deep': 1,
+          'Stack': 1,
+        };
     }
   }
 }

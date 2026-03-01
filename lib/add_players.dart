@@ -110,7 +110,17 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
       if (line.isEmpty) continue;
 
       if (recordFlag && !dateFieldRegex.hasMatch(line)) {
-        playerLines.add("$line,3,M");
+        String name = line;
+        String position = "Any";
+        if (line.contains("(") && line.contains(")")) {
+          final start = line.lastIndexOf("(");
+          final end = line.lastIndexOf(")");
+          if (end > start) {
+            position = line.substring(start + 1, end).trim();
+            name = line.substring(0, start).trim();
+          }
+        }
+        playerLines.add("$name,3,M,,$position");
         recordFlag = false;
         continue;
       }
@@ -582,8 +592,8 @@ class AddPlayersScreenState extends State<AddPlayersScreen> {
           maxLines: 8,
           decoration: InputDecoration(
             hintText:
-                "Name, Level, Gender, Team, Role\nJohn, 3, M, 1, Setter\nJane, 4, F, 2, Libero",
-            helperText: "Format: Name, Level, Gender, Team, Role",
+                "Name, Level, Gender, Team, Position\nJohn, 3, M, 1, Setter\nJane, 4, F, 2, Libero",
+            helperText: "Format: Name, Level, Gender, Team, Position",
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
             fillColor:
