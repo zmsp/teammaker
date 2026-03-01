@@ -32,67 +32,7 @@ class _HelpExampleState extends State<HelpExample> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: <Widget>[
-          _buildMarkdownSection(
-            context,
-            title: "How to use",
-            imageUrl: "https://i.imgur.com/y7ktqtP.png",
-            content: "# Steps to generate a team:\n"
-                "1. Press **Add Players** button (+ sign).\n"
-                "2. In the textbox, add comma separated values of **NAME, SKILL LEVEL, GENDER** (name is required, others optional).\n"
-                "3. Press **Add**.\n"
-                "4. Press **Generate Team** button (the icon with the clock).",
-          ),
-          const SizedBox(height: 24),
-          _buildMarkdownSection(
-            context,
-            title: "Advanced Functionality",
-            imageUrl: "https://i.imgur.com/czQJm7Q.png",
-            content: "### Change number of teams or generation function\n"
-                "By default, the app will generate 4 teams with balanced skill and gender. "
-                "You can change these in the **Settings**. Access settings via the palette icon in the top right "
-                "of the main screen.\n\n"
-                "• **Fair Mix**: Best for gender and skill balance.\n"
-                "• **Role Balanced**: Optimized for role-specific sports like Volleyball.\n"
-                "• **Skill Balance**: Focuses purely on level distribution.",
-          ),
-          const SizedBox(height: 24),
-          _buildMarkdownSection(
-            context,
-            title: "Meetup Import",
-            imageUrl: "https://i.imgur.com/y2lzEsy.png",
-            content: "### Entering data from Meetup\n"
-                "• Copy-paste the Meetup attendance list from desktop or mobile.\n"
-                "• In the Add menu, paste the text and press **'Format Text From Meetup'**.\n"
-                "• Level 3 and Male gender are added by default to formatted rows.\n"
-                "• Press **'Check/Validate'** to ensure everything looks correct.\n"
-                "• Press **'Add All'** to update your player list.",
-          ),
-          const SizedBox(height: 32),
-          _buildHeader(context, "Quick Access Tools"),
-          const SizedBox(height: 12),
-          _buildHelpTile(
-            context,
-            icon: Icons.sports_score,
-            color: Colors.orange,
-            title: "Pro Scoreboard",
-            subtitle:
-                "Custom team names, country themes, and integrated timers.",
-          ),
-          _buildHelpTile(
-            context,
-            icon: Icons.list_alt,
-            color: Colors.blue,
-            title: "Player Queue",
-            subtitle:
-                "Managed entry system with digital reveal and rotation logic.",
-          ),
-          _buildHelpTile(
-            context,
-            icon: Icons.history,
-            color: Colors.purple,
-            title: "Match History",
-            subtitle: "Track previous team compositions and tournament rounds.",
-          ),
+        
           const SizedBox(height: 32),
           _buildHeader(context, "Support & Tutorials"),
           const SizedBox(height: 12),
@@ -101,8 +41,7 @@ class _HelpExampleState extends State<HelpExample> {
             title: "Visual Walkthrough",
             subtitle:
                 "Technical guide on roster optimization and team generation.",
-            url:
-                'https://raw.githubusercontent.com/zmsp/teammaker/refs/heads/master/asset/video/meetup.mp4',
+            url: 'assets/demo.mp4',
             color: Colors.blueAccent,
           ),
           _buildResourceLink(
