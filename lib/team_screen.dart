@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/MatchScreen.dart';
 import 'package:teammaker/model/data_model.dart';
+import 'package:teammaker/theme/app_theme.dart';
 
 class TeamList extends StatelessWidget {
   final List<ListItem> items;
@@ -66,8 +67,9 @@ class TeamList extends StatelessWidget {
               MaterialPageRoute(
                   builder: (context) => MatchScreen(settingsData)));
         },
-        child: const FaIcon(
-          FontAwesomeIcons.volleyball,
+        child: Icon(
+          Theme.of(context).extension<SportIconExtension>()?.icon ??
+              Icons.sports,
         ),
       ),
     );

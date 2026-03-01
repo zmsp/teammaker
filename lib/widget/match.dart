@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teammaker/model/data_model.dart';
+import 'package:teammaker/theme/app_theme.dart';
 import 'package:teammaker/widgets/tapscore_widget.dart';
 
 class MatchWidget extends StatefulWidget {
@@ -78,7 +79,12 @@ class _MatchWidgetState extends State<MatchWidget> {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        isBye ? Icons.coffee : Icons.sports_tennis,
+                        isBye
+                            ? Icons.coffee
+                            : (Theme.of(context)
+                                    .extension<SportIconExtension>()
+                                    ?.icon ??
+                                Icons.sports),
                         size: 24, // Bigger Icon
                         color: colorScheme.secondary,
                       ),

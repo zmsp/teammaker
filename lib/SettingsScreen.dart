@@ -325,16 +325,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   fontSize: 14)),
           subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-          trailing: RadioGroup<GenOption>(
+          trailing: Radio<GenOption>(
+            value: value,
             groupValue: settingsData.o,
             onChanged: (v) {
               setState(() {
                 settingsData.o = v ?? settingsData.o;
               });
             },
-            child: Radio<GenOption>(
-              value: value,
-            ),
           ),
           onTap: () {
             setState(() {

@@ -7,87 +7,119 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ──────────────────────────────────────────────────────────────────────────
 
 enum SportPalette {
-  pitchGreen,
-  oceanBlue,
-  fireRed,
-  sunsetOrange,
-  royalPurple,
+  volleyball, // #1 globally
+  basketball,
+  football,
+  cricket,
+  tennis,
+  rugby,
+  handball,
+  netball,
 }
 
 extension SportPaletteInfo on SportPalette {
   String get label {
     switch (this) {
-      case SportPalette.pitchGreen:
-        return 'Pitch Green';
-      case SportPalette.oceanBlue:
-        return 'Ocean Blue';
-      case SportPalette.fireRed:
-        return 'Fire Red';
-      case SportPalette.sunsetOrange:
-        return 'Sunset Orange';
-      case SportPalette.royalPurple:
-        return 'Royal Purple';
+      case SportPalette.volleyball:
+        return 'Volleyball';
+      case SportPalette.basketball:
+        return 'Basketball';
+      case SportPalette.football:
+        return 'Football';
+      case SportPalette.cricket:
+        return 'Cricket';
+      case SportPalette.tennis:
+        return 'Tennis';
+      case SportPalette.rugby:
+        return 'Rugby';
+      case SportPalette.handball:
+        return 'Handball';
+      case SportPalette.netball:
+        return 'Netball';
     }
   }
 
   String get description {
     switch (this) {
-      case SportPalette.pitchGreen:
-        return 'Classic field green — football, soccer, cricket';
-      case SportPalette.oceanBlue:
-        return 'Cool ocean blue — aquatics, beach sports';
-      case SportPalette.fireRed:
-        return 'Fierce fire red — basketball, volleyball';
-      case SportPalette.sunsetOrange:
-        return 'Energy amber — running, cycling, tennis';
-      case SportPalette.royalPurple:
-        return 'Royal purple — ultimate frisbee, netball';
+      case SportPalette.volleyball:
+        return 'Sky blue & gold — beach & indoor';
+      case SportPalette.basketball:
+        return 'Court orange & black — NBA energy';
+      case SportPalette.football:
+        return 'Pitch green & white — the beautiful game';
+      case SportPalette.cricket:
+        return 'Willow cream & forest — Lords & MCG';
+      case SportPalette.tennis:
+        return 'Wimbledon purple & green — clay to grass';
+      case SportPalette.rugby:
+        return 'Deep crimson & slate — tough & bold';
+      case SportPalette.handball:
+        return 'Electric blue & amber — fast & powerful';
+      case SportPalette.netball:
+        return 'Royal purple & pink — fast and fluid';
     }
   }
 
-  /// The primary seed color for the preset (shown in the palette swatch).
   Color get seedColor {
     switch (this) {
-      case SportPalette.pitchGreen:
-        return const Color(0xFF1B8C3A);
-      case SportPalette.oceanBlue:
-        return const Color(0xFF0277BD);
-      case SportPalette.fireRed:
-        return const Color(0xFFD32F2F);
-      case SportPalette.sunsetOrange:
-        return const Color(0xFFE65100);
-      case SportPalette.royalPurple:
-        return const Color(0xFF6A1B9A);
+      case SportPalette.volleyball:
+        return const Color(0xFF0277BD); // sky blue
+      case SportPalette.basketball:
+        return const Color(0xFFE35205); // NBA orange
+      case SportPalette.football:
+        return const Color(0xFF1B8C3A); // pitch green
+      case SportPalette.cricket:
+        return const Color(0xFF33691E); // forest green
+      case SportPalette.tennis:
+        return const Color(0xFF4A148C); // Wimbledon purple
+      case SportPalette.rugby:
+        return const Color(0xFFC62828); // deep crimson
+      case SportPalette.handball:
+        return const Color(0xFF0D47A1); // electric blue
+      case SportPalette.netball:
+        return const Color(0xFF6A1B9A); // royal purple
     }
   }
 
-  /// Secondary accent color (shown alongside in swatches).
   Color get accentColor {
     switch (this) {
-      case SportPalette.pitchGreen:
-        return const Color(0xFFFF8C00);
-      case SportPalette.oceanBlue:
-        return const Color(0xFF00BCD4);
-      case SportPalette.fireRed:
-        return const Color(0xFFFF6F00);
-      case SportPalette.sunsetOrange:
-        return const Color(0xFFFFC107);
-      case SportPalette.royalPurple:
-        return const Color(0xFFE91E63);
+      case SportPalette.volleyball:
+        return const Color(0xFFFFD600); // gold
+      case SportPalette.basketball:
+        return const Color(0xFF1A1A1A); // court black
+      case SportPalette.football:
+        return const Color(0xFFFFFFFF); // white lines
+      case SportPalette.cricket:
+        return const Color(0xFFFFF9C4); // willow cream
+      case SportPalette.tennis:
+        return const Color(0xFF76FF03); // Wimbledon green
+      case SportPalette.rugby:
+        return const Color(0xFF424242); // slate dark
+      case SportPalette.handball:
+        return const Color(0xFFFFAB00); // amber
+      case SportPalette.netball:
+        return const Color(0xFFE91E63); // vivid pink
     }
   }
 
+  /// Material icon representing this sport — used throughout the UI.
   IconData get icon {
     switch (this) {
-      case SportPalette.pitchGreen:
-        return Icons.sports_soccer;
-      case SportPalette.oceanBlue:
-        return Icons.pool;
-      case SportPalette.fireRed:
+      case SportPalette.volleyball:
+        return Icons.sports_volleyball;
+      case SportPalette.basketball:
         return Icons.sports_basketball;
-      case SportPalette.sunsetOrange:
-        return Icons.directions_run;
-      case SportPalette.royalPurple:
+      case SportPalette.football:
+        return Icons.sports_soccer;
+      case SportPalette.cricket:
+        return Icons.sports_cricket;
+      case SportPalette.tennis:
+        return Icons.sports_tennis;
+      case SportPalette.rugby:
+        return Icons.sports_rugby;
+      case SportPalette.handball:
+        return Icons.sports_handball;
+      case SportPalette.netball:
         return Icons.sports;
     }
   }
@@ -100,7 +132,7 @@ class ThemeController extends ChangeNotifier {
   static const _keyPalette = 'theme_palette';
   static const _keyMode = 'theme_mode';
 
-  SportPalette _palette = SportPalette.pitchGreen;
+  SportPalette _palette = SportPalette.volleyball;
   ThemeMode _mode = ThemeMode.dark;
 
   SportPalette get palette => _palette;
@@ -118,7 +150,7 @@ class ThemeController extends ChangeNotifier {
     if (paletteName != null) {
       _palette = SportPalette.values.firstWhere(
         (e) => e.name == paletteName,
-        orElse: () => SportPalette.pitchGreen,
+        orElse: () => SportPalette.volleyball,
       );
     }
     if (modeName != null) {
@@ -143,6 +175,25 @@ class ThemeController extends ChangeNotifier {
 
   ThemeData get lightTheme => AppTheme.light(_palette);
   ThemeData get darkTheme => AppTheme.dark(_palette);
+
+  /// The sport icon for the current palette — use this in sport-context UI.
+  IconData get sportIcon => _palette.icon;
+}
+
+// ─── Sport Icon Theme Extension ───────────────────────────────────────────────
+/// Carries the active sport's IconData into the widget tree via Theme.
+/// Read it with: `Theme.of(context).extension<SportIconExtension>()?.icon`
+class SportIconExtension extends ThemeExtension<SportIconExtension> {
+  final IconData icon;
+  const SportIconExtension(this.icon);
+
+  @override
+  SportIconExtension copyWith({IconData? icon}) =>
+      SportIconExtension(icon ?? this.icon);
+
+  @override
+  SportIconExtension lerp(SportIconExtension? other, double t) =>
+      t < 0.5 ? this : (other ?? this);
 }
 
 // ─── App Theme Builder ────────────────────────────────────────────────────
@@ -167,7 +218,7 @@ class AppTheme {
       secondaryContainer: secondary.withValues(alpha: 0.15),
       onSecondaryContainer: secondary,
     );
-    return _buildLight(cs);
+    return _buildLight(cs, palette);
   }
 
   static ThemeData dark(SportPalette palette) {
@@ -185,14 +236,15 @@ class AppTheme {
       secondary: _lighten(secondary, 0.25),
       secondaryContainer: secondary.withValues(alpha: 0.25),
     );
-    return _buildDark(cs, primary);
+    return _buildDark(cs, primary, palette);
   }
 
   // ── Shared light theme structure ─────────────────────────────────────────
-  static ThemeData _buildLight(ColorScheme cs) {
+  static ThemeData _buildLight(ColorScheme cs, SportPalette palette) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: cs,
+      extensions: [SportIconExtension(palette.icon)],
       fontFamily: 'Roboto',
       scaffoldBackgroundColor: const Color(0xFFF5F7FA),
       appBarTheme: AppBarTheme(
@@ -276,10 +328,12 @@ class AppTheme {
   }
 
   // ── Shared dark theme structure ──────────────────────────────────────────
-  static ThemeData _buildDark(ColorScheme cs, Color seedPrimary) {
+  static ThemeData _buildDark(
+      ColorScheme cs, Color seedPrimary, SportPalette palette) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: cs,
+      extensions: [SportIconExtension(palette.icon)],
       fontFamily: 'Roboto',
       scaffoldBackgroundColor: _darkBase,
       drawerTheme: const DrawerThemeData(backgroundColor: _darkSurface),

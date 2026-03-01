@@ -651,10 +651,13 @@ Jane,4,F""";
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         children: [
-          SectionHeader(
-              title: 'QUICK TOOLS',
-              icon: FontAwesomeIcons.bolt,
-              color: Colors.orangeAccent),
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 0),
+            child: SectionHeader(
+                title: 'QUICK TOOLS',
+                icon: FontAwesomeIcons.bolt,
+                color: Colors.orangeAccent),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12.0),
             child: SingleChildScrollView(
@@ -663,8 +666,11 @@ Jane,4,F""";
                 children: [
                   QuickToolCard(
                     title: 'TAP SCORE',
-                    icon: FontAwesomeIcons.stopwatch20,
-                    color: Colors.blue,
+                    icon: Theme.of(context)
+                            .extension<SportIconExtension>()
+                            ?.icon ??
+                        Icons.sports,
+                    color: colorScheme.primary,
                     onTap: () {
                       Navigator.push(
                           context,
@@ -702,10 +708,13 @@ Jane,4,F""";
             ),
           ),
           const SizedBox(height: 8),
-          SectionHeader(
-              title: '1. PLAYER ROSTER',
-              icon: FontAwesomeIcons.users,
-              color: colorScheme.primary),
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 80),
+            child: SectionHeader(
+                title: '1. PLAYER ROSTER',
+                icon: FontAwesomeIcons.users,
+                color: colorScheme.primary),
+          ),
           Card(
             elevation: 0,
             clipBehavior: Clip.antiAlias,
@@ -863,10 +872,13 @@ Jane,4,F""";
               ],
             ),
           ),
-          SectionHeader(
-              title: '2. BALANCE STRATEGY',
-              icon: FontAwesomeIcons.gears,
-              color: colorScheme.secondary),
+          FadeSlideIn(
+            delay: const Duration(milliseconds: 160),
+            child: SectionHeader(
+                title: '2. BALANCE STRATEGY',
+                icon: FontAwesomeIcons.gears,
+                color: colorScheme.secondary),
+          ),
           Card(
             elevation: 0,
             clipBehavior: Clip.antiAlias,
@@ -1030,22 +1042,40 @@ Jane,4,F""";
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 60,
-                    child: ElevatedButton.icon(
+                    height: 48,
+                    child: ElevatedButton(
                       onPressed: generateTeams,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                            borderRadius: BorderRadius.circular(14)),
                         elevation: 4,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                       ),
-                      icon: const Icon(Icons.flash_on, size: 28),
-                      label: const Text('GENERATE TEAMS',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Theme.of(context)
+                                    .extension<SportIconExtension>()
+                                    ?.icon ??
+                                Icons.sports,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'GENERATE TEAMS',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.flash_on, size: 16),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1057,10 +1087,13 @@ Jane,4,F""";
                   TeamUtils.normalizeTeamName(
                       element.cells['team_field']?.value.toString()) !=
                   "No team")) ...[
-            SectionHeader(
-                title: '3. RESULTS',
-                icon: FontAwesomeIcons.trophy,
-                color: colorScheme.tertiary),
+            FadeSlideIn(
+              delay: const Duration(milliseconds: 0),
+              child: SectionHeader(
+                  title: '3. RESULTS',
+                  icon: FontAwesomeIcons.trophy,
+                  color: colorScheme.tertiary),
+            ),
             Card(
               elevation: 4,
               shadowColor: colorScheme.tertiary.withValues(alpha: 0.2),
